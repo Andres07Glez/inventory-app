@@ -1,3 +1,7 @@
 import { Routes } from '@angular/router';
 
-export const routes: Routes = [];
+import { AssetRegistration } from './modules/home/asset-registration/asset-registration';
+
+export const routes: Routes = [
+  { path: 'registro', component: AssetRegistration }
+];
