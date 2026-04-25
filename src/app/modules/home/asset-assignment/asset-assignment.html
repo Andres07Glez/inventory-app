@@ -1,0 +1,301 @@
+<!-- ──────────────────────────────────────────────────────────────────────────
+     asset-assignment.component.html
+     Formulario de asignación de bienes a resguardantes.
+     Layout: panel izquierdo (búsqueda + preview del bien) |
+             panel derecho (formulario de asignación)
+     ─────────────────────────────────────────────────────────────────────────── -->
+
+<p-toast position="top-right" />
+
+<div class="asg-page">
+
+<!-- ── Encabezado ───────────────────────────────────────────────────────── -->
+    <header class="asg-header">
+        <div class="asg-header__icon">
+        <i class="pi pi-user-plus"></i>
+        </div>
+        <div class="asg-header__text">
+        <h1 class="asg-header__title">Asignación de Bienes</h1>
+        <p class="asg-header__subtitle">
+            Registra el resguardante responsable de un bien institucional
+        </p>
+        </div>
+    </header>
+
+<!-- ── Layout principal (dos paneles) ───────────────────────────────────── -->
+  <div class="asg-layout">
+
+    <!-- ══ PANEL IZQUIERDO — Búsqueda + Preview ══════════════════════════ -->
+    <section class="asg-panel asg-panel--asset">
+
+      <!-- Paso 1: búsqueda por código -->
+      <div class="asg-section-label">
+        <span class="asg-step-badge">1</span>
+        <span>Localiza el bien</span>
+      </div>
+
+      <form [formGroup]="lookupForm" (ngSubmit)="onLookup()" class="asg-lookup-form" novalidate>
+        <div class="asg-field">
+          <label class="asg-label" for="lookup-code">
+            Número de inventario o código de barras
+          </label>
+          <div class="asg-lookup-row">
+            <div class="asg-input-wrap" [class.asg-input-wrap--error]="codeControl.invalid && codeControl.touched">
+              <i class="pi pi-search asg-input-icon"></i>
+              <input
+                pInputText
+                id="lookup-code"
+                formControlName="code"
+                class="asg-input asg-input--with-icon"
+                placeholder="Ej. INV-2026-001 o escanea el código"
+                autocomplete="off"
+              />
+            </div>
+            <button
+              pButton
+              type="submit"
+              icon="pi pi-search"
+              label="Buscar"
+              class="asg-btn asg-btn--primary"
+              [loading]="lookingUp()"
+              [disabled]="lookupForm.invalid || lookingUp()"
+            ></button>
+          </div>
+          @if (codeControl.invalid && codeControl.touched) {
+            <span class="asg-field-error">
+              <i class="pi pi-exclamation-circle"></i> El código es obligatorio
+            </span>
+          }
+        </div>
+      </form>
+
+      <!-- Error de búsqueda -->
+      @if (lookupError()) {
+        <div class="asg-alert asg-alert--error">
+          <i class="pi pi-times-circle"></i>
+          <span>{{ lookupError() }}</span>
+        </div>
+      }
+
+      <!-- Skeleton mientras busca -->
+      @if (lookingUp()) {
+        <div class="asg-asset-card asg-asset-card--skeleton">
+          <p-skeleton height="1.25rem" width="60%" styleClass="asg-skeleton" />
+          <p-skeleton height="1rem" width="40%" styleClass="asg-skeleton" />
+          <p-skeleton height="1rem" width="80%" styleClass="asg-skeleton" />
+          <p-skeleton height="1rem" width="50%" styleClass="asg-skeleton" />
+        </div>
+      }
+
+      <!-- Tarjeta del bien encontrado -->
+      @if (assetPreview(); as asset) {
+        <div class="asg-asset-card" [@fadeIn]>
+          <div class="asg-asset-card__header">
+            <div class="asg-asset-card__number">
+              <i class="pi pi-box"></i>
+              {{ asset.inventoryNumber }}
+            </div>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-times"
+              class="asg-btn-icon"
+              pTooltip="Limpiar búsqueda"
+              tooltipPosition="left"
+              (click)="clearLookup()"
+            ></button>
+          </div>
+
+        <h3 class="asg-asset-card__desc">{{ asset.description }}</h3>
+
+            <div class="asg-asset-card__meta">
+                @if (asset.brand || asset.model) {
+                <div class="asg-meta-row">
+                    <span class="asg-meta-label"><i class="pi pi-tag"></i> Marca/Modelo</span>
+                    <span class="asg-meta-value">{{ asset.brand }} {{ asset.model }}</span>
+                </div>
+                }
+                <div class="asg-meta-row">
+                <span class="asg-meta-label"><i class="pi pi-folder"></i> Categoría</span>
+                <span class="asg-meta-value">{{ asset.categoryName }}</span>
+                </div>
+                <div class="asg-meta-row">
+                    <span class="asg-meta-label"><i class="pi pi-map-marker"></i> Ubicación actual</span>
+                    <span class="asg-meta-value">{{ asset.locationName }}</span>
+                </div>
+            </div>
+
+            <div class="asg-asset-card__tags">
+                <p-tag
+                [value]="getConditionLabel(asset.conditionStatus)"
+                [severity]="getConditionSeverity(asset.conditionStatus)"
+                styleClass="asg-tag"
+                />
+                <p-tag
+                [value]="getLifecycleLabel(asset.lifecycleStatus)"
+                [severity]="getLifecycleSeverity(asset.lifecycleStatus)"
+                styleClass="asg-tag"
+                />
+            </div>
+
+          @if (asset.lifecycleStatus === 'ASSIGNED') {
+            <div class="asg-alert asg-alert--warn">
+              <i class="pi pi-info-circle"></i>
+              <span>Este bien ya tiene una asignación activa. Registrar una nueva la reemplazará.</span>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Estado vacío inicial -->
+      @if (!assetPreview() && !lookingUp() && !lookupError()) {
+        <div class="asg-empty-hint">
+          <i class="pi pi-qrcode asg-empty-hint__icon"></i>
+          <p>Ingresa el número de inventario o escanea el código de barras del bien para comenzar</p>
+        </div>
+      }
+
+    </section>
+
+    <!-- ══ PANEL DERECHO — Formulario de asignación ═══════════════════════ -->
+    <section class="asg-panel asg-panel--form" [class.asg-panel--disabled]="!assetPreview()">
+
+      <div class="asg-section-label">
+        <span class="asg-step-badge" [class.asg-step-badge--inactive]="!assetPreview()">2</span>
+        <span>Datos de la asignación</span>
+      </div>
+
+      @if (!assetPreview()) {
+        <div class="asg-form-overlay">
+          <i class="pi pi-lock"></i>
+          <p>Primero busca y selecciona un bien</p>
+        </div>
+      }
+
+      <form
+        [formGroup]="assignmentForm"
+        (ngSubmit)="onSubmit()"
+        class="asg-form"
+        [class.asg-form--locked]="!assetPreview()"
+        novalidate
+      >
+        <!-- Resguardante -->
+        <div class="asg-field">
+          <label class="asg-label" for="guardian-select">
+            Resguardante <span class="asg-required">*</span>
+          </label>
+          @if (loadingCatalogs()) {
+            <p-skeleton height="2.5rem" styleClass="asg-skeleton" />
+          } @else {
+            <p-select
+              inputId="guardian-select"
+              formControlName="guardianId"
+              [options]="guardians()"
+              optionLabel="fullName"
+              optionValue="id"
+              placeholder="Selecciona un resguardante"
+              styleClass="asg-select"
+              [filter]="true"
+              filterPlaceholder="Buscar resguardante..."
+              [showClear]="true"
+              appendTo="body"
+            >
+              <ng-template pTemplate="item" let-g>
+                <div class="asg-select-item">
+                  <span class="asg-select-item__name">{{ g.fullName }}</span>
+                  <span class="asg-select-item__sub">{{ g.employeeNumber }} — {{ g.department }}</span>
+                </div>
+              </ng-template>
+            </p-select>
+          }
+          @if (isFieldInvalid(assignmentForm, 'guardianId')) {
+            <span class="asg-field-error">
+              <i class="pi pi-exclamation-circle"></i> Selecciona un resguardante
+            </span>
+          }
+        </div>
+
+        <!-- Ubicación de destino -->
+        <div class="asg-field">
+          <label class="asg-label" for="location-select">
+            Ubicación de destino <span class="asg-required">*</span>
+          </label>
+          @if (loadingCatalogs()) {
+            <p-skeleton height="2.5rem" styleClass="asg-skeleton" />
+          } @else {
+            <p-select
+              inputId="location-select"
+              formControlName="locationId"
+              [options]="locations()"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Selecciona una ubicación"
+              styleClass="asg-select"
+              [filter]="true"
+              filterPlaceholder="Buscar ubicación..."
+              [showClear]="true"
+              appendTo="body"
+            >
+              <ng-template pTemplate="item" let-loc>
+                <div class="asg-select-item">
+                  <span class="asg-select-item__name">{{ loc.name }}</span>
+                  <span class="asg-select-item__sub">{{ loc.building }} — {{ loc.campus }}</span>
+                </div>
+              </ng-template>
+            </p-select>
+          }
+          @if (isFieldInvalid(assignmentForm, 'locationId')) {
+            <span class="asg-field-error">
+              <i class="pi pi-exclamation-circle"></i> Selecciona una ubicación
+            </span>
+          }
+        </div>
+
+        <!-- Notas opcionales -->
+        <div class="asg-field">
+          <label class="asg-label" for="notes-input">
+            Notas <span class="asg-optional">(opcional)</span>
+          </label>
+          <textarea
+            pTextarea
+            id="notes-input"
+            formControlName="notes"
+            class="asg-textarea"
+            rows="3"
+            placeholder="Observaciones sobre la entrega, condiciones del bien, etc."
+            maxlength="500"
+          ></textarea>
+          <span class="asg-char-count">
+            {{ assignmentForm.get('notes')?.value?.length ?? 0 }}/500
+          </span>
+        </div>
+
+        <p-divider />
+
+        <!-- Acciones -->
+        <div class="asg-actions">
+          <button
+            pButton
+            type="button"
+            icon="pi pi-times"
+            label="Cancelar"
+            class="asg-btn asg-btn--secondary"
+            (click)="clearLookup()"
+            [disabled]="submitting()"
+          ></button>
+          <button
+            pButton
+            type="submit"
+            icon="pi pi-check"
+            label="Registrar asignación"
+            class="asg-btn asg-btn--primary"
+            [loading]="submitting()"
+            [disabled]="!assetPreview() || submitting()"
+          ></button>
+        </div>
+
+      </form>
+    </section>
+
+  </div><!-- /.asg-layout -->
+</div><!-- /.asg-page -->
