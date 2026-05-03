@@ -1,56 +1,73 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // asset-assignment.model.ts
-// Modelos, DTOs e interfaces del módulo de asignaciones de bienes.
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── Request ──────────────────────────────────────────────────────────────────
 
 export interface AssetAssignmentRequestDTO {
-    assetId: number;
-    guardianId: number;
-    locationId: number;
-    assignedBy: number;   // temporal — será reemplazado por el JWT
-    notes?: string;
+  assetId: number;
+  guardianId: number;
+  locationId: number;
+  assignedById: number;   // temporal — reemplazar por JWT
+  notes?: string;
 }
 
 // ── Response ─────────────────────────────────────────────────────────────────
 
 export interface AssetAssignmentResponseDTO {
-    id: number;
-    assetInventoryNumber: string;
-    assetDescription: string;
-    guardianName: string;
-    locationName: string;
-    notes: string;
-    assignedAt: string;   // ISO datetime
-    returnedAt: string | null;
+  id: number;
+  assetInventoryNumber: string;
+  assetDescription: string;
+  guardianName: string;
+  locationName: string;
+  notes: string;
+  assignedAt: string;
+  returnedAt: string | null;
 }
 
-// ── Catálogos (para poblar los selects del formulario) ───────────────────────
+// ── Catálogos ─────────────────────────────────────────────────────────────────
 
 export interface GuardianOption {
-    id: number;
-    fullName: string;
-    employeeNumber: string;
-    department: string;
+  id: number;
+  fullName: string;
+  employeeNumber: string;
+  department: string;
 }
 
 export interface LocationOption {
-    id: number;
-    name: string;
-    building: string;
-    campus: string;
+  id: number;
+  name: string;
+  building: string;
+  campus: string;
 }
 
-/** Resultado del endpoint /v1/assets/lookup usado para previsualizar el bien */
-export interface AssetPreview {
-    id: number;
-    inventoryNumber: string;
-    description: string;
-    brand: string;
-    model: string;
-    conditionStatus: string;
-    lifecycleStatus: string;
-    locationName: string;
-    categoryName: string;
+// ── Búsqueda de bienes ───────────────────────────────────────────────────────
+
+/**
+ * Mapea AssetSearchResponseDTO del backend.
+ * Resultado del endpoint GET /v1/assets/search?keyword=...
+ * Incluye el resguardante activo y la ubicación actual.
+ */
+export interface AssetSearchResult {
+  id: number;
+  inventoryNumber: string;
+  description: string;
+  brand: string;
+  model: string;
+  categoryName: string;
+  conditionStatus: string;            // GOOD | REGULAR | BAD
+  lifecycleStatus: string;            // REGISTERED | AVAILABLE | ASSIGNED | ...
+  locationName: string;
+  currentGuardianName: string | null; // null si no tiene asignación activa
+}
+
+/** Wrapper Spring Page<T> */
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
 }

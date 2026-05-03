@@ -1,22 +1,18 @@
 import { inject, Injectable } from '@angular/core';
-import { AssetAssignmentRequestDTO, AssetAssignmentResponseDTO, AssetPreview, GuardianOption, LocationOption } from '../../models/asset-assignment.model';
-import { Observable } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
+import { AssetAssignmentRequestDTO, AssetAssignmentResponseDTO, AssetSearchResult, GuardianOption, LocationOption, PageResponse } from '../../models/asset-assignment.model';
+import { map, Observable } from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
 
-// En tu proyecto real, importa desde environments/environment.ts
 const API_BASE_URL = 'http://localhost:8080';
-
+ 
 @Injectable({ providedIn: 'root' })
 export class AssetAssignmentService {
-
+ 
   private readonly http = inject(HttpClient);
-
+ 
   // ── Asignaciones ───────────────────────────────────────────────────────────
-
-  /**
-   * Crea una nueva asignación de bien a resguardante.
-   * POST /api/v1/assignments
-   */
+ 
+  /** POST /api/v1/assignments */
   createAssignment(request: AssetAssignmentRequestDTO): Observable<AssetAssignmentResponseDTO> {
     return this.http.post<AssetAssignmentResponseDTO>(
       `${API_BASE_URL}/v1/assignments`,
@@ -24,32 +20,44 @@ export class AssetAssignmentService {
     );
   }
  
-  // ── Catálogos ──────────────────────────────────────────────────────────────
+  // ── Búsqueda de bienes ────────────────────────────────────────────────────
  
   /**
-   * Busca un bien por código (inventario o código de barras).
-   * GET /v1/assets/lookup?q={code}
+   * Búsqueda paginada por nombre, marca, categoría, número de inventario, etc.
+   * GET /v1/assets/search?keyword=...&page=0&size=8
+   * Retorna AssetSearchResponseDTO con currentGuardianName incluido.
    */
-  lookupAsset(code: string): Observable<{ data: AssetPreview }> {
-    return this.http.get<{ data: AssetPreview }>(
-      `${API_BASE_URL}/v1/assets/lookup`,
-      { params: { q: code } }
+  searchAssets(
+    keyword: string,
+    page = 0,
+    size = 8
+  ): Observable<PageResponse<AssetSearchResult>> {
+    const params = new HttpParams()
+      .set('keyword', keyword)
+      .set('page', page.toString())
+      .set('size', size.toString());
+ 
+    return this.http.get<PageResponse<AssetSearchResult>>(
+      `${API_BASE_URL}/v1/assets/search`,
+      { params }
     );
   }
  
-  /**
-   * Obtiene la lista de resguardantes disponibles.
-   * GET /api/v1/guardians
-   */
+// ── Catálogos ──────────────────────────────────────────────────────────────
+ 
+  /** GET /api/v1/guardians — todos los activos */
   getGuardians(): Observable<GuardianOption[]> {
-    return this.http.get<GuardianOption[]>(`${API_BASE_URL}/v1/guardians`);
+    const params = new HttpParams().set('size', '500').set('sort', 'fullName,asc');
+    // Le decimos que reciba el PageResponse, y extraemos solo el 'content'
+    return this.http.get<PageResponse<GuardianOption>>(`${API_BASE_URL}/v1/guardians`, { params })
+      .pipe(map(response => response.content));
   }
  
-  /**
-   * Obtiene la lista de ubicaciones disponibles.
-   * GET /api/v1/locations
-   */
+  /** GET /api/v1/locations — todas las activas */
   getLocations(): Observable<LocationOption[]> {
-    return this.http.get<LocationOption[]>(`${API_BASE_URL}/v1/locations`);
+    const params = new HttpParams().set('size', '500').set('sort', 'name,asc');
+    // Hacemos lo mismo para las ubicaciones
+    return this.http.get<PageResponse<LocationOption>>(`${API_BASE_URL}/v1/locations`, { params })
+      .pipe(map(response => response.content));
   }
 }
