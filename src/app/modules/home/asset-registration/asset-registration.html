@@ -20,17 +20,50 @@
       </p>
     </div>
     <div class="ar-header__right">
-      <!--div class="ar-folio-preview">
-        <span class="ar-folio-preview__label">Folio asignado</span>
-        <span class="ar-folio-preview__value">INV-2026-<span class="ar-folio-preview__seq">00001</span></span>
-        <p-tag severity="info" value="Nuevo" styleClass="ar-folio-preview__tag" />
-      </div-->
       <div class="ar-folio-preview">
-        <span class="ar-folio-preview__label">Folio asignado</span>
-        <span class="ar-folio-preview__value">
-          {{ previewInventoryNumber() }}
-        </span>
-        <p-tag severity="info" value="Nuevo" />
+        <div class="ar-folio-preview__top">
+          <span class="ar-folio-preview__label">Número de inventario</span>
+          <button type="button" class="ar-folio-toggle" [class.ar-folio-toggle--active]="useCustomInventoryNumber()"
+            (click)="toggleInventoryMode()"
+            [pTooltip]="useCustomInventoryNumber() ? 'Usar el siguiente número automático' : 'Asignar número manualmente'"
+            tooltipPosition="left">
+            <i class="pi" [class.pi-pencil]="!useCustomInventoryNumber()"
+              [class.pi-undo]="useCustomInventoryNumber()"></i>
+            {{ useCustomInventoryNumber() ? 'Automático' : 'Manual' }}
+          </button>
+        </div>
+
+        @if (!useCustomInventoryNumber()) {
+        <!-- Modo automático: folio siguiente directo del backend -->
+        @if (inventoryNumberLoading()) {
+        <div class="ar-folio-loading">
+          <i class="pi pi-spin pi-spinner"></i>
+          <span>Consultando folio...</span>
+        </div>
+        } @else {
+        <div class="ar-folio-auto">
+          <div class="ar-folio-auto__row ar-folio-auto__row--next">
+            <span class="ar-folio-auto__sublabel">Se asignará</span>
+            <span class="ar-folio-auto__num">{{ nextInventoryNumber() }}</span>
+          </div>
+        </div>
+        }
+        <p-tag severity="info" value="Siguiente disponible" styleClass="ar-folio-preview__tag" />
+        } @else {
+        <!-- Modo manual: input libre -->
+        <input class="ar-folio-preview__input" type="text" placeholder="Ej: INV-2026-00099"
+          [value]="customInventoryNumber()" (input)="customInventoryNumber.set($any($event.target).value.toUpperCase())"
+          maxlength="30" autocomplete="off" />
+        <small class="ar-folio-manual-hint">
+          <i class="pi pi-info-circle"></i>
+          Siguiente automático: <strong>{{ nextInventoryNumber() }}</strong>
+        </small>
+        @if (!customInventoryNumber().trim()) {
+        <p-tag severity="warn" value="Ingresa el número" styleClass="ar-folio-preview__tag" />
+        } @else {
+        <p-tag severity="success" value="Personalizado" styleClass="ar-folio-preview__tag" />
+        }
+        }
       </div>
     </div>
   </div>
@@ -71,7 +104,7 @@
     <div class="ar-step-panel ar-step-panel--enter">
 
       <!-- Sección A: Identificación -->
-      <p-card styleClass="ar-card ar-card--primary" styleClass="margin-bottom: 1.25rem;">
+      <p-card styleClass="ar-card ar-card--primary" class="margin-bottom: 1.25rem;">
         <ng-template #header>
           <div class="ar-card__header">
             <div class="ar-card__header-icon ar-card__header-icon--blue">
@@ -131,39 +164,29 @@
           <!-- Marca -->
           <div class="ar-field">
             <label class="ar-label ar-label--required" for="brand">Marca</label>
-            <p-iconfield>
-              <p-inputicon styleClass="pi pi-building" />
-              <input pInputText id="brand" formControlName="brand" placeholder="Ej: HP, Dell, Samsung..."
-                class="ar-input" [class.ng-invalid]="isFieldInvalid('brand')"
-                [class.ng-dirty]="isFieldInvalid('brand')" />
-            </p-iconfield>
+            <p-select id="brand" formControlName="brand" [options]="brands" optionLabel="name" optionValue="id"
+              placeholder="Selecciona una marca..." [filter]="true" filterPlaceholder="Buscar marca..."
+              [showClear]="true" styleClass="ar-select" [class.ng-invalid]="isFieldInvalid('brand')" />
             @if (isFieldInvalid('brand')) {
             <small class="ar-error">
               <i class="pi pi-exclamation-triangle"></i>
-              La marca es obligatoria.
+              Selecciona una marca.
             </small>
             }
           </div>
 
           <!-- Modelo -->
           <div class="ar-field">
-            <label class="ar-label ar-label--required" for="model">Modelo</label>
+            <label class="ar-label" for="model">Modelo</label>
             <p-iconfield>
               <p-inputicon styleClass="pi pi-server" />
               <input pInputText id="model" formControlName="model" placeholder="Ej: Pavilion 15-eg3010la"
-                class="ar-input" [class.ng-invalid]="isFieldInvalid('model')"
-                [class.ng-dirty]="isFieldInvalid('model')" />
+                class="ar-input" />
             </p-iconfield>
-            @if (isFieldInvalid('model')) {
-            <small class="ar-error">
-              <i class="pi pi-exclamation-triangle"></i>
-              El modelo es obligatorio.
-            </small>
-            }
           </div>
 
           <!-- Número de Serie -->
-          <div class="ar-field">
+          <div class="ar-field ar-field--full">
             <label class="ar-label" for="serial_number">
               Número de serie
               <p-tag value="Equipo de cómputo" severity="secondary" styleClass="ar-label__badge" />
@@ -174,19 +197,6 @@
                 class="ar-input" />
             </p-iconfield>
           </div>
-
-          <!-- Código de Barras -->
-          <!--div class="ar-field">
-            <label class="ar-label" for="barcode">
-              Código de barras
-              <span class="ar-label__optional">(Opcional)</span>
-            </label>
-            <p-iconfield>
-              <p-inputicon styleClass="pi pi-barcode" />
-              <input pInputText id="barcode" formControlName="barcode" placeholder="Escanea o ingresa el código..."
-                class="ar-input" />
-            </p-iconfield>
-          </div-->
         </div>
       </p-card>
 
@@ -205,39 +215,26 @@
         </ng-template>
 
         <div class="ar-grid">
-          <!-- Ubicación -->
+          <!-- Ubicación — fija, no editable -->
           <div class="ar-field">
-            <label class="ar-label" for="location_id">
-              Ubicación física
-              <span class="ar-label__optional">(Opcional)</span>
-            </label>
-            <p-select id="location_id" formControlName="location_id" [options]="locations" optionLabel="name"
-              optionValue="id" placeholder="Selecciona una ubicación" [showClear]="true" [filter]="true"
-              filterPlaceholder="Buscar ubicación..." styleClass="ar-select">
-              <ng-template #item let-loc>
-                <div class="ar-location-option">
-                  <span class="ar-location-option__name">{{ loc.name }}</span>
-                  <span class="ar-location-option__meta">
-                    <i class="pi pi-building"></i> {{ loc.building }}
-                    @if (loc.campus) { · {{ loc.campus }} }
-                  </span>
-                </div>
-              </ng-template>
-            </p-select>
-            <small class="ar-hint">
-              <i class="pi pi-info-circle"></i>
-              Si aún no tiene ubicación asignada, puedes dejarlo vacío.
-            </small>
+            <label class="ar-label">Ubicación física</label>
+            <div class="ar-location-fixed">
+              <i class="pi pi-warehouse ar-location-fixed__icon"></i>
+              <div class="ar-location-fixed__info">
+                <span class="ar-location-fixed__name">{{ DEFAULT_LOCATION_LABEL }}</span>
+                <span class="ar-location-fixed__meta">{{ DEFAULT_LOCATION_CAMPUS }}</span>
+              </div>
+              <i class="pi pi-lock ar-location-fixed__lock"
+                pTooltip="La ubicación de entrada siempre es el almacén general" tooltipPosition="left"></i>
+            </div>
           </div>
 
           <!-- Factura -->
-          <!-- Factura -->
           <div class="ar-field">
-            <label class="ar-label ar-label--required" for="invoice_id">Factura de compra</label>
+            <label class="ar-label" for="invoice_id">Factura de compra</label>
             <p-select id="invoice_id" formControlName="invoice_id" [options]="invoices" optionLabel="invoice_number"
               optionValue="id" placeholder="Selecciona la factura..." [showClear]="true" [filter]="true"
-              filterPlaceholder="Buscar factura..." styleClass="ar-select"
-              [class.ng-invalid]="isFieldInvalid('invoice_id')">
+              filterPlaceholder="Buscar factura..." styleClass="ar-select">
               <ng-template #item let-inv>
                 <div class="ar-invoice-option">
                   <span class="ar-invoice-option__num">{{ inv.invoice_number }}</span>
@@ -245,19 +242,14 @@
                 </div>
               </ng-template>
             </p-select>
-            @if (isFieldInvalid('invoice_id')) {
-            <small class="ar-error">
-              <i class="pi pi-exclamation-triangle"></i>
-              Debes seleccionar una factura.
-            </small>
-            }
+            <!-- Fecha de factura derivada automáticamente -->
             @if (getSelectedInvoice()) {
             <small class="ar-hint ar-hint--invoice-date">
               <i class="pi pi-calendar"></i>
               Fecha de factura: <strong>{{ getSelectedInvoice()!.invoice_date }}</strong>
               · {{ getSelectedInvoice()!.supplier }}
             </small>
-            } @else if (!isFieldInvalid('invoice_id')) {
+            } @else {
             <small class="ar-hint">
               <i class="pi pi-info-circle"></i>
               La fecha se toma automáticamente de la factura seleccionada.
@@ -265,40 +257,40 @@
             }
           </div>
 
-          <!-- Fecha de Entrada — bloqueada, fecha actual automática -->
+          <!-- Fecha de Entrada — editable, con fecha de hoy por defecto -->
           <div class="ar-field ar-field--full">
-            <label class="ar-label" for="entry_date">
+            <label class="ar-label ar-label--required" for="entry_date">
               Fecha de entrada al almacén
-              <p-tag value="Automática" severity="secondary" styleClass="ar-label__badge" />
             </label>
-            <div class="ar-entry-date-display">
-              <i class="pi pi-calendar-clock ar-entry-date-display__icon"></i>
-              <div class="ar-entry-date-display__body">
-                <span class="ar-entry-date-display__value">{{ f['entry_date'].value | date: 'dd/MM/yyyy' }}</span>
-                <span class="ar-entry-date-display__sub">Hoy · Se registra la fecha del sistema automáticamente</span>
-              </div>
-              <i class="pi pi-lock ar-entry-date-display__lock"
-                pTooltip="Este campo se asigna automáticamente con la fecha actual" tooltipPosition="left"></i>
+            <div class="ar-entry-date-row">
+              <p-datepicker id="entry_date" formControlName="entry_date" dateFormat="dd/mm/yy" [showIcon]="true"
+                [showButtonBar]="true" todayButtonStyleClass="ar-datepicker-today-btn" inputStyleClass="ar-input"
+                styleClass="ar-datepicker ar-datepicker--full" [class.ng-invalid]="isFieldInvalid('entry_date')" />
             </div>
+            @if (isFieldInvalid('entry_date')) {
+            <small class="ar-error"><i class="pi pi-exclamation-triangle"></i> La fecha de entrada es requerida.</small>
+            }
+            <small class="ar-hint">
+              <i class="pi pi-calendar"></i>
+              Por defecto es hoy. Puedes ajustarla si el ingreso fue en otra fecha.
+            </small>
           </div>
         </div>
 
         <!-- Info Banner -->
-        <div class="ar-info-banner">
+        <!--div class="ar-info-banner">
           <i class="pi pi-info-circle ar-info-banner__icon"></i>
           <div>
             <strong>Diseño de resguardo:</strong> La asignación a un resguardante se realiza desde el módulo
             <em>Asignaciones</em>, una vez que el bien esté disponible.
           </div>
-        </div>
+        </div-->
 
         <ng-template #footer>
           <div class="ar-card__footer">
             <div></div>
             <p-button label="Siguiente: Evidencia y Confirmación" icon="pi pi-arrow-right" iconPos="right"
-              (onClick)="nextStep()" [disabled]="!canAdvance()" styleClass="ar-btn ar-btn--primary"
-              pTooltip="Completa descripción, categoría, marca, modelo y factura para continuar"
-              [tooltipDisabled]="canAdvance()" tooltipPosition="top" />
+              (onClick)="nextStep()" [disabled]="!canAdvance()" styleClass="ar-btn ar-btn--primary" />
           </div>
         </ng-template>
       </p-card>
@@ -372,28 +364,39 @@
           </ng-template>
 
           <!-- Defaults automáticos -->
-          <!--div class="ar-defaults-banner">
-              <div class="ar-defaults-banner__item ar-defaults-banner__item--green">
-                <i class="pi pi-check-circle"></i>
-                <div>
-                  <span class="ar-defaults-banner__label">Condición física</span>
-                  <span class="ar-defaults-banner__val">Buena</span>
-                </div>
+          <div class="ar-defaults-banner">
+            <div class="ar-defaults-banner__item ar-defaults-banner__item--green">
+              <i class="pi pi-check-circle"></i>
+              <div>
+                <span class="ar-defaults-banner__label">Condición física</span>
+                <span class="ar-defaults-banner__val">Buena</span>
               </div>
-              <div class="ar-defaults-banner__item ar-defaults-banner__item--blue">
-                <i class="pi pi-tag"></i>
-                <div>
-                  <span class="ar-defaults-banner__label">Ciclo de vida</span>
-                  <span class="ar-defaults-banner__val">Registrado</span>
-                </div>
+            </div>
+            <div class="ar-defaults-banner__item ar-defaults-banner__item--blue">
+              <i class="pi pi-tag"></i>
+              <div>
+                <span class="ar-defaults-banner__label">Ciclo de vida</span>
+                <span class="ar-defaults-banner__val">Registrado</span>
               </div>
-            </!--div-->
+            </div>
+          </div>
 
           <p-divider align="left">
             <span class="ar-divider-label"><i class="pi pi-clipboard"></i> Datos capturados</span>
           </p-divider>
 
           <div class="ar-summary">
+            <div class="ar-summary__row ar-summary__row--folio">
+              <span class="ar-summary__key">N.° de inventario</span>
+              <span class="ar-summary__val ar-summary__val--folio">
+                {{ displayInventoryNumber }}
+                @if (useCustomInventoryNumber()) {
+                <p-tag value="Manual" severity="warn" styleClass="ar-summary__folio-tag" />
+                } @else {
+                <p-tag value="Auto" severity="info" styleClass="ar-summary__folio-tag" />
+                }
+              </span>
+            </div>
             <div class="ar-summary__row">
               <span class="ar-summary__key">Descripción</span>
               <span class="ar-summary__val">{{ f['description'].value || '—' }}</span>
@@ -405,7 +408,7 @@
             <div class="ar-summary__row">
               <span class="ar-summary__key">Marca / Modelo</span>
               <span class="ar-summary__val">
-                {{ f['brand'].value || '—' }}{{ f['model'].value ? ' / ' + f['model'].value : '' }}
+                {{ getBrandName(f['brand'].value) }}{{ f['model'].value ? ' / ' + f['model'].value : '' }}
               </span>
             </div>
             <div class="ar-summary__row">
@@ -413,12 +416,8 @@
               <span class="ar-summary__val">{{ f['serial_number'].value || '—' }}</span>
             </div>
             <div class="ar-summary__row">
-              <span class="ar-summary__key">Código de barras</span>
-              <span class="ar-summary__val">{{ f['barcode'].value || '—' }}</span>
-            </div>
-            <div class="ar-summary__row">
               <span class="ar-summary__key">Ubicación</span>
-              <span class="ar-summary__val">{{ getLocationName(f['location_id'].value) }}</span>
+              <span class="ar-summary__val">{{ DEFAULT_LOCATION_LABEL }} — {{ DEFAULT_LOCATION_CAMPUS }}</span>
             </div>
             <div class="ar-summary__row">
               <span class="ar-summary__key">Factura</span>
@@ -432,8 +431,7 @@
             }
             <div class="ar-summary__row">
               <span class="ar-summary__key">Fecha de entrada</span>
-              <span class="ar-summary__val">{{ f['entry_date'].value | date: 'dd/MM/yyyy' }} <em
-                  class="ar-summary__auto">(hoy)</em></span>
+              <span class="ar-summary__val">{{ f['entry_date'].value | date: 'dd/MM/yyyy' }}</span>
             </div>
             <div class="ar-summary__row">
               <span class="ar-summary__key">Imágenes adjuntas</span>

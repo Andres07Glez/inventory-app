@@ -2,9 +2,10 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { environment } from '../../config/enviroment';
+import { environment } from '../../config/environment';
 
 export interface AssetRequest {
+  inventoryNumber?: string;  // ← agrega esta línea
   description: string;
   brand?: string;
   model?: string;
@@ -45,11 +46,29 @@ export interface Location {
   campus?: string;
 }
 
+/*export interface Invoice {
+  id: number;
+  invoiceNumber: string;
+  supplier?: string;
+  invoiceDate: string;
+}*/
+
 export interface Invoice {
   id: number;
   invoiceNumber: string;
   supplier?: string;
   invoiceDate: string;
+  totalAmount?: number;
+  documentPath?: string;
+  notes?: string;
+  createdAt: string;
+  createdByName?: string;
+}
+
+export interface Brand {
+  id: number;
+  name: string;
+  isActive: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -89,6 +108,12 @@ export class AssetService {
   getNextFolio(): Observable<string> {
     return this.http
       .get<{ success: boolean; data: string }>(`${this.base}/assets/next-folio`)
+      .pipe(map(res => res.data));
+  }
+
+  getBrands(): Observable<Brand[]> {
+    return this.http
+      .get<{ success: boolean; data: Brand[] }>(`${this.base}/catalogs/brands`)
       .pipe(map(res => res.data));
   }
 }

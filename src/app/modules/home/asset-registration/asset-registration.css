@@ -510,7 +510,198 @@
   cursor: default;
 }
 
+/* ── Folio preview (con toggle manual/auto) ────────── */
+.ar-folio-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  background: var(--ar-blue-lt);
+  border: 1px solid #bfdbfe;
+  border-radius: var(--ar-radius);
+  padding: 0.75rem 1.25rem;
+  min-width: 230px;
+}
+.ar-folio-preview__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.5rem;
+}
+.ar-folio-preview__label {
+  font-size: 0.75rem;
+  color: var(--ar-blue);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.ar-folio-preview__value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ar-text);
+  font-family: 'Courier New', monospace;
+  align-self: flex-end;
+}
+.ar-folio-preview__input {
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  color: var(--ar-text);
+  background: white;
+  border: 1.5px solid var(--ar-blue);
+  border-radius: var(--ar-radius-sm);
+  padding: 0.3rem 0.6rem;
+  width: 100%;
+  outline: none;
+  text-align: right;
+}
+.ar-folio-preview__input:focus {
+  box-shadow: 0 0 0 3px #bfdbfe;
+}
+.ar-folio-preview__input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+/* Toggle btn del folio */
+.ar-folio-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 99px;
+  border: 1.5px solid #93c5fd;
+  background: white;
+  color: var(--ar-blue);
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+.ar-folio-toggle:hover { background: #dbeafe; }
+.ar-folio-toggle--active {
+  background: var(--ar-blue);
+  color: white;
+  border-color: var(--ar-blue);
+}
+.ar-folio-toggle--active:hover { background: #1d4ed8; }
+
+/* ── Folio auto — último / siguiente ───────────────── */
+.ar-folio-auto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 100%;
+  background: white;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--ar-radius-sm);
+  padding: 0.5rem 0.75rem;
+}
+.ar-folio-auto__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.ar-folio-auto__sublabel {
+  font-size: 0.7rem;
+  color: var(--ar-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+.ar-folio-auto__num {
+  font-family: 'Courier New', monospace;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ar-blue);
+}
+.ar-folio-auto__num--muted {
+  color: #94a3b8;
+  font-weight: 500;
+  font-size: 0.85rem;
+  text-decoration: line-through;
+  text-decoration-color: #cbd5e1;
+}
+.ar-folio-auto__divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 0.1rem 0;
+}
+.ar-folio-manual-hint {
+  font-size: 0.75rem;
+  color: var(--ar-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  width: 100%;
+  justify-content: flex-end;
+}
+.ar-folio-manual-hint strong { color: var(--ar-text); }
+
+/* ── Ubicación fija (sin edición) ──────────────────── */
+.ar-location-fixed {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--ar-teal-lt);
+  border: 1.5px solid #99f6e4;
+  border-radius: var(--ar-radius-sm);
+  padding: 0.65rem 0.9rem;
+}
+.ar-location-fixed__icon {
+  font-size: 1.2rem;
+  color: var(--ar-teal);
+  flex-shrink: 0;
+}
+.ar-location-fixed__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  flex: 1;
+}
+.ar-location-fixed__name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ar-text);
+}
+.ar-location-fixed__meta {
+  font-size: 0.75rem;
+  color: var(--ar-muted);
+}
+.ar-location-fixed__lock {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  flex-shrink: 0;
+  cursor: default;
+}
+
 /* ── Invoice date hint ─────────────────────────────── */
+.ar-entry-date-row { width: 100%; }
+:host ::ng-deep .ar-datepicker--full { width: 100%; }
+:host ::ng-deep .ar-datepicker--full .p-datepicker { width: 100%; }
+:host ::ng-deep .ar-datepicker--full .p-datepicker-input { width: 100%; }
+
+/* ── Summary folio row ─────────────────────────────── */
+.ar-summary__row--folio {
+  background: var(--ar-blue-lt);
+  border-radius: var(--ar-radius-sm);
+  padding: 0.45rem 0.6rem;
+  border-bottom: none !important;
+  margin-bottom: 0.25rem;
+}
+.ar-summary__val--folio {
+  font-family: 'Courier New', monospace;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+:host ::ng-deep .ar-summary__folio-tag.p-tag { font-size: 0.65rem; padding: 0.1rem 0.35rem; }
+
+
 .ar-hint--invoice-date {
   color: var(--ar-teal);
   font-weight: 500;

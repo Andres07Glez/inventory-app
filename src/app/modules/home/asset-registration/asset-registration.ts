@@ -1,7 +1,9 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AssetService } from '../../../core/service/asset.service';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
+import { catchError, of } from 'rxjs';
+//import { AssetService } from '../'; // ajusta la ruta según tu estructura
+import { AssetService } from '../../../core/service/asset.service';
 
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
@@ -62,6 +64,12 @@ interface LifecycleOption {
   description: string;
 }
 
+interface Brand {
+  id: number;
+  name: string;
+  isActive: boolean;
+}
+
 // ─── Component ────────────────────────────────────────────
 @Component({
   selector: 'app-asset-registration',
@@ -99,6 +107,7 @@ export class AssetRegistration implements OnInit {
   // ── Stepper state
   activeStep = signal(0);
   totalSteps = 2;
+  readonly DEFAULT_LOCATION_ID = 3; // ID del Almacén General en la BD
 
   progressValue = computed(() => ((this.activeStep() + 1) / this.totalSteps) * 100);
 
@@ -107,38 +116,97 @@ export class AssetRegistration implements OnInit {
 
   // ── Upload state
   uploadedImages: File[] = [];
-  maxImages = 3;
+  maxImages = 5;
 
-  // ── Generated inventory number (preview)
-  previewInventoryNumber = signal('INV-2026-XXXXX');
+  // ── Número de inventario — consumido desde AssetService
+  nextInventoryNumber = signal<string>('…');
+  inventoryNumberLoading = signal(true);
+
+  useCustomInventoryNumber = signal(false);
+  customInventoryNumber = signal('');
+
+  get displayInventoryNumber(): string {
+    if (this.useCustomInventoryNumber() && this.customInventoryNumber().trim()) {
+      return this.customInventoryNumber().trim();  // número que escribió el usuario
+    }
+    return this.nextInventoryNumber();  // número automático del backend
+  }
+
+  toggleInventoryMode() {
+    this.useCustomInventoryNumber.update(v => !v);
+    if (!this.useCustomInventoryNumber()) {
+      this.customInventoryNumber.set('');
+    }
+  }
+
+  private loadNextFolio(): void {
+    this.inventoryNumberLoading.set(true);
+    this.assetService.getNextFolio()
+      .pipe(catchError(() => of(null)))
+      .subscribe(folio => {
+        this.inventoryNumberLoading.set(false);
+        this.nextInventoryNumber.set(folio ?? 'Sin conexión');
+      });
+  }
+
+  private loadCatalogs(): void {
+    // Categorías
+    this.assetService.getCategories().pipe(catchError(() => of([]))).subscribe(data => {
+      this.categories = data.map(c => ({
+        id: c.id,
+        name: c.name,
+        description: c.description,
+        parent_id: c.parent?.id ?? null
+      }));
+    });
+
+    // Facturas
+    this.assetService.getInvoices().pipe(catchError(() => of([]))).subscribe(data => {
+      this.invoices = data.map(i => ({
+        id: i.id,
+        invoice_number: i.invoiceNumber,
+        supplier: i.supplier,
+        invoice_date: i.invoiceDate
+      }));
+    });
+
+    // Marcas
+    this.assetService.getBrands().pipe(catchError(() => of([]))).subscribe(data => {
+      this.brands = data;
+    });
+  }
+
+  // ── Ubicación fija: Almacén General — Campus Central
+  // No es editable por el usuario; se envía siempre este valor al backend
+  readonly DEFAULT_LOCATION_LABEL = 'Almacén General';
+  readonly DEFAULT_LOCATION_CAMPUS = 'Campus Central';
+
+  brands: Brand[] = [];
 
   // ── Catalog Data (mock — en producción vendrían de un servicio)
   categories: Category[] = [
-    { id: 1, name: 'Bienes Muebles', description: 'Mobiliario en general', parent_id: null },
+    /*{ id: 1, name: 'Bienes Muebles', description: 'Mobiliario en general', parent_id: null },
     { id: 2, name: 'Equipo de Cómputo', description: 'Computadoras y componentes', parent_id: null },
     { id: 3, name: 'Licencias de Software', description: 'Licencias físicas y electrónicas', parent_id: null },
     { id: 4, name: 'Climatización', description: 'Aires acondicionados y equipo de clima', parent_id: null },
     { id: 5, name: 'Equipo de Laboratorio', description: 'Instrumental y equipo especializado', parent_id: null },
     { id: 6, name: 'CPUs y Servidores', description: 'Unidades centrales y servidores', parent_id: 2 },
     { id: 7, name: 'Periféricos', description: 'Mouse, teclado, monitor, impresoras, etc.', parent_id: 2 },
-    { id: 8, name: 'Laptops', description: 'Equipos portátiles', parent_id: 2 },
+    { id: 8, name: 'Laptops', description: 'Equipos portátiles', parent_id: 2 },*/
   ];
 
   locations: Location[] = [
-    { id: 1, name: 'Laboratorio de Software', building: 'Edificio de Computacion', campus: 'Loma Bonita' },
-    { id: 2, name: 'Laboratorio Quimico - Biologico', building: 'Laboratorio Quimico', campus: 'Loma Bonita' },
-    { id: 3, name: 'Auditorio', building: '', campus: 'Loma Bonita' },
-    { id: 1, name: 'Laboratorio de Cómputo A', building: 'Edificio TI', campus: 'Campus Central' },
+    /*{ id: 1, name: 'Laboratorio de Cómputo A', building: 'Edificio TI', campus: 'Campus Central' },
     { id: 2, name: 'Sala de Servidores', building: 'Edificio TI', campus: 'Campus Central' },
     { id: 3, name: 'Aula Magna', building: 'Edificio Académico', campus: 'Campus Central' },
     { id: 4, name: 'Biblioteca', building: 'Edificio Cultural', campus: 'Campus Central' },
-    { id: 5, name: 'Bodega Principal', building: 'Almacén', campus: 'Campus Central' },
+    { id: 5, name: 'Bodega Principal', building: 'Almacén', campus: 'Campus Central' },*/
   ];
 
   invoices: Invoice[] = [
-    { id: 1, invoice_number: 'FAC-2026-001', supplier: 'Dell México S.A.', invoice_date: '2026-01-15' },
+    /*{ id: 1, invoice_number: 'FAC-2026-001', supplier: 'Dell México S.A.', invoice_date: '2026-01-15' },
     { id: 2, invoice_number: 'FAC-2026-002', supplier: 'HP Inc.', invoice_date: '2026-02-10' },
-    { id: 3, invoice_number: 'FAC-2026-003', supplier: 'Office Depot', invoice_date: '2026-03-05' },
+    { id: 3, invoice_number: 'FAC-2026-003', supplier: 'Office Depot', invoice_date: '2026-03-05' },*/
   ];
 
   conditionOptions: ConditionOption[] = [
@@ -166,61 +234,16 @@ export class AssetRegistration implements OnInit {
     { label: 'Disponible', value: 'AVAILABLE' },
   ];
 
-  //constructor(private fb: FormBuilder, private messageService: MessageService) {}
   constructor(
     private fb: FormBuilder,
     private messageService: MessageService,
-    private assetService: AssetService   // ← inyecta el servicio
+    private assetService: AssetService,
   ) { }
 
   ngOnInit() {
     this.buildForm();
-    this.loadCatalogs();   // ← carga catálogos reales al iniciar
-    this.loadNextFolio();   // ← agrega esto
-  }
-
-  loadNextFolio() {
-    this.assetService.getNextFolio().subscribe({
-      next: (folio) => this.previewInventoryNumber.set(folio),
-      error: () => this.previewInventoryNumber.set('INV-2026-?????')
-    });
-  }
-
-  loadCatalogs() {
-    this.assetService.getCategories().subscribe({
-      next: (data) => {
-        // Adapta la respuesta del backend al formato que espera el template
-        this.categories = data.map(c => ({
-          id: c.id,
-          name: c.name,
-          description: c.description,
-          parent_id: c.parent?.id ?? null
-        }));
-      },
-      error: () => this.messageService.add({
-        severity: 'warn',
-        summary: 'Aviso',
-        detail: 'No se pudieron cargar las categorías.'
-      })
-    });
-
-    this.assetService.getLocations().subscribe({
-      next: (data) => { this.locations = data; },
-      error: () => { }
-    });
-
-    this.assetService.getInvoices().subscribe({
-      next: (data) => {
-        // Adapta camelCase del backend al snake_case que usa el template
-        this.invoices = data.map(i => ({
-          id: i.id,
-          invoice_number: i.invoiceNumber,
-          supplier: i.supplier,
-          invoice_date: i.invoiceDate
-        }));
-      },
-      error: () => { }
-    });
+    this.loadNextFolio();
+    this.loadCatalogs();
   }
 
   // ── Build Form
@@ -228,19 +251,17 @@ export class AssetRegistration implements OnInit {
     this.form = this.fb.group({
       // Step 1 — Identificación
       description: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(500)]],
-      brand: ['', Validators.required],
-      model: ['', Validators.required],
+      brand: [null, Validators.required],
+      model: [''],
       serial_number: [''],
-      barcode: [''],
       category_id: [null, Validators.required],
 
       // Step 1 — Ubicación y Fechas
-      location_id: [null],
-      invoice_id: [null, Validators.required],
-      // invoice_date se toma directamente de la factura seleccionada, no se captura aquí
-      entry_date: [{ value: new Date(), disabled: true }, Validators.required],
+      // location_id no es campo del form: siempre se envía el valor por defecto (DEFAULT_LOCATION_LABEL)
+      invoice_id: [null],
+      entry_date: [new Date(), Validators.required],
 
-      // Step 3 — Estado
+      // Defaults automáticos
       condition_status: ['GOOD', Validators.required],
       lifecycle_status: ['REGISTERED', Validators.required],
       notes: [''],
@@ -269,21 +290,8 @@ export class AssetRegistration implements OnInit {
   }
 
   nextStep() {
-    if (this.activeStep() < this.totalSteps - 1) {
-      if (this.canAdvance()) {
-        this.activeStep.update((s) => s + 1);
-      } else {
-        // Marca los campos obligatorios del step 0 como tocados para mostrar errores
-        ['description', 'category_id', 'brand', 'model', 'invoice_id'].forEach(field => {
-          this.form.get(field)?.markAsTouched();
-        });
-        this.messageService.add({
-          severity: 'warn',
-          summary: 'Campos incompletos',
-          detail: 'Completa todos los campos requeridos para continuar.',
-          life: 4000
-        });
-      }
+    if (this.canAdvance() && this.activeStep() < this.totalSteps - 1) {
+      this.activeStep.update((s) => s + 1);
     }
   }
 
@@ -297,12 +305,11 @@ export class AssetRegistration implements OnInit {
     const step = this.activeStep();
     if (step === 0) {
       return (
-        !!this.form.get('description')?.value &&
         !this.isFieldInvalid('description') &&
+        !!this.form.get('description')?.value &&
+        !this.isFieldInvalid('category_id') &&
         !!this.form.get('category_id')?.value &&
-        !!this.form.get('brand')?.value &&
-        !!this.form.get('model')?.value &&
-        !!this.form.get('invoice_id')?.value
+        !!this.form.get('brand')?.value
       );
     }
     return true;
@@ -341,9 +348,9 @@ export class AssetRegistration implements OnInit {
     return this.categories.find((c) => c.id === id)?.name ?? '—';
   }
 
-  getLocationName(id: number | null): string {
-    if (!id) return 'Sin asignar';
-    return this.locations.find((l) => l.id === id)?.name ?? '—';
+  getBrandName(id: number | null): string {
+    if (!id) return '—';
+    return this.brands.find(b => b.id === id)?.name ?? '—';
   }
 
   getInvoiceLabel(id: number | null): string {
@@ -360,45 +367,56 @@ export class AssetRegistration implements OnInit {
   }
 
   // ── Submit
-  // Reemplaza submitForm() completo:
-
   submitForm() {
+    console.log('useCustom:', this.useCustomInventoryNumber());
+    console.log('customNumber:', this.customInventoryNumber());
+    console.log('displayInventoryNumber:', this.displayInventoryNumber);
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.messageService.add({
         severity: 'error',
         summary: 'Formulario incompleto',
-        detail: 'Verifica los campos requeridos antes de guardar.'
+        detail: 'Verifica los campos requeridos antes de guardar.',
       });
       return;
     }
 
     const raw = this.form.getRawValue();
-    const selectedInvoice = this.getSelectedInvoice();
+    const selectedBrand = this.brands.find(b => b.id === raw.brand);
+
+    const inventoryNumber = this.useCustomInventoryNumber() && this.customInventoryNumber().trim()
+      ? this.customInventoryNumber().trim()
+      : this.nextInventoryNumber();
+
+    console.log('invoice_id del form:', raw.invoice_id);
+    console.log('invoiceId en payload:', raw.invoice_id ?? undefined);
+    console.log('invoice seleccionada:', this.getSelectedInvoice());
 
     const payload = {
-      description: raw.description?.trim(),
-      brand: raw.brand || null,
-      model: raw.model || null,
-      serialNumber: raw.serial_number || null,
-      barcode: raw.barcode || null,
-      notes: raw.notes || null,
+      //inventoryNumber: this.displayInventoryNumber,
+      inventoryNumber: inventoryNumber,
+      description: raw.description?.trim().toUpperCase(),
+      brand: selectedBrand?.name ?? undefined,
+      model: raw.model || undefined,
+      serialNumber: raw.serial_number || undefined,
+      barcode: undefined,
+      notes: raw.notes || undefined,
       categoryId: raw.category_id,
-      locationId: raw.location_id ?? null,
-      invoiceId: raw.invoice_id ?? null,
+      locationId: this.DEFAULT_LOCATION_ID,
+      invoiceId: raw.invoice_id ?? undefined,
       entryDate: (raw.entry_date as Date).toISOString().split('T')[0],
       conditionStatus: raw.condition_status
     };
 
     this.assetService.registerAsset(payload).subscribe({
-      next: (res) => {
+      /*next: (res) => {
         this.messageService.add({
           severity: 'success',
           summary: '¡Bien registrado!',
           detail: `Folio asignado: ${res.inventoryNumber}`,
           life: 5000
         });
-        this.loadNextFolio(); // ← refresca el preview para el siguiente bien
+        this.loadNextFolio();
         setTimeout(() => {
           this.form.reset();
           this.form.patchValue({
@@ -406,10 +424,69 @@ export class AssetRegistration implements OnInit {
             condition_status: 'GOOD',
             lifecycle_status: 'REGISTERED'
           });
+          this.useCustomInventoryNumber.set(false);
+          this.customInventoryNumber.set('');
           this.activeStep.set(0);
           this.uploadedImages = [];
         }, 1500);
+      },*/
+      /*next: (res) => {
+        this.messageService.add({
+          severity: 'success',
+          summary: '¡Bien registrado!',
+          detail: `Folio asignado: ${res.inventoryNumber}`,
+          life: 5000
+        });
+
+        // Calcula el siguiente folio desde el inventoryNumber real que retornó el backend
+        const parts = res.inventoryNumber.split('-');
+        if (parts.length === 3) {
+          const year = parts[1];
+          const nextSeq = String(parseInt(parts[2], 10) + 1).padStart(5, '0');
+          this.nextInventoryNumber.set(`INV-${year}-${nextSeq}`);
+        } else {
+          this.loadNextFolio(); // fallback si el formato es inesperado
+        }
+
+        setTimeout(() => {
+          this.form.reset();
+          this.form.patchValue({
+            entry_date: new Date(),
+            condition_status: 'GOOD',
+            lifecycle_status: 'REGISTERED'
+          });
+          this.useCustomInventoryNumber.set(false);
+          this.customInventoryNumber.set('');
+          this.activeStep.set(0);
+          this.uploadedImages = [];
+        }, 1500);
+      },*/
+      next: (res) => {
+        this.messageService.add({
+          severity: 'success',
+          summary: '¡Bien registrado!',
+          detail: `Folio asignado: ${res.inventoryNumber}`,
+          life: 5000
+        });
+
+        setTimeout(() => {
+          this.form.reset();
+          this.form.patchValue({
+            entry_date: new Date(),
+            condition_status: 'GOOD',
+            lifecycle_status: 'REGISTERED'
+          });
+          this.useCustomInventoryNumber.set(false);
+          this.customInventoryNumber.set('');
+          this.activeStep.set(0);
+          this.uploadedImages = [];
+
+          // Se llama aquí adentro para darle tiempo al backend
+          // de confirmar la transacción antes de consultar el siguiente folio
+          this.loadNextFolio();
+        }, 1500);
       },
+
       error: (err) => {
         const msg = err.error?.message ?? 'Ocurrió un error al registrar el bien.';
         this.messageService.add({
