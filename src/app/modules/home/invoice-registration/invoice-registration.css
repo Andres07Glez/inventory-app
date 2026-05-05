@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────
-   marca-registration.css
+   invoice-registration.css
    Variables --ds-* definidas en styles.css (claro/oscuro auto)
    Sobreescrituras PrimeNG encapsuladas con :host ::ng-deep
 ───────────────────────────────────────────────────────── */
@@ -20,7 +20,7 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
-  margin-bottom: 1.75rem;
+  margin-bottom: 1.5rem;
 }
 
 .header-left {
@@ -59,7 +59,63 @@
   font-weight: 400;
 }
 
-/* ── Card ── */
+/* ── Tarjetas de resumen ── */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--ds-surface);
+  border: 1px solid var(--ds-border);
+  border-radius: 12px;
+  padding: 1.1rem 1.35rem;
+  box-shadow: var(--ds-shadow);
+  transition: background .25s, border-color .25s;
+}
+
+.summary-card--accent {
+  border-color: rgba(0, 125, 104, .3);
+  background: rgba(0, 125, 104, .05);
+}
+
+.summary-card__icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 10px;
+  background: rgba(0, 125, 104, .12);
+  color: var(--ds-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.summary-card__value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--ds-text);
+  margin: 0 0 .1rem;
+  letter-spacing: -.01em;
+}
+
+.summary-card__label {
+  font-size: .75rem;
+  color: var(--ds-text-muted);
+  font-family: var(--ds-font-cond);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* ── Card contenedora ── */
 .card {
   background: var(--ds-surface);
   border: 1px solid var(--ds-border);
@@ -104,14 +160,14 @@
 .skeleton-row {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 1rem;
   padding: .9rem 1.25rem;
   border-bottom: 1px solid var(--ds-border);
 }
 
 .skeleton-row:last-child { border-bottom: none; }
 
-/* ── Tabla ── */
+/* ── Celdas de tabla ── */
 .id-cell {
   color: var(--ds-text-muted);
   font-size: .78rem;
@@ -120,18 +176,18 @@
   letter-spacing: .04em;
 }
 
-.brand-name-cell {
+.invoice-number-cell {
   display: flex;
   align-items: center;
-  gap: .6rem;
-  font-weight: 500;
-  font-size: .9rem;
+  gap: .55rem;
+  font-weight: 600;
+  font-size: .875rem;
   color: var(--ds-text);
 }
 
-.brand-avatar {
-  width: 2rem;
-  height: 2rem;
+.invoice-avatar {
+  width: 1.9rem;
+  height: 1.9rem;
   border-radius: 7px;
   background: rgba(0, 125, 104, .10);
   border: 1px solid rgba(0, 125, 104, .2);
@@ -140,6 +196,71 @@
   align-items: center;
   justify-content: center;
   font-size: .75rem;
+  flex-shrink: 0;
+}
+
+.supplier-cell {
+  font-size: .875rem;
+  color: var(--ds-text);
+}
+
+.date-cell {
+  font-size: .875rem;
+  color: var(--ds-text);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.date-cell-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+}
+
+.date-icon {
+  color: var(--ds-text-muted);
+  font-size: .78rem;
+}
+
+.amount-cell { text-align: right; }
+
+.amount-badge {
+  display: inline-block;
+  background: rgba(0, 125, 104, .10);
+  color: var(--ds-primary);
+  border: 1px solid rgba(0, 125, 104, .2);
+  font-size: .8rem;
+  font-weight: 700;
+  font-family: var(--ds-font-cond);
+  padding: .2rem .65rem;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.no-amount {
+  color: var(--ds-text-muted);
+  font-size: .875rem;
+}
+
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .82rem;
+  color: var(--ds-text-muted);
+}
+
+.user-avatar {
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: var(--ds-surface-alt);
+  border: 1px solid var(--ds-border);
+  color: var(--ds-text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .68rem;
   flex-shrink: 0;
 }
 
@@ -183,11 +304,17 @@
 }
 
 /* ── Formulario ── */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
 .field {
   display: flex;
   flex-direction: column;
   gap: .35rem;
-  margin-bottom: .25rem;
+  margin-bottom: .9rem;
 }
 
 .field-label {
@@ -212,12 +339,29 @@
 
 .field-error i { font-size: .72rem; }
 
+.notes-textarea {
+  font-family: var(--ds-font) !important;
+  background: var(--ds-surface-alt) !important;
+  border: none !important;
+  border-bottom: 2px solid var(--ds-text-muted) !important;
+  border-radius: 4px 4px 0 0 !important;
+  color: var(--ds-text) !important;
+  padding: .65rem .75rem !important;
+  resize: vertical;
+}
+
+.notes-textarea:focus {
+  outline: none;
+  border-bottom-color: var(--ds-primary) !important;
+  box-shadow: none !important;
+}
+
 /* ── Pie del diálogo ── */
 .dialog-footer {
   display: flex;
   justify-content: flex-end;
   gap: .65rem;
-  margin-top: 1.5rem;
+  margin-top: .5rem;
   padding-top: 1.1rem;
   border-top: 1px solid var(--ds-border);
 }
@@ -227,6 +371,7 @@
   :host { padding: 1rem; }
   .page-header { flex-direction: column; align-items: flex-start; }
   .toolbar { flex-direction: column; align-items: stretch; }
+  .form-row { grid-template-columns: 1fr; }
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -327,17 +472,21 @@
 }
 :host ::ng-deep .p-dialog .p-dialog-header-icon { color: var(--ds-text-muted) !important; }
 
-/* ── Tag ── */
-:host ::ng-deep .p-tag.p-tag-success {
-  background: rgba(0, 125, 104, .15) !important;
-  color: var(--ds-teal-600) !important;
+/* ── InputNumber ── */
+:host ::ng-deep .p-inputnumber { width: 100%; }
+:host ::ng-deep .p-inputnumber .p-inputtext { width: 100%; }
+
+/* ── DatePicker ── */
+:host ::ng-deep .p-datepicker-input {
+  background: var(--ds-surface-alt) !important;
+  border: none !important;
+  border-bottom: 2px solid var(--ds-text-muted) !important;
+  border-radius: 4px 4px 0 0 !important;
+  color: var(--ds-text) !important;
 }
-:host ::ng-deep .p-tag.p-tag-secondary {
-  background: rgba(127, 127, 127, .15) !important;
-  color: var(--ds-text-muted) !important;
-}
-@media (prefers-color-scheme: dark) {
-  :host ::ng-deep .p-tag.p-tag-success { color: var(--ds-teal-400) !important; }
+:host ::ng-deep .p-datepicker-input:focus {
+  border-bottom-color: var(--ds-primary) !important;
+  box-shadow: none !important;
 }
 
 /* ── Skeleton ── */
