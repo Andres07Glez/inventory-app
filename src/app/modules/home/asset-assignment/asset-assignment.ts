@@ -13,6 +13,7 @@ import { DividerModule } from 'primeng/divider';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
+import { ActivatedRoute, Router } from '@angular/router';
 
 type ConditionStatus = 'GOOD' | 'REGULAR' | 'BAD';
 type LifecycleStatus =
@@ -60,6 +61,8 @@ export class AssetAssignmentComponent implements OnInit {
   private readonly service = inject(AssetAssignmentService);
   private readonly messageService = inject(MessageService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   // ── Estado ────────────────────────────────────────────────────────────────
   assetPreview = signal<AssetPreview | null>(null);
@@ -72,6 +75,7 @@ export class AssetAssignmentComponent implements OnInit {
   locations = signal<LocationOption[]>([]);
   loadingCatalogs = signal(true);
 
+  preloaded       = signal(false);
   // ── Formulario ────────────────────────────────────────────────────────────
 
   /** Paso 1: búsqueda del bien */
@@ -94,6 +98,35 @@ export class AssetAssignmentComponent implements OnInit {
   // ── Ciclo de vida ────────────────────────────────────────────────────────
   ngOnInit(): void {
     this.loadCatalogs();
+    const assetIdParam = this.route.snapshot.queryParamMap.get('assetId');
+    if (assetIdParam) {
+      const assetId = Number(assetIdParam);
+      if (!isNaN(assetId)) {
+        this.preloaded.set(true);
+        this.lookingUp.set(true);
+        // Reutilizamos el lookupAsset del servicio que ya habla con GET /v1/assets/lookup
+        // pero usando el inventoryNumber no disponible aquí. En su lugar llamamos
+        // directamente al endpoint de detalle.
+        this.service.lookupAssetById(assetId).subscribe({
+          next: (res) => {
+            if (res.data.lifecycleStatus === 'DECOMMISSIONED') {
+              this.lookupError.set('Este bien está dado de baja y no puede ser asignado.');
+              this.preloaded.set(false);
+            } else {
+              this.assetPreview.set(res.data);
+            }
+            this.lookingUp.set(false);
+            this.cdr.markForCheck();
+          },
+          error: () => {
+            this.lookupError.set('No se pudo cargar el bien seleccionado.');
+            this.preloaded.set(false);
+            this.lookingUp.set(false);
+            this.cdr.markForCheck();
+          },
+        });
+      }
+    }
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -108,20 +141,20 @@ export class AssetAssignmentComponent implements OnInit {
     this.assetPreview.set(null);
     this.assignmentForm.reset();
     this.submitted.set(false);
- 
+
     const code = this.codeControl.value.trim();
- 
+
     this.service.lookupAsset(code).subscribe({
       next: (res) => {
         const asset = res.data;
- 
+
         if (asset.lifecycleStatus === 'DECOMMISSIONED') {
           this.lookupError.set('Este bien está dado de baja y no puede ser asignado.');
           this.lookingUp.set(false);
           this.cdr.markForCheck();
           return;
         }
- 
+
         this.assetPreview.set(asset);
         this.lookingUp.set(false);
         // Pre-seleccionar la ubicación actual del bien
@@ -134,25 +167,30 @@ export class AssetAssignmentComponent implements OnInit {
       },
     });
   }
- 
+
   clearLookup(): void {
+    if (this.preloaded()) {
+      // Si fue pre-cargado, volver a la pantalla de detalle del bien
+      this.router.navigate(['/inventario/bienes', this.assetPreview()?.id]);
+      return;
+    }
     this.lookupForm.reset();
     this.assignmentForm.reset();
     this.assetPreview.set(null);
     this.lookupError.set(null);
     this.submitted.set(false);
   }
- 
+
   // ─────────────────────────────────────────────────────────────────────────
   // PASO 2 — Envío del formulario
   // ─────────────────────────────────────────────────────────────────────────
- 
+
   onSubmit(): void {
     this.assignmentForm.markAllAsTouched();
     if (this.assignmentForm.invalid || !this.assetPreview()) return;
- 
+
     this.submitting.set(true);
- 
+
     const payload = {
       assetId: this.assetPreview()!.id,
       guardianId: this.assignmentForm.value.guardianId,
@@ -160,7 +198,7 @@ export class AssetAssignmentComponent implements OnInit {
       assignedBy: 1, // TODO: reemplazar con el ID del usuario autenticado (JWT)
       notes: this.assignmentForm.value.notes ?? '',
     };
- 
+
     this.service.createAssignment(payload).subscribe({
       next: (res) => {
         this.submitting.set(false);
@@ -171,7 +209,12 @@ export class AssetAssignmentComponent implements OnInit {
           detail: `El bien ${res.assetInventoryNumber} fue asignado a ${res.guardianName}.`,
           life: 5000,
         });
-        this.clearLookup();
+        // Si vino pre-cargado, redirigir de vuelta al detalle del bien
+        if (this.preloaded()) {
+          setTimeout(() => this.router.navigate(['/inventario/bienes', payload.assetId]), 2000);
+        } else {
+          this.clearLookup();
+        }
         this.cdr.markForCheck();
       },
       error: (err) => {
@@ -187,57 +230,57 @@ export class AssetAssignmentComponent implements OnInit {
       },
     });
   }
- 
+
   // ─────────────────────────────────────────────────────────────────────────
   // Helpers de UI
   // ─────────────────────────────────────────────────────────────────────────
- 
+
   getConditionLabel(status: string): string {
     return CONDITION_LABEL[status as ConditionStatus] ?? status;
   }
- 
+
   getConditionSeverity(status: string): 'success' | 'warn' | 'danger' {
     return CONDITION_SEVERITY[status as ConditionStatus] ?? 'warn';
   }
- 
+
   getLifecycleLabel(status: string): string {
     return LIFECYCLE_LABEL[status as LifecycleStatus] ?? status;
   }
- 
+
   getLifecycleSeverity(status: string): 'info' | 'success' | 'secondary' | 'warn' | 'contrast' | 'danger' {
     return LIFECYCLE_SEVERITY[status as LifecycleStatus] ?? 'info';
   }
- 
+
   isFieldInvalid(form: FormGroup, field: string): boolean {
     const ctrl = form.get(field);
     return !!ctrl && ctrl.invalid && ctrl.touched;
   }
- 
+
   // ─────────────────────────────────────────────────────────────────────────
   // Catálogos
   // ─────────────────────────────────────────────────────────────────────────
- 
+
 private loadCatalogs(): void {
     let pending = 2;
     const done = () => { if (--pending === 0) { this.loadingCatalogs.set(false); this.cdr.markForCheck(); } };
- 
+
     this.service.getGuardians().subscribe({
       // ✅ Extraemos el arreglo de la propiedad "content"
-      next: (res: any) => { 
-        this.guardians.set(res.content || []); 
-        done(); 
+      next: (res: any) => {
+        this.guardians.set(res.content || []);
+        done();
       },
       error: () => {
         this.messageService.add({ severity: 'warn', summary: 'Catálogo', detail: 'No se pudieron cargar los resguardantes.' });
         done();
       },
     });
- 
+
     this.service.getLocations().subscribe({
       // ✅ Hacemos lo mismo para las ubicaciones
-      next: (res: any) => { 
-        this.locations.set(res.content || []); 
-        done(); 
+      next: (res: any) => {
+        this.locations.set(res.content || []);
+        done();
       },
       error: () => {
         this.messageService.add({ severity: 'warn', summary: 'Catálogo', detail: 'No se pudieron cargar las ubicaciones.' });

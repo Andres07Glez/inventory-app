@@ -1,0 +1,55 @@
+<!-- Ruta: src/app/modules/home/dashboard/dashboard.html -->
+<div class="dash-page">
+
+  <header class="dash-header">
+    <h1 class="dash-header__title">Dashboard</h1>
+    <p class="dash-header__sub">Resumen general del inventario institucional</p>
+  </header>
+
+  <!-- ── KPIs ──────────────────────────────────────────────────────────────── -->
+  <div class="dash-kpis">
+    @for (kpi of kpis; track kpi.label) {
+      <div class="kpi-card">
+        <div class="kpi-card__icon">
+          <i class="{{ kpi.icon }}"></i>
+        </div>
+        <div class="kpi-card__body">
+          <span class="kpi-card__value">{{ kpi.value }}</span>
+          <span class="kpi-card__label">{{ kpi.label }}</span>
+          <span class="kpi-card__detail">{{ kpi.detail }}</span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- ── Aviso: pendiente de conexión al backend ───────────────────────────── -->
+  <div class="dash-pending-notice">
+    <i class="pi pi-info-circle"></i>
+    <span>
+      Las métricas estarán disponibles cuando el backend implemente
+      <code>GET /v1/assets/stats</code>.
+      Por ahora puedes navegar al
+      <a routerLink="/inventario/bienes">inventario de bienes</a>.
+    </span>
+  </div>
+
+  <!-- ── Placeholder gráficas ──────────────────────────────────────────────── -->
+  <div class="dash-charts">
+    <div class="dash-chart-card">
+      <h3 class="dash-chart-card__title">Condición de bienes</h3>
+      <div class="dash-chart-placeholder">
+        <i class="pi pi-chart-pie"></i>
+        <span>Gráfica de dona — pendiente de datos</span>
+      </div>
+    </div>
+
+    <div class="dash-chart-card">
+      <h3 class="dash-chart-card__title">Top 5 áreas por bienes asignados</h3>
+      <div class="dash-chart-placeholder">
+        <i class="pi pi-chart-bar"></i>
+        <span>Gráfica de barras — pendiente de datos</span>
+      </div>
+    </div>
+  </div>
+
+</div>

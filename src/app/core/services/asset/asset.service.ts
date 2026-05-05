@@ -1,18 +1,11 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// asset.service.ts
-// Servicio de acceso a la API REST de bienes.
-// ─────────────────────────────────────────────────────────────────────────────
-
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { AssetQueryParams, AssetResponseDTO, PageResponse } from '../../models/asset.model';
+import { map, Observable } from 'rxjs';
+import { AssetDetailResponseDTO, AssetQueryParams, AssetResponseDTO, AssignmentHistoryDTO, PageResponse, UpdateConditionRequest, UpdateConditionResponse } from '../../models/asset.model';
 import { environment } from '../../../config/environment';
 
-// ---------------------------------------------------------------------------
-// En tu proyecto real importa desde environments/environment.ts:
-// import { environment } from '../../environments/environment';
-// ---------------------------------------------------------------------------
+
+interface ApiResponse<T> { success: boolean; message: string; data: T; }
 const API_BASE_URL = environment.apiBaseUrl;  // ← cambia según tu entorno
 
 @Injectable({ providedIn: 'root' })
@@ -30,22 +23,29 @@ export class AssetService {
   getAssets(params: AssetQueryParams = {}): Observable<PageResponse<AssetResponseDTO>> {
     let httpParams = new HttpParams();
 
-    if (params.conditionStatus) {
-      httpParams = httpParams.set('conditionStatus', params.conditionStatus);
-    }
-    if (params.lifecycleStatus) {
-      httpParams = httpParams.set('lifecycleStatus', params.lifecycleStatus);
-    }
-    if (params.page !== undefined) {
-      httpParams = httpParams.set('page', params.page.toString());
-    }
-    if (params.size !== undefined) {
-      httpParams = httpParams.set('size', params.size.toString());
-    }
-    if (params.sort) {
-      httpParams = httpParams.set('sort', params.sort);
-    }
+    if (params.conditionStatus) httpParams = httpParams.set('conditionStatus', params.conditionStatus);
+    if (params.lifecycleStatus) httpParams = httpParams.set('lifecycleStatus', params.lifecycleStatus);
+    if (params.page !== undefined) httpParams = httpParams.set('page', params.page.toString());
+    if (params.size !== undefined) httpParams = httpParams.set('size', params.size.toString());
+    if (params.sort) httpParams = httpParams.set('sort', params.sort);
 
     return this.http.get<PageResponse<AssetResponseDTO>>(this.endpoint, { params: httpParams });
+  }
+  getAssetById(id: number): Observable<AssetDetailResponseDTO> {
+    return this.http
+      .get<ApiResponse<AssetDetailResponseDTO>>(`${this.endpoint}/${id}`)
+      .pipe(map(r => r.data));
+  }
+
+  getAssignmentHistory(assetId: number): Observable<AssignmentHistoryDTO[]> {
+    return this.http
+      .get<ApiResponse<AssignmentHistoryDTO[]>>(`${this.endpoint}/${assetId}/assignments`)
+      .pipe(map(r => r.data));
+  }
+
+  updateCondition(id: number, request: UpdateConditionRequest): Observable<UpdateConditionResponse> {
+    return this.http
+      .patch<ApiResponse<UpdateConditionResponse>>(`${this.endpoint}/${id}/condition`, request)
+      .pipe(map(r => r.data));
   }
 }

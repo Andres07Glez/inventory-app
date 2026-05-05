@@ -102,3 +102,65 @@ export const LIFECYCLE_STATUS_OPTIONS: SelectOption<LifecycleStatus>[] = [
   { label: 'En garantía', value: 'IN_WARRANTY' },
   { label: 'Dado de baja', value: 'DECOMMISSIONED' },
 ];
+
+export interface GuardianSummary {
+  id: number;
+  fullName: string;
+  employeeNumber?: string;
+  department?: string;
+}
+
+/**
+ * Respuesta del endpoint GET /v1/assets/{id}
+ * Incluye todos los campos del bien y el resguardante actual.
+ */
+export interface AssetDetailResponseDTO {
+  id: number;
+  inventoryNumber: string;
+  barcode?: string;
+  description: string;
+  brand?: string;
+  model?: string;
+  serialNumber?: string;
+  notes?: string;
+  categoryName: string;
+  locationName?: string;
+  building?: string;
+  campus?: string;
+  conditionStatus: ConditionStatus;
+  lifecycleStatus: LifecycleStatus;
+  invoiceDate?: string;
+  entryDate: string;
+  createdAt?: string;
+  updatedAt: string;
+  guardian?: GuardianSummary;  // null si el bien no tiene asignación activa
+}
+
+/**
+ * Respuesta del endpoint GET /v1/assets/{id}/assignments
+ * Historial completo de asignaciones del bien.
+ */
+export interface AssignmentHistoryDTO {
+  id: number;
+  guardianName: string;
+  guardianEmployeeNumber?: string;
+  locationName?: string;
+  assignedAt: string;    // ISO datetime
+  returnedAt: string | null;  // null = asignación activa vigente
+  assignedByUsername?: string;
+  notes?: string;
+}
+
+// ── SP-09: Actualizar condición ──────────────────────────────────────────────
+
+export interface UpdateConditionRequest {
+  conditionStatus: ConditionStatus;
+}
+
+export interface UpdateConditionResponse {
+  assetId: number;
+  inventoryNumber: string;
+  previousCondition: ConditionStatus;
+  newCondition: ConditionStatus;
+  updatedAt: string;
+}

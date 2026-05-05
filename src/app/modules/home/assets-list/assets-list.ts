@@ -14,6 +14,7 @@ import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { Router } from '@angular/router';
 
 // ── Helpers de UI ─────────────────────────────────────────────────────────────
 
@@ -69,101 +70,110 @@ export class AssetsList implements OnInit {
   private readonly assetService = inject(AssetService);
   private readonly messageService = inject(MessageService);
   private readonly cdr = inject(ChangeDetectorRef);
- 
+  private readonly router = inject(Router);
+
+
   // ── Estado ────────────────────────────────────────────────────────────────
   assets = signal<AssetResponseDTO[]>([]);
   totalRecords = signal<number>(0);
   loading = signal<boolean>(true);
- 
+
   // ── Filtros ───────────────────────────────────────────────────────────────
   selectedCondition: ConditionStatus | null = null;
   selectedLifecycle: LifecycleStatus | null = null;
- 
+
   readonly conditionOptions: SelectOption<ConditionStatus>[] = [
     { label: 'Todas las condiciones', value: null as any },
     ...CONDITION_STATUS_OPTIONS,
   ];
- 
+
   readonly lifecycleOptions: SelectOption<LifecycleStatus>[] = [
     { label: 'Todos los estados', value: null as any },
     ...LIFECYCLE_STATUS_OPTIONS,
   ];
- 
+
   // ── Paginación ────────────────────────────────────────────────────────────
   readonly PAGE_SIZE = 10;
   private currentPage = 0;
   private currentSort = 'inventoryNumber,asc';
- 
+
   // ── Helpers de UI (expuestos al template) ─────────────────────────────────
   // Se usan métodos en lugar de Records directos porque en el template de
   // PrimeNG `let-asset` es implícitamente `any`, lo que impide indexar un
   // Record<EnumKey, ...> sin un cast explícito.
- 
+
   getConditionLabel(status: string): string {
     return CONDITION_LABEL[status as ConditionStatus] ?? status;
   }
- 
+
   getConditionSeverity(status: string): 'success' | 'warn' | 'danger' {
     return CONDITION_SEVERITY[status as ConditionStatus] ?? 'warn';
   }
- 
+
   getLifecycleLabel(status: string): string {
     return LIFECYCLE_LABEL[status as LifecycleStatus] ?? status;
   }
- 
+
   getLifecycleSeverity(status: string): 'info' | 'success' | 'secondary' | 'warn' | 'contrast' | 'danger' {
     return LIFECYCLE_SEVERITY[status as LifecycleStatus] ?? 'info';
   }
- 
+
   // ─────────────────────────────────────────────────────────────────────────
   ngOnInit(): void {
     // La tabla PrimeNG dispara onLazyLoad al iniciarse, así que no
     // necesitamos llamar manualmente aquí.
   }
- 
+
   // ─────────────────────────────────────────────────────────────────────────
   /** Llamado por p-table en cada cambio de página / orden */
   onLazyLoad(event: TableLazyLoadEvent): void {
     this.loading.set(true);
- 
+
     const page = Math.floor((event.first ?? 0) / this.PAGE_SIZE);
- 
+
     let sort = 'inventoryNumber,asc';
     if (event.sortField) {
       const dir = (event.sortOrder ?? 1) === 1 ? 'asc' : 'desc';
       sort = `${event.sortField},${dir}`;
     }
- 
+
     this.currentPage = page;
     this.currentSort = sort;
- 
+
     this.fetchAssets();
   }
- 
+
   /** Llamado cuando el usuario cambia algún filtro */
   onFilterChange(): void {
     this.currentPage = 0;
     this.fetchAssets();
   }
- 
+
   /** Limpia todos los filtros */
   clearFilters(): void {
     this.selectedCondition = null;
     this.selectedLifecycle = null;
     this.onFilterChange();
   }
- 
-  // ─────────────────────────────────────────────────────────────────────────
+
+  // ── NUEVO: navega al detalle del bien ─────────────────────────────────────
+  navigateToDetail(id: number): void {
+    this.router.navigate(['/inventario/bienes', id]);
+  }
+
+  get hasActiveFilters(): boolean {
+    return !!this.selectedCondition || !!this.selectedLifecycle;
+  }
+
   private fetchAssets(): void {
     const params: AssetQueryParams = {
       page: this.currentPage,
       size: this.PAGE_SIZE,
       sort: this.currentSort,
+      ...(this.selectedCondition && { conditionStatus: this.selectedCondition }),
+      ...(this.selectedLifecycle && { lifecycleStatus: this.selectedLifecycle }),
     };
- 
-    if (this.selectedCondition) params.conditionStatus = this.selectedCondition;
-    if (this.selectedLifecycle) params.lifecycleStatus = this.selectedLifecycle;
- 
+
     this.assetService.getAssets(params).subscribe({
       next: (page) => {
         this.assets.set(page.content);
@@ -183,9 +193,5 @@ export class AssetsList implements OnInit {
     });
   }
 
-  /** Verifica si hay filtros activos */
-  get hasActiveFilters(): boolean {
-    return !!this.selectedCondition || !!this.selectedLifecycle;
-  }
 
 }
