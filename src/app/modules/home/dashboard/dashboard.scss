@@ -1,16 +1,35 @@
 // Ruta: src/app/modules/home/dashboard/dashboard.scss
 
-.dash-page { display: flex; flex-direction: column; gap: 24px; }
-
-.dash-header {
-  &__title { font-size: 1.5rem; font-weight: 600; margin-bottom: 4px; }
-  &__sub    { font-size: 0.875rem; color: var(--text-color-secondary); }
+.dash-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  font-family: var(--font-primary);
 }
 
+// ── Header ───────────────────────────────────────────────────────────────────
+.dash-header {
+  &__title {
+    font-size: var(--text-24);
+    font-weight: 700;
+    color: var(--text-color);
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+  &__sub {
+    font-family: var(--font-condensed);
+    font-size: var(--text-label);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-color-muted);
+  }
+}
+
+// ── KPIs ─────────────────────────────────────────────────────────────────────
 .dash-kpis {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
 }
 
 .kpi-card {
@@ -20,47 +39,78 @@
   padding: 20px;
   background: var(--surface-card);
   border: 1px solid var(--surface-border);
-  border-radius: 10px;
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.15s, transform 0.15s;
+
+  &:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+
+  &--skeleton {
+    gap: 16px;
+    pointer-events: none;
+  }
 
   &__icon {
     width: 48px;
     height: 48px;
     border-radius: 10px;
-    background: var(--primary-50, #eff6ff);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    i { font-size: 1.3rem; color: var(--primary-color); }
+    i { font-size: 1.25rem; }
   }
 
-  &__body { display: flex; flex-direction: column; gap: 2px; }
-  &__value  { font-size: 1.8rem; font-weight: 700; line-height: 1; }
-  &__label  { font-size: 0.8rem; font-weight: 500; color: var(--text-color); }
-  &__detail { font-size: 0.75rem; color: var(--text-color-secondary); }
-}
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
 
-.dash-pending-notice {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  background: var(--blue-50, #eff6ff);
-  border: 1px solid var(--blue-200, #bfdbfe);
-  border-radius: 8px;
-  font-size: 0.875rem;
-  color: var(--blue-700, #1d4ed8);
-
-  code {
-    background: var(--blue-100, #dbeafe);
-    padding: 1px 6px;
-    border-radius: 4px;
+  &__value  {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text-color);
+  }
+  &__label  {
     font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  &__detail {
+    font-family: var(--font-condensed);
+    font-size: var(--text-label);
+    color: var(--text-color-muted);
   }
 
-  a { color: var(--primary-color); font-weight: 500; }
+  // Variantes semánticas — icono + borde izquierdo por color
+  &--primary {
+    border-left: 3px solid var(--color-primary);
+    .kpi-card__icon { background: var(--color-primary-light); i { color: var(--color-primary); } }
+  }
+  &--success {
+    border-left: 3px solid var(--color-success);
+    .kpi-card__icon { background: var(--color-success-light); i { color: var(--color-success); } }
+  }
+  &--danger {
+    border-left: 3px solid var(--color-danger);
+    .kpi-card__icon { background: var(--color-danger-light); i { color: var(--color-danger); } }
+  }
+  &--warning {
+    border-left: 3px solid var(--color-warning);
+    .kpi-card__icon { background: var(--color-warning-light); i { color: var(--color-warning); } }
+  }
 }
 
+// ── Gráficas ──────────────────────────────────────────────────────────────────
 .dash-charts {
   display: grid;
   grid-template-columns: 1fr 1.6fr;
@@ -70,30 +120,104 @@
 }
 
 .dash-chart-card {
-  padding: 20px;
   background: var(--surface-card);
   border: 1px solid var(--surface-border);
-  border-radius: 10px;
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
 
   &__title {
     font-size: 0.9rem;
     font-weight: 600;
-    margin-bottom: 16px;
     color: var(--text-color);
+    margin: 0;
+  }
+
+  &__total {
+    font-family: var(--font-condensed);
+    font-size: var(--text-label);
+    color: var(--text-color-muted);
+    white-space: nowrap;
+  }
+
+  &__link {
+    font-family: var(--font-condensed);
+    font-size: var(--text-label);
+    color: var(--color-primary);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+
+    &:hover { opacity: 0.75; }
+    i { font-size: 0.6rem; }
+  }
+
+  &__body {
+    position: relative;
+    flex: 1;
   }
 }
 
-.dash-chart-placeholder {
+.dash-chart-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 160px;
+  height: 100%;
   gap: 10px;
-  color: var(--text-color-secondary);
+  color: var(--text-color-muted);
   font-size: 0.875rem;
   border: 2px dashed var(--surface-border);
-  border-radius: 8px;
+  border-radius: var(--border-radius-md);
 
   i { font-size: 2rem; opacity: 0.3; }
+}
+
+// ── Aviso módulos pendientes ──────────────────────────────────────────────────
+.dash-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--color-info-light);
+  border: 1px solid var(--color-info);
+  border-radius: var(--border-radius-md);
+  font-size: 0.875rem;
+  color: var(--color-info-dark);
+  opacity: 0.9;
+
+  i { flex-shrink: 0; margin-top: 1px; }
+  strong { font-weight: 600; }
+}
+
+// ── Error de carga ────────────────────────────────────────────────────────────
+.dash-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  gap: 12px;
+  text-align: center;
+
+  &__icon { font-size: 3rem; color: var(--text-color-muted); opacity: 0.4; }
+  &__msg  { font-size: 0.875rem; color: var(--text-color-secondary); margin: 0; }
+  &__link {
+    color: var(--color-primary);
+    font-weight: 500;
+    text-decoration: none;
+    &:hover { opacity: 0.75; }
+  }
 }

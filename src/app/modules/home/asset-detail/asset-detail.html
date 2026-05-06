@@ -44,7 +44,7 @@
     <!-- ── Tabs PrimeNG 21 ────────────────────────────────────────────────── -->
     <!-- Nueva API: p-tabs > p-tablist > p-tab (headers) + p-tabpanels > p-tabpanel (contenido) -->
     <!-- El [value] en p-tab y p-tabpanel es el identificador que los vincula  -->
-    <p-tabs styleClass="detail-tabs">
+    <p-tabs styleClass="detail-tabs"  [(value)]="activeTab">
 
       <p-tablist>
         <p-tab value="resumen">

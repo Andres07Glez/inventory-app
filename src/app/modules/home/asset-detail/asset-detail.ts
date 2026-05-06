@@ -69,6 +69,7 @@ export class AssetDetail implements OnInit{
   // ── SP-09: estado del formulario de condición ─────────────────────────────
   selectedCondition: ConditionStatus | null = null;
   savingCondition   = signal(false);
+  activeTab = 'resumen';
 
   readonly conditionOptions: SelectOption<ConditionStatus>[] = CONDITION_STATUS_OPTIONS;
 
