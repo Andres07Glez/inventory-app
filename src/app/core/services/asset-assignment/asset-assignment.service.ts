@@ -1,7 +1,8 @@
 import { inject, Injectable } from '@angular/core';
-import { AssetAssignmentRequestDTO, AssetAssignmentResponseDTO, AssetSearchResult, GuardianOption, LocationOption, PageResponse } from '../../models/asset-assignment.model';
+import { AssetAssignmentRequestDTO, AssetAssignmentResponseDTO, AssetSearchResult, GuardianOption, PageResponse } from '../../models/asset-assignment.model';
 import { map, Observable } from 'rxjs';
 import { HttpClient, HttpParams } from '@angular/common/http';
+
 
 const API_BASE_URL = 'http://localhost:8080';
  
@@ -12,10 +13,13 @@ export class AssetAssignmentService {
  
   // ── Asignaciones ───────────────────────────────────────────────────────────
  
-  /** POST /api/v1/assignments */
+  /**
+   * POST /v1/assets/assign
+   * La ubicación ya NO se envía: el backend la hereda de guardian.location.
+   */
   createAssignment(request: AssetAssignmentRequestDTO): Observable<AssetAssignmentResponseDTO> {
     return this.http.post<AssetAssignmentResponseDTO>(
-      `${API_BASE_URL}/v1/assignments`,
+      `${API_BASE_URL}/v1/assets/assign`,
       request
     );
   }
@@ -43,21 +47,15 @@ export class AssetAssignmentService {
     );
   }
  
-// ── Catálogos ──────────────────────────────────────────────────────────────
+  // ── Catálogos ──────────────────────────────────────────────────────────────
  
-  /** GET /api/v1/guardians — todos los activos */
+  /**
+   * GET /api/v1/guardians — activos con paginación desactivada para el select.
+   * El DTO ahora incluye locationId y locationName (heredados en la asignación).
+   */
   getGuardians(): Observable<GuardianOption[]> {
     const params = new HttpParams().set('size', '500').set('sort', 'fullName,asc');
-    // Le decimos que reciba el PageResponse, y extraemos solo el 'content'
-    return this.http.get<PageResponse<GuardianOption>>(`${API_BASE_URL}/v1/guardians`, { params })
-      .pipe(map(response => response.content));
+    return this.http.get<GuardianOption[]>(`${API_BASE_URL}/v1/guardians`, { params });
   }
- 
-  /** GET /api/v1/locations — todas las activas */
-  getLocations(): Observable<LocationOption[]> {
-    const params = new HttpParams().set('size', '500').set('sort', 'name,asc');
-    // Hacemos lo mismo para las ubicaciones
-    return this.http.get<PageResponse<LocationOption>>(`${API_BASE_URL}/v1/locations`, { params })
-      .pipe(map(response => response.content));
-  }
+  // getLocations() eliminado: la ubicación se hereda automáticamente del resguardante
 }

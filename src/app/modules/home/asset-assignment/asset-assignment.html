@@ -1,8 +1,8 @@
 <!-- ──────────────────────────────────────────────────────────────────────────
-    asset-assignment.component.html
-    Layout: panel izquierdo (búsqueda + lista de resultados + preview seleccionado)
-            panel derecho (formulario de asignación)
-    ─────────────────────────────────────────────────────────────────────────── -->
+     asset-assignment.component.html
+     Layout: panel izquierdo (búsqueda + lista de resultados + preview seleccionado)
+             panel derecho (formulario de asignación)
+     ─────────────────────────────────────────────────────────────────────────── -->
 
 <p-toast position="top-right" />
 
@@ -256,8 +256,8 @@
 
           <!-- Resguardante actual — dato principal del nuevo criterio -->
           <div class="asg-current-guardian"
-                [class.asg-current-guardian--occupied]="asset.currentGuardianName"
-                [class.asg-current-guardian--free]="!asset.currentGuardianName">
+               [class.asg-current-guardian--occupied]="asset.currentGuardianName"
+               [class.asg-current-guardian--free]="!asset.currentGuardianName">
             <i class="pi" [ngClass]="asset.currentGuardianName ? 'pi-user' : 'pi-user-minus'"></i>
             <div>
               <span class="asg-current-guardian__label">Resguardante actual</span>
@@ -308,11 +308,17 @@
               filterPlaceholder="Buscar resguardante..."
               [showClear]="true"
               appendTo="body"
+              (onChange)="onGuardianChange($event.value)"
             >
               <ng-template pTemplate="item" let-g>
                 <div class="asg-select-item">
                   <span class="asg-select-item__name">{{ g.fullName }}</span>
-                  <span class="asg-select-item__sub">{{ g.employeeNumber }} — {{ g.department }}</span>
+                  <span class="asg-select-item__sub">
+                    {{ g.employeeNumber }} — {{ g.department }}
+                    @if (g.locationName) {
+                      · <i class="pi pi-map-marker"></i> {{ g.locationName }}
+                    }
+                  </span>
                 </div>
               </ng-template>
             </p-select>
@@ -324,41 +330,24 @@
           }
         </div>
 
-        <!-- Ubicación de destino -->
-        <div class="asg-field">
-          <label class="asg-label" for="location-select">
-            Ubicación de destino <span class="asg-required">*</span>
-          </label>
-          @if (loadingCatalogs()) {
-            <p-skeleton height="2.5rem" styleClass="asg-skeleton" />
-          } @else {
-            <p-select
-              inputId="location-select"
-              formControlName="locationId"
-              [options]="locations()"
-              optionLabel="name"
-              optionValue="id"
-              placeholder="Selecciona una ubicación"
-              styleClass="asg-select"
-              [filter]="true"
-              filterPlaceholder="Buscar ubicación..."
-              [showClear]="true"
-              appendTo="body"
-            >
-              <ng-template pTemplate="item" let-loc>
-                <div class="asg-select-item">
-                  <span class="asg-select-item__name">{{ loc.name }}</span>
-                  <span class="asg-select-item__sub">{{ loc.building }} — {{ loc.campus }}</span>
-                </div>
-              </ng-template>
-            </p-select>
-          }
-          @if (isFieldInvalid('locationId')) {
-            <span class="asg-field-error">
-              <i class="pi pi-exclamation-circle"></i> Selecciona una ubicación
-            </span>
-          }
-        </div>
+        <!-- Ubicación heredada — READ ONLY, derivada del resguardante seleccionado -->
+        @if (selectedGuardian()) {
+          <div class="asg-inherited-location"
+               [class.asg-inherited-location--ok]="selectedGuardian()!.locationName"
+               [class.asg-inherited-location--warn]="!selectedGuardian()!.locationName">
+            <i class="pi" [ngClass]="selectedGuardian()!.locationName ? 'pi-map-marker' : 'pi-exclamation-triangle'"></i>
+            <div class="asg-inherited-location__body">
+              <span class="asg-inherited-location__label">Ubicación de destino (heredada)</span>
+              @if (selectedGuardian()!.locationName) {
+                <span class="asg-inherited-location__value">{{ selectedGuardian()!.locationName }}</span>
+              } @else {
+                <span class="asg-inherited-location__value">
+                  Sin ubicación base — configura la ubicación del resguardante antes de continuar
+                </span>
+              }
+            </div>
+          </div>
+        }
 
         <!-- Notas -->
         <div class="asg-field">

@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Toast, ToastModule } from "primeng/toast";
 import { AssetAssignmentService } from '../../../core/services/asset-assignment/asset-assignment.service';
 import { MessageService } from 'primeng/api';
-import { AssetSearchResult, GuardianOption, LocationOption } from '../../../core/models/asset-assignment.model';
+import { AssetSearchResult, GuardianOption } from '../../../core/models/asset-assignment.model';
 import { CommonModule } from '@angular/common';
 import { SelectModule } from 'primeng/select';
 import { InputTextModule } from 'primeng/inputtext';
@@ -91,15 +91,17 @@ export class AssetAssignmentComponent implements OnInit {
   submitting    = signal(false);
  
   // ── Catálogos ─────────────────────────────────────────────────────────────
-  guardians      = signal<GuardianOption[]>([]);
-  locations      = signal<LocationOption[]>([]);
+  guardians       = signal<GuardianOption[]>([]);
   loadingCatalogs = signal(true);
+ 
+  // ── Guardian seleccionado en el formulario (para mostrar su ubicación heredada) ──
+  selectedGuardian = signal<GuardianOption | null>(null);
  
   // ── Formulario de asignación ──────────────────────────────────────────────
   assignmentForm: FormGroup = this.fb.group({
     guardianId: [null, Validators.required],
-    locationId: [null, Validators.required],
-    notes:      [''],
+    // locationId eliminado: se hereda de guardian.location en el backend
+    notes: [''],
   });
  
   // ─────────────────────────────────────────────────────────────────────────
@@ -194,6 +196,7 @@ export class AssetAssignmentComponent implements OnInit {
  
   clearSelection(): void {
     this.selectedAsset.set(null);
+    this.selectedGuardian.set(null);
     this.assignmentForm.reset();
   }
  
@@ -203,7 +206,15 @@ export class AssetAssignmentComponent implements OnInit {
     this.totalRecords.set(0);
     this.hasSearched.set(false);
     this.selectedAsset.set(null);
+    this.selectedGuardian.set(null);
     this.assignmentForm.reset();
+  }
+ 
+  /** Actualiza selectedGuardian cuando el usuario elige uno en el select */
+  onGuardianChange(guardianId: number | null): void {
+    if (!guardianId) { this.selectedGuardian.set(null); return; }
+    const found = this.guardians().find(g => g.id === guardianId) ?? null;
+    this.selectedGuardian.set(found);
   }
  
   // ── Envío ─────────────────────────────────────────────────────────────────
@@ -212,14 +223,25 @@ export class AssetAssignmentComponent implements OnInit {
     this.assignmentForm.markAllAsTouched();
     if (this.assignmentForm.invalid || !this.selectedAsset()) return;
  
+    // Validar que el resguardante tenga ubicación base — el backend la exige
+    if (!this.selectedGuardian()?.locationId) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Resguardante sin ubicación',
+        detail: `"${this.selectedGuardian()?.fullName}" no tiene una ubicación base configurada. Actualiza el resguardante antes de asignarle bienes.`,
+        life: 7000,
+      });
+      return;
+    }
+ 
     this.submitting.set(true);
  
     const payload = {
-      assetId:      this.selectedAsset()!.id,
-      guardianId:   this.assignmentForm.value.guardianId,
-      locationId:   this.assignmentForm.value.locationId,
-      assignedById: 1, // TODO: reemplazar con ID del usuario autenticado (JWT)
-      notes:        this.assignmentForm.value.notes ?? '',
+      assetId:    this.selectedAsset()!.id,
+      guardianId: this.assignmentForm.value.guardianId,
+      assignedBy: 1, // TODO: reemplazar con ID del usuario autenticado (JWT)
+      notes:      this.assignmentForm.value.notes ?? '',
+      // locationId eliminado: el backend lo hereda de guardian.location
     };
  
     this.service.createAssignment(payload).subscribe({
@@ -271,25 +293,21 @@ export class AssetAssignmentComponent implements OnInit {
  
   // ── Catálogos ─────────────────────────────────────────────────────────────
  
-  private loadCatalogs(): void {
-    let pending = 2;
-    const done = () => {
-      if (--pending === 0) { this.loadingCatalogs.set(false); this.cdr.markForCheck(); }
-    };
- 
+private loadCatalogs(): void {
     this.service.getGuardians().subscribe({
-      next: (g) => { this.guardians.set(g); done(); },
+      next: (res: any) => { 
+        // 1. Extraemos el arreglo de resguardantes del objeto paginado
+        const arraySeguro = Array.isArray(res?.content) ? res.content : [];
+        
+        // 2. Lo guardamos en la señal
+        this.guardians.set(arraySeguro); 
+        this.loadingCatalogs.set(false); 
+        this.cdr.markForCheck(); 
+      },
       error: () => {
         this.messageService.add({ severity: 'warn', summary: 'Catálogo', detail: 'No se pudieron cargar los resguardantes.' });
-        done();
-      },
-    });
- 
-    this.service.getLocations().subscribe({
-      next: (l) => { this.locations.set(l); done(); },
-      error: () => {
-        this.messageService.add({ severity: 'warn', summary: 'Catálogo', detail: 'No se pudieron cargar las ubicaciones.' });
-        done();
+        this.loadingCatalogs.set(false);
+        this.cdr.markForCheck();
       },
     });
   }

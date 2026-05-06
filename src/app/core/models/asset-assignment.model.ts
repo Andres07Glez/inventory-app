@@ -7,9 +7,9 @@
 export interface AssetAssignmentRequestDTO {
   assetId: number;
   guardianId: number;
-  locationId: number;
-  assignedById: number;   // temporal — reemplazar por JWT
+  assignedBy: number;   // temporal — reemplazar por JWT. Renombrado de assignedById
   notes?: string;
+  // locationId eliminado: la ubicación se hereda automáticamente de guardian.location
 }
 
 // ── Response ─────────────────────────────────────────────────────────────────
@@ -32,14 +32,11 @@ export interface GuardianOption {
   fullName: string;
   employeeNumber: string;
   department: string;
+  locationId: number | null;    // nuevo campo: ubicación base del resguardante
+  locationName: string | null;  // nuevo campo: nombre de la ubicación base
 }
 
-export interface LocationOption {
-  id: number;
-  name: string;
-  building: string;
-  campus: string;
-}
+// LocationOption eliminada: la ubicación se hereda del resguardante, no se selecciona
 
 // ── Búsqueda de bienes ───────────────────────────────────────────────────────
 
