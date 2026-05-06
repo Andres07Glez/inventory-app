@@ -1,0 +1,459 @@
+<p-toast position="top-right" />
+
+<div class="ar-page">
+  <!-- ═══════════════════════════════════════════
+       PAGE HEADER
+  ═══════════════════════════════════════════ -->
+  <div class="ar-header">
+    <div class="ar-header__left">
+      <div class="ar-header__breadcrumb">
+        <span class="ar-header__breadcrumb-item">Inventario</span>
+        <i class="pi pi-chevron-right ar-header__breadcrumb-sep"></i>
+        <span class="ar-header__breadcrumb-item ar-header__breadcrumb-item--active">Registro de Bienes</span>
+      </div>
+      <h1 class="ar-header__title">
+        <i class="pi pi-box ar-header__title-icon"></i>
+        Registrar Nuevo Bien
+      </h1>
+      <p class="ar-header__subtitle">
+        Complete la información del bien patrimonial para ingresarlo al inventario institucional.
+      </p>
+    </div>
+    <div class="ar-header__right">
+      <div class="ar-folio-preview">
+        <div class="ar-folio-preview__top">
+          <span class="ar-folio-preview__label">Número de inventario</span>
+          <button type="button" class="ar-folio-toggle" [class.ar-folio-toggle--active]="useCustomInventoryNumber()"
+            (click)="toggleInventoryMode()"
+            [pTooltip]="useCustomInventoryNumber() ? 'Usar el siguiente número automático' : 'Asignar número manualmente'"
+            tooltipPosition="left">
+            <i class="pi" [class.pi-pencil]="!useCustomInventoryNumber()"
+              [class.pi-undo]="useCustomInventoryNumber()"></i>
+            {{ useCustomInventoryNumber() ? 'Automático' : 'Manual' }}
+          </button>
+        </div>
+
+        @if (!useCustomInventoryNumber()) {
+        <!-- Modo automático: folio siguiente directo del backend -->
+        @if (inventoryNumberLoading()) {
+        <div class="ar-folio-loading">
+          <i class="pi pi-spin pi-spinner"></i>
+          <span>Consultando folio...</span>
+        </div>
+        } @else {
+        <div class="ar-folio-auto">
+          <div class="ar-folio-auto__row ar-folio-auto__row--next">
+            <span class="ar-folio-auto__sublabel">Se asignará</span>
+            <span class="ar-folio-auto__num">{{ nextInventoryNumber() }}</span>
+          </div>
+        </div>
+        }
+        <p-tag severity="info" value="Siguiente disponible" styleClass="ar-folio-preview__tag" />
+        } @else {
+        <!-- Modo manual: input libre -->
+        <input class="ar-folio-preview__input" type="text" placeholder="Ej: INV-2026-00099"
+          [value]="customInventoryNumber()" (input)="customInventoryNumber.set($any($event.target).value.toUpperCase())"
+          maxlength="30" autocomplete="off" />
+        <small class="ar-folio-manual-hint">
+          <i class="pi pi-info-circle"></i>
+          Siguiente automático: <strong>{{ nextInventoryNumber() }}</strong>
+        </small>
+        @if (!customInventoryNumber().trim()) {
+        <p-tag severity="warn" value="Ingresa el número" styleClass="ar-folio-preview__tag" />
+        } @else {
+        <p-tag severity="success" value="Personalizado" styleClass="ar-folio-preview__tag" />
+        }
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       PROGRESS
+  ═══════════════════════════════════════════ -->
+  <div class="ar-progress-bar-wrap">
+    <p-progressBar [value]="progressValue()" [showValue]="false" styleClass="ar-progress-bar" />
+    <div class="ar-step-indicators">
+      @for (step of [
+      { label: 'Datos del Bien', icon: 'pi-tag' },
+      { label: 'Evidencia y Confirmación', icon: 'pi-images' }
+      ]; track $index) {
+      <button class="ar-step-btn" [class.ar-step-btn--done]="$index < activeStep()"
+        [class.ar-step-btn--active]="$index === activeStep()" (click)="goToStep($index)">
+        <span class="ar-step-btn__circle">
+          @if ($index < activeStep()) { <i class="pi pi-check"></i>
+            } @else {
+            {{ $index + 1 }}
+            }
+        </span>
+        <span class="ar-step-btn__label">{{ step.label }}</span>
+      </button>
+      }
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       FORM BODY
+  ═══════════════════════════════════════════ -->
+  <form [formGroup]="form" (ngSubmit)="submitForm()" autocomplete="off" novalidate>
+
+    <!-- ──────────────────────────────────────
+         STEP 0 — Datos del Bien (Identificación + Ubicación y Fechas)
+    ────────────────────────────────────── -->
+    @if (activeStep() === 0) {
+    <div class="ar-step-panel ar-step-panel--enter">
+
+      <!-- Sección A: Identificación -->
+      <p-card styleClass="ar-card ar-card--primary" class="margin-bottom: 1.25rem;">
+        <ng-template #header>
+          <div class="ar-card__header">
+            <div class="ar-card__header-icon ar-card__header-icon--blue">
+              <i class="pi pi-tag"></i>
+            </div>
+            <div>
+              <h2 class="ar-card__title">Identificación del Bien</h2>
+              <p class="ar-card__subtitle">Datos descriptivos e identificadores únicos del activo</p>
+            </div>
+          </div>
+        </ng-template>
+
+        <div class="ar-grid">
+          <!-- Descripción (full width) -->
+          <div class="ar-field ar-field--full">
+            <label class="ar-label ar-label--required" for="description">
+              Descripción del bien
+            </label>
+            <textarea pTextarea id="description" formControlName="description" rows="3"
+              placeholder="Ej: Laptop HP Pavilion 15, color negro, uso académico..." class="ar-textarea"
+              [class.ng-invalid]="isFieldInvalid('description')"
+              [class.ng-dirty]="isFieldInvalid('description')"></textarea>
+            @if (isFieldInvalid('description')) {
+            <small class="ar-error">
+              <i class="pi pi-exclamation-triangle"></i>
+              La descripción es obligatoria (mín. 5 caracteres).
+            </small>
+            }
+            <small class="ar-hint">{{ f['description'].value?.length ?? 0 }}/500 caracteres</small>
+          </div>
+
+          <!-- Categoría -->
+          <div class="ar-field">
+            <label class="ar-label ar-label--required" for="category_id">Categoría</label>
+            <p-select id="category_id" formControlName="category_id" [options]="categories" optionLabel="name"
+              optionValue="id" placeholder="Selecciona una categoría" [filter]="true"
+              filterPlaceholder="Buscar categoría..." styleClass="ar-select"
+              [class.ng-invalid]="isFieldInvalid('category_id')">
+              <ng-template #item let-cat>
+                <div class="ar-select-option">
+                  <span [class.ar-select-option--child]="cat.parent_id">
+                    @if (cat.parent_id) { <i class="pi pi-arrow-right ar-select-option__arrow"></i> }
+                    {{ cat.name }}
+                  </span>
+                  @if (cat.description) {
+                  <small class="ar-select-option__desc">{{ cat.description }}</small>
+                  }
+                </div>
+              </ng-template>
+            </p-select>
+            @if (isFieldInvalid('category_id')) {
+            <small class="ar-error"><i class="pi pi-exclamation-triangle"></i> Selecciona una categoría.</small>
+            }
+          </div>
+
+          <!-- Marca -->
+          <!-- Marca -->
+          <div class="ar-field">
+            <label class="ar-label ar-label--required" for="brand">Marca</label>
+            <p-select id="brand" formControlName="brand" [options]="brands" optionLabel="name" optionValue="id"
+              placeholder="Selecciona una marca..." [filter]="true" filterPlaceholder="Buscar marca..."
+              [showClear]="true" styleClass="ar-select" [class.ng-invalid]="isFieldInvalid('brand')" />
+            @if (isFieldInvalid('brand')) {
+            <small class="ar-error">
+              <i class="pi pi-exclamation-triangle"></i>
+              Selecciona una marca.
+            </small>
+            }
+          </div>
+
+          <!-- Modelo -->
+          <div class="ar-field">
+            <label class="ar-label" for="model">Modelo</label>
+            <p-iconfield>
+              <p-inputicon styleClass="pi pi-server" />
+              <input pInputText id="model" formControlName="model" placeholder="Ej: Pavilion 15-eg3010la"
+                class="ar-input" />
+            </p-iconfield>
+          </div>
+
+          <!-- Número de Serie -->
+          <div class="ar-field ar-field--full">
+            <label class="ar-label" for="serial_number">
+              Número de serie
+              <p-tag value="Equipo de cómputo" severity="secondary" styleClass="ar-label__badge" />
+            </label>
+            <p-iconfield>
+              <p-inputicon styleClass="pi pi-qrcode" />
+              <input pInputText id="serial_number" formControlName="serial_number" placeholder="Ej: 5CD1234ABC"
+                class="ar-input" />
+            </p-iconfield>
+          </div>
+        </div>
+      </p-card>
+
+      <!-- Sección B: Ubicación y Fechas -->
+      <p-card styleClass="ar-card ar-card--primary">
+        <ng-template #header>
+          <div class="ar-card__header">
+            <div class="ar-card__header-icon ar-card__header-icon--teal">
+              <i class="pi pi-map-marker"></i>
+            </div>
+            <div>
+              <h2 class="ar-card__title">Ubicación y Fechas</h2>
+              <p class="ar-card__subtitle">Asigna el bien a un espacio físico y registra las fechas clave</p>
+            </div>
+          </div>
+        </ng-template>
+
+        <div class="ar-grid">
+          <!-- Ubicación — fija, no editable -->
+          <div class="ar-field">
+            <label class="ar-label">Ubicación física</label>
+            <div class="ar-location-fixed">
+              <i class="pi pi-warehouse ar-location-fixed__icon"></i>
+              <div class="ar-location-fixed__info">
+                <span class="ar-location-fixed__name">{{ DEFAULT_LOCATION_LABEL }}</span>
+                <span class="ar-location-fixed__meta">{{ DEFAULT_LOCATION_CAMPUS }}</span>
+              </div>
+              <i class="pi pi-lock ar-location-fixed__lock"
+                pTooltip="La ubicación de entrada siempre es el almacén general" tooltipPosition="left"></i>
+            </div>
+          </div>
+
+          <!-- Factura -->
+          <div class="ar-field">
+            <label class="ar-label" for="invoice_id">Factura de compra</label>
+            <p-select id="invoice_id" formControlName="invoice_id" [options]="invoices" optionLabel="invoice_number"
+              optionValue="id" placeholder="Selecciona la factura..." [showClear]="true" [filter]="true"
+              filterPlaceholder="Buscar factura..." styleClass="ar-select">
+              <ng-template #item let-inv>
+                <div class="ar-invoice-option">
+                  <span class="ar-invoice-option__num">{{ inv.invoice_number }}</span>
+                  <span class="ar-invoice-option__meta">{{ inv.supplier }} · {{ inv.invoice_date }}</span>
+                </div>
+              </ng-template>
+            </p-select>
+            <!-- Fecha de factura derivada automáticamente -->
+            @if (getSelectedInvoice()) {
+            <small class="ar-hint ar-hint--invoice-date">
+              <i class="pi pi-calendar"></i>
+              Fecha de factura: <strong>{{ getSelectedInvoice()!.invoice_date }}</strong>
+              · {{ getSelectedInvoice()!.supplier }}
+            </small>
+            } @else {
+            <small class="ar-hint">
+              <i class="pi pi-info-circle"></i>
+              La fecha se toma automáticamente de la factura seleccionada.
+            </small>
+            }
+          </div>
+
+          <!-- Fecha de Entrada — editable, con fecha de hoy por defecto -->
+          <div class="ar-field ar-field--full">
+            <label class="ar-label ar-label--required" for="entry_date">
+              Fecha de entrada al almacén
+            </label>
+            <div class="ar-entry-date-row">
+              <p-datepicker id="entry_date" formControlName="entry_date" dateFormat="dd/mm/yy" [showIcon]="true"
+                [showButtonBar]="true" todayButtonStyleClass="ar-datepicker-today-btn" inputStyleClass="ar-input"
+                styleClass="ar-datepicker ar-datepicker--full" [class.ng-invalid]="isFieldInvalid('entry_date')" />
+            </div>
+            @if (isFieldInvalid('entry_date')) {
+            <small class="ar-error"><i class="pi pi-exclamation-triangle"></i> La fecha de entrada es requerida.</small>
+            }
+            <small class="ar-hint">
+              <i class="pi pi-calendar"></i>
+              Por defecto es hoy. Puedes ajustarla si el ingreso fue en otra fecha.
+            </small>
+          </div>
+        </div>
+
+        <!-- Info Banner -->
+        <!--div class="ar-info-banner">
+          <i class="pi pi-info-circle ar-info-banner__icon"></i>
+          <div>
+            <strong>Diseño de resguardo:</strong> La asignación a un resguardante se realiza desde el módulo
+            <em>Asignaciones</em>, una vez que el bien esté disponible.
+          </div>
+        </div-->
+
+        <ng-template #footer>
+          <div class="ar-card__footer">
+            <div></div>
+            <p-button label="Siguiente: Evidencia y Confirmación" icon="pi pi-arrow-right" iconPos="right"
+              (onClick)="nextStep()" [disabled]="!canAdvance()" styleClass="ar-btn ar-btn--primary" />
+          </div>
+        </ng-template>
+      </p-card>
+
+    </div>
+    }
+
+    <!-- ──────────────────────────────────────
+         STEP 1 — Evidencia y Confirmación
+    ────────────────────────────────────── -->
+    @if (activeStep() === 1) {
+    <div class="ar-step-panel ar-step-panel--enter">
+      <div class="ar-two-col">
+
+        <!-- Left: Evidencia fotográfica + Notas -->
+        <p-card styleClass="ar-card ar-card--primary">
+          <ng-template #header>
+            <div class="ar-card__header">
+              <div class="ar-card__header-icon ar-card__header-icon--violet">
+                <i class="pi pi-images"></i>
+              </div>
+              <div>
+                <h2 class="ar-card__title">Evidencia Fotográfica</h2>
+                <p class="ar-card__subtitle">Hasta {{ maxImages }} imágenes del bien (opcional)</p>
+              </div>
+            </div>
+          </ng-template>
+
+          <p-fileupload mode="advanced" accept="image/*" [maxFileSize]="5000000" [multiple]="true" [auto]="false"
+            chooseLabel="Seleccionar imágenes" uploadLabel="Subir" cancelLabel="Cancelar"
+            (onSelect)="onImageSelect($event)" styleClass="ar-fileupload">
+            <ng-template #empty>
+              <div class="ar-upload-empty">
+                <i class="pi pi-cloud-upload ar-upload-empty__icon"></i>
+                <p class="ar-upload-empty__text">Arrastra imágenes aquí o usa el botón</p>
+                <p class="ar-upload-empty__hint">JPG, PNG, WEBP · Máx. 5 MB por imagen</p>
+              </div>
+            </ng-template>
+          </p-fileupload>
+
+          @if (uploadedImages.length > 0) {
+          <div class="ar-image-chips">
+            @for (img of uploadedImages; track $index) {
+            <p-chip [label]="img.name" [removable]="true" (onRemove)="removeImage($index)" styleClass="ar-chip" />
+            }
+          </div>
+          }
+
+          <p-divider />
+
+          <!-- Notas adicionales -->
+          <div class="ar-field ar-field--full">
+            <label class="ar-label" for="notes">Notas adicionales</label>
+            <textarea pTextarea id="notes" formControlName="notes" rows="4"
+              placeholder="Observaciones, aclaraciones o comentarios sobre el bien..." class="ar-textarea"></textarea>
+          </div>
+        </p-card>
+
+        <!-- Right: Resumen del registro -->
+        <p-card styleClass="ar-card ar-card--primary">
+          <ng-template #header>
+            <div class="ar-card__header">
+              <div class="ar-card__header-icon ar-card__header-icon--teal">
+                <i class="pi pi-list-check"></i>
+              </div>
+              <div>
+                <h2 class="ar-card__title">Resumen del Registro</h2>
+                <p class="ar-card__subtitle">Verifica los datos antes de guardar</p>
+              </div>
+            </div>
+          </ng-template>
+
+          <!-- Defaults automáticos -->
+          <div class="ar-defaults-banner">
+            <div class="ar-defaults-banner__item ar-defaults-banner__item--green">
+              <i class="pi pi-check-circle"></i>
+              <div>
+                <span class="ar-defaults-banner__label">Condición física</span>
+                <span class="ar-defaults-banner__val">Buena</span>
+              </div>
+            </div>
+            <div class="ar-defaults-banner__item ar-defaults-banner__item--blue">
+              <i class="pi pi-tag"></i>
+              <div>
+                <span class="ar-defaults-banner__label">Ciclo de vida</span>
+                <span class="ar-defaults-banner__val">Registrado</span>
+              </div>
+            </div>
+          </div>
+
+          <p-divider align="left">
+            <span class="ar-divider-label"><i class="pi pi-clipboard"></i> Datos capturados</span>
+          </p-divider>
+
+          <div class="ar-summary">
+            <div class="ar-summary__row ar-summary__row--folio">
+              <span class="ar-summary__key">N.° de inventario</span>
+              <span class="ar-summary__val ar-summary__val--folio">
+                {{ displayInventoryNumber }}
+                @if (useCustomInventoryNumber()) {
+                <p-tag value="Manual" severity="warn" styleClass="ar-summary__folio-tag" />
+                } @else {
+                <p-tag value="Auto" severity="info" styleClass="ar-summary__folio-tag" />
+                }
+              </span>
+            </div>
+            <div class="ar-summary__row">
+              <span class="ar-summary__key">Descripción</span>
+              <span class="ar-summary__val">{{ f['description'].value || '—' }}</span>
+            </div>
+            <div class="ar-summary__row">
+              <span class="ar-summary__key">Categoría</span>
+              <span class="ar-summary__val">{{ getCategoryName(f['category_id'].value) }}</span>
+            </div>
+            <div class="ar-summary__row">
+              <span class="ar-summary__key">Marca / Modelo</span>
+              <span class="ar-summary__val">
+                {{ getBrandName(f['brand'].value) }}{{ f['model'].value ? ' / ' + f['model'].value : '' }}
+              </span>
+            </div>
+            <div class="ar-summary__row">
+              <span class="ar-summary__key">N.° de Serie</span>
+              <span class="ar-summary__val">{{ f['serial_number'].value || '—' }}</span>
+            </div>
+            <div class="ar-summary__row">
+              <span class="ar-summary__key">Ubicación</span>
+              <span class="ar-summary__val">{{ DEFAULT_LOCATION_LABEL }} — {{ DEFAULT_LOCATION_CAMPUS }}</span>
+            </div>
+            <div class="ar-summary__row">
+              <span class="ar-summary__key">Factura</span>
+              <span class="ar-summary__val">{{ getInvoiceLabel(f['invoice_id'].value) }}</span>
+            </div>
+            @if (getSelectedInvoice()) {
+            <div class="ar-summary__row">
+              <span class="ar-summary__key">Fecha de factura</span>
+              <span class="ar-summary__val">{{ getSelectedInvoice()!.invoice_date }}</span>
+            </div>
+            }
+            <div class="ar-summary__row">
+              <span class="ar-summary__key">Fecha de entrada</span>
+              <span class="ar-summary__val">{{ f['entry_date'].value | date: 'dd/MM/yyyy' }}</span>
+            </div>
+            <div class="ar-summary__row">
+              <span class="ar-summary__key">Imágenes adjuntas</span>
+              <span class="ar-summary__val">{{ uploadedImages.length }} archivo(s)</span>
+            </div>
+          </div>
+        </p-card>
+
+      </div>
+
+      <!-- Footer actions -->
+      <div class="ar-submit-footer">
+        <p-button label="Anterior" icon="pi pi-arrow-left" severity="secondary" (onClick)="prevStep()"
+          styleClass="ar-btn ar-btn--secondary" />
+        <div class="ar-submit-footer__right">
+          <p-button label="Cancelar" severity="danger" [outlined]="true" icon="pi pi-times" styleClass="ar-btn" />
+          <p-button type="submit" label="Registrar Bien" icon="pi pi-check" iconPos="right"
+            styleClass="ar-btn ar-btn--success" />
+        </div>
+      </div>
+    </div>
+    }
+
+  </form>
+</div>
