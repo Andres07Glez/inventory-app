@@ -1,5 +1,5 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
-import { CommonModule, CurrencyPipe } from '@angular/common';
+import { Component, OnInit, signal, computed, ViewChild, ElementRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 
 import { TableModule } from 'primeng/table';
@@ -7,7 +7,6 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { DatePickerModule } from 'primeng/datepicker';
-import { InputNumberModule } from 'primeng/inputnumber';
 import { DialogModule } from 'primeng/dialog';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
@@ -15,7 +14,6 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
-import { TagModule } from 'primeng/tag';
 import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { InvoiceService, InvoiceResponse, InvoiceRequest } from '../../../core/service/invoice.service';
@@ -25,14 +23,12 @@ import { InvoiceService, InvoiceResponse, InvoiceRequest } from '../../../core/s
   standalone: true,
   imports: [
     CommonModule,
-    CurrencyPipe,
     ReactiveFormsModule,
     TableModule,
     ButtonModule,
     InputTextModule,
     TextareaModule,
     DatePickerModule,
-    InputNumberModule,
     DialogModule,
     ConfirmDialogModule,
     ToastModule,
@@ -40,7 +36,6 @@ import { InvoiceService, InvoiceResponse, InvoiceRequest } from '../../../core/s
     InputIconModule,
     SkeletonModule,
     TooltipModule,
-    TagModule,
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './invoice-registration.html',
@@ -48,33 +43,35 @@ import { InvoiceService, InvoiceResponse, InvoiceRequest } from '../../../core/s
 })
 export class InvoiceRegistration implements OnInit {
 
-  // ── Estado reactivo ──────────────────────────────────────────────────────────
-  invoices      = signal<InvoiceResponse[]>([]);
-  loading       = signal(true);
-  saving        = signal(false);
-  dialogVisible = signal(false);
-  editingInvoice = signal<InvoiceResponse | null>(null);
-  filterQuery   = signal('');
+  // Referencia al input oculto de archivo
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
+  // ── Estado reactivo ──────────────────────────────────────────────────────────
+  invoices         = signal<InvoiceResponse[]>([]);
+  loading          = signal(true);
+  saving           = signal(false);
+  dialogVisible    = signal(false);
+  editingInvoice   = signal<InvoiceResponse | null>(null);
+  filterQuery      = signal('');
+  selectedFileName = signal<string>('');
+
+  // Solo los últimos 15 registros, respetando el filtro de búsqueda
   filteredInvoices = computed(() => {
     const q = this.filterQuery().toLowerCase().trim();
-    if (!q) return this.invoices();
-    return this.invoices().filter(inv =>
-      inv.invoiceNumber.toLowerCase().includes(q) ||
-      inv.supplier?.toLowerCase().includes(q) ||
-      inv.createdByName?.toLowerCase().includes(q)
-    );
+    const list = q
+      ? this.invoices().filter(inv =>
+          inv.invoiceNumber.toLowerCase().includes(q) ||
+          inv.supplier?.toLowerCase().includes(q)     ||
+          inv.createdByName?.toLowerCase().includes(q)
+        )
+      : this.invoices();
+    return list.slice(0, 15);
   });
-
-  // ── Resumen rápido ───────────────────────────────────────────────────────────
-  totalAmount = computed(() =>
-    this.invoices().reduce((sum, inv) => sum + (inv.totalAmount ?? 0), 0)
-  );
 
   // ── Formulario ───────────────────────────────────────────────────────────────
   form!: FormGroup;
 
-  // Fecha máxima: hoy
+  readonly today   = new Date();
   readonly maxDate = new Date();
 
   constructor(
@@ -87,9 +84,8 @@ export class InvoiceRegistration implements OnInit {
   ngOnInit(): void {
     this.form = this.fb.group({
       invoiceNumber: ['', [Validators.required, Validators.maxLength(100)]],
-      supplier:      ['', [Validators.maxLength(200)]],
-      invoiceDate:   [null, [Validators.required]],
-      totalAmount:   [null],
+      supplier:      ['', [Validators.required, Validators.maxLength(200)]],  // ahora obligatorio
+      invoiceDate:   [this.today, [Validators.required]],                     // predefinida: hoy
       documentPath:  ['', [Validators.maxLength(500)]],
       notes:         ['', [Validators.maxLength(1000)]],
     });
@@ -111,7 +107,6 @@ export class InvoiceRegistration implements OnInit {
 
   formatDate(dateStr: string | number[]): string {
     if (!dateStr) return '—';
-    // Spring Boot puede serializar LocalDate como array [YYYY, M, D] o string 'YYYY-MM-DD'
     let y: number, m: number, d: number;
     if (Array.isArray(dateStr)) {
       [y, m, d] = dateStr;
@@ -122,9 +117,16 @@ export class InvoiceRegistration implements OnInit {
     return `${String(d).padStart(2,'0')}/${String(m).padStart(2,'0')}/${y}`;
   }
 
-  formatCurrency(amount?: number | null): string {
-    if (amount == null) return '—';
-    return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount);
+  // ── Selección de archivo ─────────────────────────────────────────────────────
+  triggerFileSelect(): void {
+    this.fileInput.nativeElement.click();
+  }
+
+  onFileSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.selectedFileName.set(file.name);
+    this.form.patchValue({ documentPath: file.name });
   }
 
   // ── Carga ────────────────────────────────────────────────────────────────────
@@ -142,17 +144,24 @@ export class InvoiceRegistration implements OnInit {
   // ── Diálogo ──────────────────────────────────────────────────────────────────
   openCreate(): void {
     this.editingInvoice.set(null);
-    this.form.reset();
+    this.selectedFileName.set('');
+    this.form.reset({
+      invoiceNumber: '',
+      supplier:      '',
+      invoiceDate:   this.today,
+      documentPath:  '',
+      notes:         '',
+    });
     this.dialogVisible.set(true);
   }
 
   openEdit(invoice: InvoiceResponse): void {
     this.editingInvoice.set(invoice);
+    this.selectedFileName.set(invoice.documentPath ?? '');
     this.form.patchValue({
       invoiceNumber: invoice.invoiceNumber,
       supplier:      invoice.supplier ?? '',
-      invoiceDate:   invoice.invoiceDate ? this.toDate(invoice.invoiceDate) : null,
-      totalAmount:   invoice.totalAmount ?? null,
+      invoiceDate:   invoice.invoiceDate ? this.toDate(invoice.invoiceDate) : this.today,
       documentPath:  invoice.documentPath ?? '',
       notes:         invoice.notes ?? '',
     });
@@ -162,6 +171,7 @@ export class InvoiceRegistration implements OnInit {
   closeDialog(): void {
     this.dialogVisible.set(false);
     this.editingInvoice.set(null);
+    this.selectedFileName.set('');
     this.form.reset();
   }
 
@@ -172,9 +182,9 @@ export class InvoiceRegistration implements OnInit {
     const raw = this.form.value;
     const payload: InvoiceRequest = {
       invoiceNumber: raw.invoiceNumber.trim(),
-      supplier:      raw.supplier?.trim() || undefined,
+      supplier:      raw.supplier.trim(),
       invoiceDate:   this.toIsoDate(raw.invoiceDate),
-      totalAmount:   raw.totalAmount ?? null,
+      totalAmount:   1,                                  // siempre 0 por defecto
       documentPath:  raw.documentPath?.trim() || undefined,
       notes:         raw.notes?.trim() || undefined,
     };
@@ -231,7 +241,6 @@ export class InvoiceRegistration implements OnInit {
   }
 
   // ── Utils ────────────────────────────────────────────────────────────────────
-  /** Convierte LocalDate de Spring (array o string) a objeto Date para el datepicker */
   private toDate(dateStr: string | number[]): Date {
     if (Array.isArray(dateStr)) {
       const [y, m, d] = dateStr;
