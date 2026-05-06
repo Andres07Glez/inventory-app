@@ -12,7 +12,7 @@ interface ApiResponse<T> { success: boolean; message: string; data: T; }
 })
 export class DashboardService {
   private readonly http     = inject(HttpClient);
-  private readonly endpoint = `${environment.apiBaseUrl}/v1/dashboard`;
+  private readonly endpoint = `${environment.apiUrl}/dashboard`;
 
   getStats(): Observable<DashboardStats> {
     return this.http

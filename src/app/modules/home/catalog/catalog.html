@@ -1,0 +1,448 @@
+<!-- ──────────────────────────────────────────────────────────────────────────
+     catalog.component.html — SP-08
+     Catálogos de Proveedores y Categorías con CRUD completo.
+     ─────────────────────────────────────────────────────────────────────────── -->
+
+<p-toast position="top-right" />
+<p-confirmDialog styleClass="cat-confirm-dialog" />
+
+<div class="cat-page">
+
+  <!-- ── Encabezado ───────────────────────────────────────────────────────── -->
+  <header class="cat-header">
+    <div class="cat-header__icon"><i class="pi pi-list"></i></div>
+    <div>
+      <h1 class="cat-header__title">Gestión de Catálogos</h1>
+      <p class="cat-header__subtitle">Administra los catálogos de proveedores y categorías de bienes</p>
+    </div>
+  </header>
+
+  <!-- ── Tabs ─────────────────────────────────────────────────────────────── -->
+  <p-tabs [(value)]="activeTab" styleClass="cat-tabs">
+
+    <p-tablist>
+      <p-tab value="suppliers">
+        <i class="pi pi-building"></i> Proveedores
+      </p-tab>
+      <p-tab value="categories">
+        <i class="pi pi-sitemap"></i> Categorías
+      </p-tab>
+    </p-tablist>
+
+    <p-tabpanels>
+
+      <!-- ════════════════════════════════════════════════════════════════════
+           TAB 1 — PROVEEDORES
+           ════════════════════════════════════════════════════════════════════ -->
+      <p-tabpanel value="suppliers">
+        <div class="cat-tab-content">
+
+          <!-- Barra de herramientas -->
+          <div class="cat-toolbar">
+            <p-iconfield styleClass="cat-search-field">
+              <p-inputicon styleClass="pi pi-search" />
+              <input
+                pInputText
+                class="cat-search-input"
+                placeholder="Buscar por nombre o contacto…"
+                [value]="supplierKeyword"
+                (input)="onSupplierSearch($any($event.target).value)"
+              />
+            </p-iconfield>
+            <button
+              pButton
+              icon="pi pi-plus"
+              label="Nuevo proveedor"
+              class="cat-btn cat-btn--primary"
+              (click)="openCreateSupplier()"
+            ></button>
+          </div>
+
+          <!-- Tabla de proveedores -->
+          <p-table
+            [value]="suppliers()"
+            [lazy]="true"
+            [paginator]="true"
+            [rows]="pageSize"
+            [totalRecords]="supplierTotal()"
+            [loading]="supplierLoading()"
+            [rowsPerPageOptions]="[10, 25, 50]"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="{first}–{last} de {totalRecords} proveedores"
+            (onLazyLoad)="onSupplierLazyLoad($event)"
+            sortMode="single"
+            sortField="name"
+            styleClass="cat-table"
+            responsiveLayout="scroll"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="name">Nombre <p-sortIcon field="name" /></th>
+                <th>Contacto</th>
+                <th>Correo</th>
+                <th>Teléfono</th>
+                <th style="width:100px;text-align:center">Estado</th>
+                <th style="width:110px;text-align:center">Acciones</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-s>
+              <tr>
+                <td>
+                  <div class="cat-cell-primary">{{ s.name }}</div>
+                  @if (s.address) {
+                    <div class="cat-cell-sub">{{ s.address }}</div>
+                  }
+                </td>
+                <td>{{ s.contactName || '—' }}</td>
+                <td>
+                  @if (s.email) {
+                    <a [href]="'mailto:' + s.email" class="cat-link">{{ s.email }}</a>
+                  } @else { <span class="cat-muted">—</span> }
+                </td>
+                <td>{{ s.phone || '—' }}</td>
+                <td style="text-align:center">
+                  <p-tag
+                    [value]="s.isActive ? 'Activo' : 'Inactivo'"
+                    [severity]="s.isActive ? 'success' : 'secondary'"
+                    styleClass="cat-tag"
+                  />
+                </td>
+                <td style="text-align:center">
+                  <div class="cat-actions">
+                    <button
+                      pButton
+                      type="button"
+                      icon="pi pi-pencil"
+                      class="cat-btn-icon cat-btn-icon--edit"
+                      pTooltip="Editar"
+                      tooltipPosition="top"
+                      (click)="openEditSupplier(s)"
+                    ></button>
+                    <button
+                      pButton
+                      type="button"
+                      icon="pi pi-ban"
+                      class="cat-btn-icon cat-btn-icon--danger"
+                      pTooltip="Desactivar"
+                      tooltipPosition="top"
+                      [disabled]="!s.isActive"
+                      (click)="confirmDeactivateSupplier(s)"
+                    ></button>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr><td colspan="6">
+                <div class="cat-empty">
+                  <i class="pi pi-building cat-empty__icon"></i>
+                  <p class="cat-empty__title">Sin proveedores</p>
+                  <p class="cat-empty__sub">
+                    @if (supplierKeyword) { No hay resultados para "{{ supplierKeyword }}". }
+                    @else { Agrega el primer proveedor con el botón "Nuevo proveedor". }
+                  </p>
+                </div>
+              </td></tr>
+            </ng-template>
+
+            <ng-template pTemplate="loadingbody">
+              @for (_ of [1,2,3,4,5]; track $index) {
+                <tr>
+                  @for (__ of [1,2,3,4,5,6]; track $index) {
+                    <td><p-skeleton height="1.25rem" styleClass="cat-skeleton" /></td>
+                  }
+                </tr>
+              }
+            </ng-template>
+          </p-table>
+
+        </div>
+      </p-tabpanel>
+
+      <!-- ════════════════════════════════════════════════════════════════════
+           TAB 2 — CATEGORÍAS
+           ════════════════════════════════════════════════════════════════════ -->
+      <p-tabpanel value="categories">
+        <div class="cat-tab-content">
+
+          <!-- Barra de herramientas -->
+          <div class="cat-toolbar">
+            <p-iconfield styleClass="cat-search-field">
+              <p-inputicon styleClass="pi pi-search" />
+              <input
+                pInputText
+                class="cat-search-input"
+                placeholder="Buscar categoría…"
+                [value]="categoryKeyword"
+                (input)="onCategorySearch($any($event.target).value)"
+              />
+            </p-iconfield>
+            <button
+              pButton
+              icon="pi pi-plus"
+              label="Nueva categoría"
+              class="cat-btn cat-btn--primary"
+              (click)="openCreateCategory()"
+            ></button>
+          </div>
+
+          <!-- Tabla de categorías -->
+          <p-table
+            [value]="categories()"
+            [lazy]="true"
+            [paginator]="true"
+            [rows]="pageSize"
+            [totalRecords]="categoryTotal()"
+            [loading]="categoryLoading()"
+            [rowsPerPageOptions]="[10, 25, 50]"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="{first}–{last} de {totalRecords} categorías"
+            (onLazyLoad)="onCategoryLazyLoad($event)"
+            sortMode="single"
+            sortField="name"
+            styleClass="cat-table"
+            responsiveLayout="scroll"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th pSortableColumn="name">Nombre <p-sortIcon field="name" /></th>
+                <th>Descripción</th>
+                <th>Categoría padre</th>
+                <th style="width:100px;text-align:center">Estado</th>
+                <th style="width:110px;text-align:center">Acciones</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-cat>
+              <tr>
+                <td>
+                  <div class="cat-cell-name">
+                    @if (cat.parentId) {
+                      <i class="pi pi-angle-right cat-cell-name__indent"></i>
+                    } @else {
+                      <i class="pi pi-folder cat-cell-name__root"></i>
+                    }
+                    {{ cat.name }}
+                  </div>
+                </td>
+                <td>
+                  <span class="cat-cell-desc" [pTooltip]="cat.description" tooltipPosition="top">
+                    {{ cat.description || '—' }}
+                  </span>
+                </td>
+                <td>
+                  @if (cat.parentName) {
+                    <span class="cat-parent-chip">
+                      <i class="pi pi-folder"></i> {{ cat.parentName }}
+                    </span>
+                  } @else {
+                    <span class="cat-muted">Raíz</span>
+                  }
+                </td>
+                <td style="text-align:center">
+                  <p-tag
+                    [value]="cat.isActive ? 'Activa' : 'Inactiva'"
+                    [severity]="cat.isActive ? 'success' : 'secondary'"
+                    styleClass="cat-tag"
+                  />
+                </td>
+                <td style="text-align:center">
+                  <div class="cat-actions">
+                    <button
+                      pButton
+                      type="button"
+                      icon="pi pi-pencil"
+                      class="cat-btn-icon cat-btn-icon--edit"
+                      pTooltip="Editar"
+                      tooltipPosition="top"
+                      (click)="openEditCategory(cat)"
+                    ></button>
+                    <button
+                      pButton
+                      type="button"
+                      icon="pi pi-ban"
+                      class="cat-btn-icon cat-btn-icon--danger"
+                      pTooltip="Desactivar"
+                      tooltipPosition="top"
+                      [disabled]="!cat.isActive"
+                      (click)="confirmDeactivateCategory(cat)"
+                    ></button>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr><td colspan="5">
+                <div class="cat-empty">
+                  <i class="pi pi-sitemap cat-empty__icon"></i>
+                  <p class="cat-empty__title">Sin categorías</p>
+                  <p class="cat-empty__sub">
+                    @if (categoryKeyword) { No hay resultados para "{{ categoryKeyword }}". }
+                    @else { Agrega la primera categoría con el botón "Nueva categoría". }
+                  </p>
+                </div>
+              </td></tr>
+            </ng-template>
+
+            <ng-template pTemplate="loadingbody">
+              @for (_ of [1,2,3,4,5]; track $index) {
+                <tr>
+                  @for (__ of [1,2,3,4,5]; track $index) {
+                    <td><p-skeleton height="1.25rem" styleClass="cat-skeleton" /></td>
+                  }
+                </tr>
+              }
+            </ng-template>
+          </p-table>
+
+        </div>
+      </p-tabpanel>
+
+    </p-tabpanels>
+  </p-tabs>
+
+</div><!-- /.cat-page -->
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     DIÁLOGO — Proveedor (Crear / Editar)
+     ══════════════════════════════════════════════════════════════════════════ -->
+<p-dialog
+  [(visible)]="supplierDialogVisible"
+  [header]="supplierDialogMode() === 'create' ? 'Nuevo proveedor' : 'Editar proveedor'"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  styleClass="cat-dialog"
+  [style]="{ width: '560px' }"
+>
+  <form [formGroup]="supplierForm" (ngSubmit)="saveSupplier()" novalidate class="cat-form">
+
+    <!-- Nombre -->
+    <div class="cat-field cat-field--full">
+      <label class="cat-label">Nombre o razón social <span class="cat-req">*</span></label>
+      <input pInputText formControlName="name" class="cat-input" placeholder="Ej. Dell México S.A. de C.V." />
+      @if (isInvalid(supplierForm, 'name')) {
+        <span class="cat-error"><i class="pi pi-exclamation-circle"></i> El nombre es obligatorio</span>
+      }
+    </div>
+
+    <!-- Contacto + Email -->
+    <div class="cat-field-row">
+      <div class="cat-field">
+        <label class="cat-label">Nombre de contacto</label>
+        <input pInputText formControlName="contactName" class="cat-input" placeholder="Ej. Ana Martínez" />
+      </div>
+      <div class="cat-field">
+        <label class="cat-label">Correo electrónico</label>
+        <input pInputText formControlName="email" class="cat-input" placeholder="correo@empresa.com" />
+        @if (isInvalid(supplierForm, 'email')) {
+          <span class="cat-error"><i class="pi pi-exclamation-circle"></i> Correo no válido</span>
+        }
+      </div>
+    </div>
+
+    <!-- Teléfono + Dirección -->
+    <div class="cat-field-row">
+      <div class="cat-field">
+        <label class="cat-label">Teléfono</label>
+        <input pInputText formControlName="phone" class="cat-input" placeholder="Ej. 287 123 4567" />
+      </div>
+      <div class="cat-field">
+        <label class="cat-label">Dirección</label>
+        <input pInputText formControlName="address" class="cat-input" placeholder="Calle, Ciudad, Estado" />
+      </div>
+    </div>
+
+    <!-- Notas -->
+    <div class="cat-field cat-field--full">
+      <label class="cat-label">Notas <span class="cat-opt">(opcional)</span></label>
+      <textarea pTextarea formControlName="notes" class="cat-textarea" rows="3"
+        placeholder="Condiciones de pago, garantías, observaciones…"></textarea>
+    </div>
+
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="cat-dialog-footer">
+      <button pButton type="button" label="Cancelar" icon="pi pi-times"
+        class="cat-btn cat-btn--secondary" (click)="supplierDialogVisible.set(false)"></button>
+      <button pButton type="button"
+        [label]="supplierDialogMode() === 'create' ? 'Crear proveedor' : 'Guardar cambios'"
+        icon="pi pi-check"
+        class="cat-btn cat-btn--primary"
+        [loading]="supplierDialogLoading()"
+        (click)="saveSupplier()"></button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     DIÁLOGO — Categoría (Crear / Editar)
+     ══════════════════════════════════════════════════════════════════════════ -->
+<p-dialog
+  [(visible)]="categoryDialogVisible"
+  [header]="categoryDialogMode() === 'create' ? 'Nueva categoría' : 'Editar categoría'"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  styleClass="cat-dialog"
+  [style]="{ width: '480px' }"
+>
+  <form [formGroup]="categoryForm" (ngSubmit)="saveCategory()" novalidate class="cat-form">
+
+    <!-- Nombre -->
+    <div class="cat-field cat-field--full">
+      <label class="cat-label">Nombre de la categoría <span class="cat-req">*</span></label>
+      <input pInputText formControlName="name" class="cat-input" placeholder="Ej. Mobiliario, Laptops, Periféricos…" />
+      @if (isInvalid(categoryForm, 'name')) {
+        <span class="cat-error"><i class="pi pi-exclamation-circle"></i> El nombre es obligatorio</span>
+      }
+    </div>
+
+    <!-- Categoría padre -->
+    <div class="cat-field cat-field--full">
+      <label class="cat-label">Categoría padre <span class="cat-opt">(opcional)</span></label>
+      <p-select
+        formControlName="parentId"
+        [options]="parentCategoryOptions()"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="— Sin categoría padre (raíz) —"
+        styleClass="cat-select"
+        appendTo="body"
+      />
+      <p class="cat-hint">
+        <i class="pi pi-info-circle"></i>
+        Deja vacío para crear una categoría raíz. Úsala para agrupar subcategorías.
+      </p>
+    </div>
+
+    <!-- Descripción -->
+    <div class="cat-field cat-field--full">
+      <label class="cat-label">Descripción <span class="cat-opt">(opcional)</span></label>
+      <textarea pTextarea formControlName="description" class="cat-textarea" rows="3"
+        placeholder="Describe qué tipo de bienes pertenecen a esta categoría…"
+        maxlength="255"></textarea>
+      <span class="cat-char-count">{{ categoryForm.get('description')?.value?.length ?? 0 }}/255</span>
+    </div>
+
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="cat-dialog-footer">
+      <button pButton type="button" label="Cancelar" icon="pi pi-times"
+        class="cat-btn cat-btn--secondary" (click)="categoryDialogVisible.set(false)"></button>
+      <button pButton type="button"
+        [label]="categoryDialogMode() === 'create' ? 'Crear categoría' : 'Guardar cambios'"
+        icon="pi pi-check"
+        class="cat-btn cat-btn--primary"
+        [loading]="categoryDialogLoading()"
+        (click)="saveCategory()"></button>
+    </div>
+  </ng-template>
+</p-dialog>

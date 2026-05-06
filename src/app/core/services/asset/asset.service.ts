@@ -6,13 +6,13 @@ import { environment } from '../../../config/environment';
 
 
 interface ApiResponse<T> { success: boolean; message: string; data: T; }
-const API_BASE_URL = environment.apiBaseUrl;  // ← cambia según tu entorno
+const API_BASE_URL = environment.apiUrl;
 
 @Injectable({ providedIn: 'root' })
 export class AssetService {
 
   private readonly http = inject(HttpClient);
-  private readonly endpoint = `${API_BASE_URL}/v1/assets`;
+  private readonly endpoint = `${API_BASE_URL}/assets`;
 
   /**
    * Obtiene la lista paginada de bienes con filtros opcionales.

@@ -1,8 +1,8 @@
 import { inject, Injectable } from '@angular/core';
-import { AssetAssignmentRequestDTO, AssetAssignmentResponseDTO, AssetPreview, GuardianOption, LocationOption } from '../../models/asset-assignment.model';
-import { Observable } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../config/enviroment';
+import { AssetAssignmentRequestDTO, AssetAssignmentResponseDTO,AssetSearchResult, GuardianOption, PageResponse } from '../../models/asset-assignment.model';
+import { map, Observable } from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { environment } from '../../../config/environment';
 
 // En tu proyecto real, importa desde environments/environment.ts
 const API_BASE_URL = environment.apiUrl;
@@ -15,45 +15,46 @@ export class AssetAssignmentService {
   // ── Asignaciones ───────────────────────────────────────────────────────────
 
   /**
-   * Crea una nueva asignación de bien a resguardante.
-   * POST /api/v1/assignments
+   * POST /v1/assets/assign
+   * La ubicación ya NO se envía: el backend la hereda de guardian.location.
    */
   createAssignment(request: AssetAssignmentRequestDTO): Observable<AssetAssignmentResponseDTO> {
     return this.http.post<AssetAssignmentResponseDTO>(
-      `${API_BASE_URL}/assignments`,
+      `${API_BASE_URL}/assets/assign`,
       request
     );
   }
-
-  // ── Catálogos ──────────────────────────────────────────────────────────────
-
   /**
-   * Busca un bien por código (inventario o código de barras).
-   * GET /v1/assets/lookup?q={code}
+   * Búsqueda paginada por nombre, marca, categoría, número de inventario, etc.
+   * GET /v1/assets/search?keyword=...&page=0&size=8
+   * Retorna AssetSearchResponseDTO con currentGuardianName incluido.
    */
-  lookupAsset(code: string): Observable<{ data: AssetPreview }> {
-    return this.http.get<{ data: AssetPreview }>(
-      `${API_BASE_URL}/assets/lookup`,
-      { params: { q: code } }
+  searchAssets(
+    keyword: string,
+    page = 0,
+    size = 8
+  ): Observable<PageResponse<AssetSearchResult>> {
+    const params = new HttpParams()
+      .set('keyword', keyword)
+      .set('page', page.toString())
+      .set('size', size.toString());
+
+    return this.http.get<PageResponse<AssetSearchResult>>(
+      `${API_BASE_URL}/assets/search`,
+      { params }
     );
   }
-  lookupAssetById(id: number): Observable<{ data: AssetPreview }> {
-    return this.http.get<{ data: AssetPreview }>(`${API_BASE_URL}/assets/${id}`);
+  lookupAssetById(id: number): Observable<{ data: AssetSearchResult }> {
+    return this.http.get<{ data: AssetSearchResult }>(`${API_BASE_URL}/assets/${id}`);
   }
 
   /**
-   * Obtiene la lista de resguardantes disponibles.
-   * GET /api/v1/guardians
+   * GET /api/v1/guardians — activos con paginación desactivada para el select.
+   * El DTO ahora incluye locationId y locationName (heredados en la asignación).
    */
   getGuardians(): Observable<GuardianOption[]> {
-    return this.http.get<GuardianOption[]>(`${API_BASE_URL}/guardians`);
+    const params = new HttpParams().set('size', '500').set('sort', 'fullName,asc');
+    return this.http.get<GuardianOption[]>(`${API_BASE_URL}/guardians`, { params });
   }
-
-  /**
-   * Obtiene la lista de ubicaciones disponibles.
-   * GET /api/v1/locations
-   */
-  getLocations(): Observable<LocationOption[]> {
-    return this.http.get<LocationOption[]>(`${API_BASE_URL}/locations`);
-  }
+  // getLocations() eliminado: la ubicación se hereda automáticamente del resguardante
 }
