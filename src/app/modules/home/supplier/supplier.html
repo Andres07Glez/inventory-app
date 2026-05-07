@@ -1,0 +1,240 @@
+<p-toast position="top-right" />
+<p-confirmDialog styleClass="cat-confirm-dialog" />
+
+<div class="cat-tab-content">
+  <div class="cat-toolbar">
+    <p-iconfield styleClass="cat-search-field">
+      <p-inputicon styleClass="pi pi-search" />
+      <input
+        pInputText
+        class="cat-search-input"
+        placeholder="Buscar por nombre o contacto…"
+        [value]="supplierKeyword"
+        (input)="onSupplierSearch($any($event.target).value)"
+      />
+    </p-iconfield>
+    <button
+      pButton
+      icon="pi pi-plus"
+      label="Nuevo proveedor"
+      class="cat-btn cat-btn--primary"
+      (click)="openCreateSupplier()"
+    ></button>
+  </div>
+
+  <p-table
+    [value]="suppliers()"
+    dataKey="id"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="pageSize"
+    [totalRecords]="supplierTotal()"
+    [loading]="supplierLoading()"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="{first}–{last} de {totalRecords} proveedores"
+    (onLazyLoad)="onSupplierLazyLoad($event)"
+    sortMode="single"
+    sortField="name"
+    styleClass="cat-table"
+    responsiveLayout="scroll"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 3rem"></th>
+        <th pSortableColumn="name">Nombre <p-sortIcon field="name" /></th>
+        <th>Contacto</th>
+        <th style="width:100px;text-align:center">Estado</th>
+        <th style="width:110px;text-align:center">Acciones</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-s let-expanded="expanded">
+      <tr>
+        <td>
+          <button 
+            type="button" 
+            pButton 
+            [pRowToggler]="s" 
+            class="p-button-text p-button-rounded p-button-plain p-button-sm" 
+            [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'">
+          </button>
+        </td>
+        <td>
+          <div class="cat-cell-primary">{{ s.name }}</div>
+        </td>
+        <td>{{ s.contactName || '—' }}</td>
+        <td style="text-align:center">
+          <p-tag
+            [value]="s.isActive ? 'Activo' : 'Inactivo'"
+            [severity]="s.isActive ? 'success' : 'secondary'"
+            styleClass="cat-tag"
+          />
+        </td>
+        <td style="text-align:center">
+          <div class="cat-actions">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-pencil"
+              class="cat-btn-icon cat-btn-icon--edit"
+              pTooltip="Editar"
+              tooltipPosition="top"
+              (click)="openEditSupplier(s)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-ban"
+              class="cat-btn-icon cat-btn-icon--danger"
+              pTooltip="Desactivar"
+              tooltipPosition="top"
+              [disabled]="!s.isActive"
+              (click)="confirmDeactivateSupplier(s)"
+            ></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="rowexpansion" let-s>
+      <tr>
+        <td colspan="5">
+          <div class="cat-expanded-row">
+            <div class="cat-detail-grid">
+              <div class="cat-detail-item">
+                <span class="cat-detail-label">RFC</span>
+                <span class="cat-detail-value">{{ s.rfc || '—' }}</span>
+              </div>
+              <div class="cat-detail-item">
+                <span class="cat-detail-label">Teléfono</span>
+                <span class="cat-detail-value">{{ s.phone || '—' }}</span>
+              </div>
+              <div class="cat-detail-item">
+                <span class="cat-detail-label">Correo electrónico</span>
+                <span class="cat-detail-value">
+                  @if (s.email) {
+                    <a [href]="'mailto:' + s.email" class="cat-link">{{ s.email }}</a>
+                  } @else { <span class="cat-muted">—</span> }
+                </span>
+              </div>
+              <div class="cat-detail-item cat-detail-item--full">
+                <span class="cat-detail-label">Dirección</span>
+                <span class="cat-detail-value">{{ s.address || '—' }}</span>
+              </div>
+              @if (s.notes) {
+                <div class="cat-detail-item cat-detail-item--full">
+                  <span class="cat-detail-label">Notas</span>
+                  <span class="cat-detail-value">{{ s.notes }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="5">
+        <div class="cat-empty">
+          <i class="pi pi-building cat-empty__icon"></i>
+          <p class="cat-empty__title">Sin proveedores</p>
+          <p class="cat-empty__sub">
+            @if (supplierKeyword) { No hay resultados para "{{ supplierKeyword }}". }
+            @else { Agrega el primer proveedor con el botón "Nuevo proveedor". }
+          </p>
+        </div>
+      </td></tr>
+    </ng-template>
+
+    <ng-template pTemplate="loadingbody">
+      @for (_ of [1,2,3,4,5]; track $index) {
+        <tr>
+          @for (__ of [1,2,3,4,5]; track $index) {
+            <td><p-skeleton height="1.25rem" styleClass="cat-skeleton" /></td>
+          }
+        </tr>
+      }
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog
+  [header]="supplierDialogMode() === 'create' ? 'Nuevo proveedor' : 'Editar proveedor'"
+  [modal]="true"
+  [(visible)]="supplierDialogVisible"
+  [style]="{ width: '550px' }"
+  styleClass="cat-dialog"
+  [draggable]="false"
+  [resizable]="false"
+  [closeOnEscape]="true"
+>
+  <form [formGroup]="supplierForm" class="cat-form">
+    <div class="cat-field cat-field--full">
+      <label class="cat-label">Razón Social / Nombre <span class="cat-req">*</span></label>
+      <input pInputText formControlName="name" class="cat-input" placeholder="Ej. Computadoras de México S.A." maxlength="200" />
+      @if (supplierForm.get('name')?.invalid && supplierForm.get('name')?.touched) {
+        <small class="cat-error"><i class="pi pi-exclamation-circle"></i> El nombre es requerido.</small>
+      }
+    </div>
+
+    <div class="cat-form-row">
+      <div class="cat-field">
+        <label class="cat-label">RFC <span class="cat-opt">(opcional)</span></label>
+        <input 
+          pInputText 
+          formControlName="rfc" 
+          class="cat-input" 
+          placeholder="Ej. XAXX010101000" 
+          maxlength="13" 
+          style="text-transform: uppercase;"
+          (input)="supplierForm.get('rfc')?.setValue($any($event.target).value.toUpperCase())"
+        />
+        @if (supplierForm.get('rfc')?.invalid && supplierForm.get('rfc')?.touched) {
+          <small class="cat-error"><i class="pi pi-exclamation-circle"></i> Formato de RFC inválido.</small>
+        }
+      </div>
+      <div class="cat-field">
+        <label class="cat-label">Contacto principal <span class="cat-opt">(opcional)</span></label>
+        <input pInputText formControlName="contactName" class="cat-input" placeholder="Nombre de la persona que atiende…" maxlength="150" />
+      </div>
+    </div>
+
+    <div class="cat-form-row">
+      <div class="cat-field">
+        <label class="cat-label">Correo electrónico <span class="cat-opt">(opcional)</span></label>
+        <input pInputText formControlName="email" type="email" class="cat-input" placeholder="contacto@empresa.com" maxlength="150" />
+        @if (supplierForm.get('email')?.invalid && supplierForm.get('email')?.touched) {
+          <small class="cat-error"><i class="pi pi-exclamation-circle"></i> Formato de correo inválido.</small>
+        }
+      </div>
+      <div class="cat-field">
+        <label class="cat-label">Teléfono <span class="cat-opt">(opcional)</span></label>
+        <input pInputText formControlName="phone" class="cat-input" placeholder="Ej. 55 1234 5678" maxlength="25" />
+      </div>
+    </div>
+
+    <div class="cat-field cat-field--full">
+      <label class="cat-label">Dirección <span class="cat-opt">(opcional)</span></label>
+      <textarea pTextarea formControlName="address" class="cat-textarea" rows="2" placeholder="Calle, Número, Colonia, Ciudad…" maxlength="300"></textarea>
+    </div>
+
+    <div class="cat-field cat-field--full">
+      <label class="cat-label">Notas adicionales <span class="cat-opt">(opcional)</span></label>
+      <textarea pTextarea formControlName="notes" class="cat-textarea" rows="2" placeholder="Tiempos de entrega, políticas, etc…"></textarea>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="cat-dialog-footer">
+      <button pButton type="button" label="Cancelar" icon="pi pi-times"
+        class="cat-btn cat-btn--secondary" (click)="supplierDialogVisible.set(false)"></button>
+      <button pButton type="button"
+        [label]="supplierDialogMode() === 'create' ? 'Crear proveedor' : 'Guardar cambios'"
+        icon="pi pi-check"
+        class="cat-btn cat-btn--primary"
+        [loading]="supplierDialogLoading()"
+        (click)="saveSupplier()"></button>
+    </div>
+  </ng-template>
+</p-dialog>
