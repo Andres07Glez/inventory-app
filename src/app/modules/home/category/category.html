@@ -23,7 +23,7 @@
   </div>
 
   <p-table
-    [value]="categories()"
+    [value]="visibleCategories()"
     [lazy]="true"
     [paginator]="true"
     [rows]="pageSize"
@@ -49,14 +49,30 @@
     </ng-template>
 
     <ng-template pTemplate="body" let-cat>
-      <tr>
+      <tr [class.cat-row--child]="cat.parentId">
         <td>
-          <div class="cat-cell-name">
-            @if (cat.parentId) {
+          <div class="cat-cell-name" [class.cat-cell-name--child]="cat.parentId">
+
+            @if (categoriesWithChildren().has(cat.id)) {
+              <!-- Categoría raíz CON hijos: botón expand/collapse -->
+              <button
+                pButton
+                type="button"
+                [icon]="expandedCategories().has(cat.id) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                class="cat-btn-icon cat-btn-icon--toggle"
+                [pTooltip]="expandedCategories().has(cat.id) ? 'Colapsar' : 'Expandir subcategorías'"
+                tooltipPosition="top"
+                (click)="toggleCategory(cat.id)"
+              ></button>
+              <i class="pi pi-folder cat-cell-name__root"></i>
+            } @else if (cat.parentId) {
+              <!-- Subcategoría (hijo) -->
               <i class="pi pi-angle-right cat-cell-name__indent"></i>
             } @else {
+              <!-- Categoría raíz SIN hijos -->
               <i class="pi pi-folder cat-cell-name__root"></i>
             }
+
             {{ cat.name }}
           </div>
         </td>
