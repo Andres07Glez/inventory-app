@@ -1,0 +1,121 @@
+<!-- Ruta: src/app/modules/home/dashboard/dashboard.html -->
+<div class="dash-page">
+
+  <header class="dash-header">
+    <div>
+      <h1 class="dash-header__title">Dashboard</h1>
+      <p class="dash-header__sub">Resumen general del inventario institucional</p>
+    </div>
+  </header>
+
+  <!-- ── Estado: error de carga ──────────────────────────────────────────────── -->
+  @if (error()) {
+    <div class="dash-error">
+      <i class="pi pi-wifi dash-error__icon"></i>
+      <p class="dash-error__msg">No se pudo conectar al servidor. Verifica la conexión.</p>
+      <a routerLink="/inventario/bienes" class="dash-error__link">
+        Ir al inventario de bienes
+      </a>
+    </div>
+  }
+
+  <!-- ── Estado: cargando ──────────────────────────────────────────────────────── -->
+  @if (loading()) {
+    <div class="dash-kpis">
+      @for (_ of [1,2,3,4]; track $index) {
+        <div class="kpi-card kpi-card--skeleton">
+          <p-skeleton shape="circle" size="48px" />
+          <div class="kpi-card__body">
+            <p-skeleton height="2rem" width="60px" styleClass="mb-1" />
+            <p-skeleton height="0.75rem" width="100px" />
+          </div>
+        </div>
+      }
+    </div>
+    <div class="dash-charts">
+      <p-skeleton height="280px" borderRadius="10px" />
+      <p-skeleton height="280px" borderRadius="10px" />
+    </div>
+  }
+
+  <!-- ── Estado: datos cargados ────────────────────────────────────────────────── -->
+  @if (!loading() && !error() && stats(); as s) {
+
+    <!-- KPIs -->
+    <div class="dash-kpis">
+      @for (kpi of getKpis(s); track kpi.label) {
+        <div class="kpi-card kpi-card--{{ kpi.color }}">
+          <div class="kpi-card__icon">
+            <i class="{{ kpi.icon }}"></i>
+          </div>
+          <div class="kpi-card__body">
+            <span class="kpi-card__value">{{ kpi.value }}</span>
+            <span class="kpi-card__label">{{ kpi.label }}</span>
+            <span class="kpi-card__detail">{{ kpi.detail }}</span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Gráficas -->
+    <div class="dash-charts">
+
+      <!-- Donut: condición de bienes -->
+      <div class="dash-chart-card">
+        <div class="dash-chart-card__header">
+          <h3 class="dash-chart-card__title">Condición de bienes</h3>
+          <span class="dash-chart-card__total">
+            {{ (s.goodCondition + s.regularCondition + s.badCondition).toLocaleString('es-MX') }} activos
+          </span>
+        </div>
+        <div class="dash-chart-card__body" style="height: 240px">
+          <p-chart
+            type="doughnut"
+            [data]="conditionChartData()"
+            [options]="conditionChartOpts()"
+            height="240"
+          />
+        </div>
+      </div>
+
+      <!-- Barras horizontales: top 5 ubicaciones -->
+      <div class="dash-chart-card">
+        <div class="dash-chart-card__header">
+          <h3 class="dash-chart-card__title">Top 5 áreas por bienes asignados</h3>
+          <a routerLink="/inventario/bienes" class="dash-chart-card__link">
+            Ver todos <i class="pi pi-arrow-right"></i>
+          </a>
+        </div>
+        <div class="dash-chart-card__body" style="height: 240px">
+          @if (locationChartData()) {
+            <p-chart
+              type="bar"
+              [data]="locationChartData()"
+              [options]="locationChartOpts()"
+              height="240"
+            />
+          } @else {
+            <div class="dash-chart-empty">
+              <i class="pi pi-map-marker"></i>
+              <span>Sin ubicaciones asignadas aún</span>
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Aviso módulos pendientes (incidencias y mantenimiento) -->
+    @if (s.openIncidents === 0 && s.maintenanceThisMonth === 0) {
+      <div class="dash-notice">
+        <i class="pi pi-info-circle"></i>
+        <span>
+          Los módulos de <strong>Incidencias</strong> y <strong>Mantenimiento</strong>
+          están en desarrollo. Sus métricas aparecerán aquí cuando sean implementados.
+        </span>
+      </div>
+    }
+
+  }
+
+</div>

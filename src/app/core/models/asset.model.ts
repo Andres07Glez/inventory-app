@@ -1,3 +1,40 @@
+export class Asset {
+    public id!: number; // BIGINT UNSIGNED
+
+    // Identificadores
+    public inventoryNumber!: string; // INV-2026-00001
+    public barcode?: string; // Opcional en BD
+
+    // Descripción
+    public description!: string; // NOT NULL
+    public brand?: string;  //marca
+    public model?: string;
+    public serialNumber?: string;
+    public notes?: string;
+
+    // Relaciones (IDs de los catálogos)
+    public categoryId!: number; // FK a categories
+    public locationId?: number; // Puede ser NULL si no tiene ubicación
+    public invoiceId?: number;  // FK a invoices
+
+    // Fechas (Se manejan como string en formato YYYY-MM-DD para los inputs de tipo date)
+    public invoiceDate?: string;
+    public entryDate!: string; // NOT NULL
+
+    // Estados (Basados en tus ENUMS)
+    public conditionStatus: 'GOOD' | 'REGULAR' | 'BAD' = 'GOOD';
+    public lifecycleStatus: 'REGISTERED' | 'AVAILABLE' | 'ASSIGNED' | 'IN_MAINTENANCE' | 'IN_WARRANTY' | 'DECOMMISSIONED' = 'REGISTERED';
+
+    // Auditoría
+    public createdAt?: string;
+    public updatedAt?: string;
+    public createdBy!: number; // ID del usuario que registra
+    public updatedBy!: number;
+
+    constructor() {
+        // Puedes inicializar valores por defecto si lo deseas
+    }
+}
 // ─────────────────────────────────────────────────────────────────────────────
 // asset.model.ts
 // Modelos e interfaces del módulo de bienes.
@@ -65,3 +102,65 @@ export const LIFECYCLE_STATUS_OPTIONS: SelectOption<LifecycleStatus>[] = [
   { label: 'En garantía', value: 'IN_WARRANTY' },
   { label: 'Dado de baja', value: 'DECOMMISSIONED' },
 ];
+
+export interface GuardianSummary {
+  id: number;
+  fullName: string;
+  employeeNumber?: string;
+  department?: string;
+}
+
+/**
+ * Respuesta del endpoint GET /v1/assets/{id}
+ * Incluye todos los campos del bien y el resguardante actual.
+ */
+export interface AssetDetailResponseDTO {
+  id: number;
+  inventoryNumber: string;
+  barcode?: string;
+  description: string;
+  brand?: string;
+  model?: string;
+  serialNumber?: string;
+  notes?: string;
+  categoryName: string;
+  locationName?: string;
+  building?: string;
+  campus?: string;
+  conditionStatus: ConditionStatus;
+  lifecycleStatus: LifecycleStatus;
+  invoiceDate?: string;
+  entryDate: string;
+  createdAt?: string;
+  updatedAt: string;
+  guardian?: GuardianSummary;  // null si el bien no tiene asignación activa
+}
+
+/**
+ * Respuesta del endpoint GET /v1/assets/{id}/assignments
+ * Historial completo de asignaciones del bien.
+ */
+export interface AssignmentHistoryDTO {
+  id: number;
+  guardianName: string;
+  guardianEmployeeNumber?: string;
+  locationName?: string;
+  assignedAt: string;    // ISO datetime
+  returnedAt: string | null;  // null = asignación activa vigente
+  assignedByUsername?: string;
+  notes?: string;
+}
+
+// ── SP-09: Actualizar condición ──────────────────────────────────────────────
+
+export interface UpdateConditionRequest {
+  conditionStatus: ConditionStatus;
+}
+
+export interface UpdateConditionResponse {
+  assetId: number;
+  inventoryNumber: string;
+  previousCondition: ConditionStatus;
+  newCondition: ConditionStatus;
+  updatedAt: string;
+}

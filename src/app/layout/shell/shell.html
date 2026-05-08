@@ -1,0 +1,73 @@
+<!-- Ruta: src/app/layout/shell/shell.html -->
+<div class="shell" [class.shell--collapsed]="sidebarCollapsed()">
+
+  <!-- ── Topbar ─────────────────────────────────────────────────────────── -->
+  <header class="topbar">
+    <button
+      class="topbar__toggle"
+      (click)="toggleSidebar()"
+      pTooltip="{{ sidebarCollapsed() ? 'Expandir menú' : 'Colapsar menú' }}"
+      tooltipPosition="right"
+    >
+      <i class="pi pi-bars"></i>
+    </button>
+
+    <div class="topbar__brand">
+      <i class="pi pi-database topbar__brand-icon"></i>
+      @if (!sidebarCollapsed()) {
+        <span class="topbar__brand-text">UNPA · Inventarios</span>
+      }
+    </div>
+
+    <div class="topbar__spacer"></div>
+
+    <!-- Buscador global -->
+    <div class="topbar__search">
+      <i class="pi pi-search topbar__search-icon"></i>
+      <input
+        class="topbar__search-input"
+        type="text"
+        placeholder="Buscar por núm. de inventario..."
+      />
+    </div>
+
+    <!-- Usuario (placeholder hasta que llegue auth) -->
+    <div class="topbar__user">
+      <i class="pi pi-user topbar__user-icon"></i>
+      <span class="topbar__user-name">Administrador</span>
+    </div>
+  </header>
+
+  <!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <nav class="sidebar__nav">
+      @for (group of navGroups; track group.section) {
+        <div class="sidebar__group">
+          @if (!sidebarCollapsed()) {
+            <span class="sidebar__section-label">{{ group.section }}</span>
+          }
+          @for (item of group.items; track item.route) {
+            <a
+              class="sidebar__nav-item"
+              [routerLink]="item.route"
+              routerLinkActive="sidebar__nav-item--active"
+              [pTooltip]="sidebarCollapsed() ? item.label : ''"
+              tooltipPosition="right"
+            >
+              <i class="{{ item.icon }} sidebar__nav-icon"></i>
+              @if (!sidebarCollapsed()) {
+                <span class="sidebar__nav-label">{{ item.label }}</span>
+              }
+            </a>
+          }
+        </div>
+      }
+    </nav>
+  </aside>
+
+  <!-- ── Contenido dinámico ──────────────────────────────────────────────── -->
+  <main class="shell__content">
+    <router-outlet />
+  </main>
+
+</div>

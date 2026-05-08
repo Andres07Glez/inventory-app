@@ -125,7 +125,11 @@
 
       <!-- ── Filas ─────────────────────────────────────────────────────────── -->
       <ng-template pTemplate="body" let-asset>
-        <tr class="inv-table__row">
+        <tr class="inv-table__row
+          inv-table__row--clickable"
+          (click)="navigateToDetail(asset.id)"
+          pTooltip="Ver detalle del bien"
+          tooltipPosition="left">
           <!-- No. inventario -->
           <td>
             <span class="inv-inv-number">{{ asset.inventoryNumber }}</span>
