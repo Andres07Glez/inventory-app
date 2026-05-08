@@ -27,7 +27,7 @@ export class Shell {
     {
       section: 'Principal',
       items: [
-        { label: 'Dashboard',    icon: 'pi pi-home',      route: '/dashboard' },
+        { label: 'Dashboard',    icon: 'pi pi-home',      route: '/inventario/dashboard' },
       ],
     },
     {
@@ -35,7 +35,7 @@ export class Shell {
       items: [
         { label: 'Bienes',       icon: 'pi pi-box',       route: '/inventario/bienes' },
         { label: 'Asignaciones', icon: 'pi pi-user-plus', route: '/inventario/asignaciones' }, // ← NUEVO
-        { label: 'Registrar',   icon: 'pi pi-plus',      route: '/registro' },
+        { label: 'Registrar',   icon: 'pi pi-plus',      route: '/inventario/registro' },
       ],
     },
     {
@@ -48,9 +48,12 @@ export class Shell {
     {
       section: 'Catálogos',
       items: [
-        { label: 'Categorías',    icon: 'pi pi-tag',        route: '/catalogos/categorias' },
+        { label: 'Categorías',    icon: 'pi pi-tag',        route: '/catalogos/categories' },
         { label: 'Resguardantes', icon: 'pi pi-users',      route: '/catalogos/resguardantes' },
         { label: 'Ubicaciones',   icon: 'pi pi-map-marker', route: '/catalogos/ubicaciones' },
+        { label: 'Marcas',        icon: 'pi pi-bookmark',   route: '/catalogos/brands' },
+        { label: 'Proveedores',   icon: 'pi pi-truck',      route: '/catalogos/suppliers' },
+        { label: 'Facturas',      icon: 'pi pi-receipt',    route: '/catalogos/invoices' },
       ],
     },
   ];

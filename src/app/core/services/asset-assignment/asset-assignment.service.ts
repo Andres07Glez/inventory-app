@@ -20,7 +20,7 @@ export class AssetAssignmentService {
    */
   createAssignment(request: AssetAssignmentRequestDTO): Observable<AssetAssignmentResponseDTO> {
     return this.http.post<AssetAssignmentResponseDTO>(
-      `${API_BASE_URL}/assets/assign`,
+      `${API_BASE_URL}/assignments`,
       request
     );
   }

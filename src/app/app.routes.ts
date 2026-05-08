@@ -6,9 +6,9 @@ export const routes: Routes = [
     path: '',
     loadComponent: () => import('./layout/shell/shell').then(m => m.Shell),
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: '', redirectTo: 'inventario/dashboard', pathMatch: 'full' },
       {
-        path: 'dashboard',
+        path: 'inventario/dashboard',
         loadComponent: () =>
           import('./modules/home/dashboard/dashboard').then(m => m.Dashboard),
       },
@@ -30,10 +30,30 @@ export const routes: Routes = [
           import('./modules/home/asset-assignment/asset-assignment').then(m => m.AssetAssignmentComponent),
       },
       {
-        path: 'registro',
+        path: 'inventario/registro',
         loadComponent: () =>
           import('./modules/home/asset-registration/asset-registration').then(m => m.AssetRegistration),
       },
+      {
+        path:'catalogos/invoices',
+        loadComponent:()=>
+          import('./modules/home/invoice-registration/invoice-registration').then(m=>m.InvoiceRegistration),
+      },
+      {
+        path:'catalogos/brands',
+        loadComponent:()=>
+          import('./modules/home/marca-registration/marca-registration').then(m=>m.MarcaRegistration),
+      },
+      {
+        path:'catalogos/categories',
+        loadComponent:()=>
+          import('./modules/home/category/category').then(m=>m.CategoryComponent),
+      },
+      {
+        path:'catalogos/suppliers',
+        loadComponent:()=>
+          import('./modules/home/supplier/supplier').then(m=>m.SupplierComponent),
+      }
     ],
   },
   { path: '**', redirectTo: '' },
