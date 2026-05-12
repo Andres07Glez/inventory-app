@@ -1,4 +1,5 @@
-<!-- Ruta: src/app/layout/shell/shell.html -->
+<p-toast position="top-right" />
+
 <div class="shell" [class.shell--collapsed]="sidebarCollapsed()">
 
   <!-- ── Topbar ─────────────────────────────────────────────────────────── -->
@@ -21,22 +22,68 @@
 
     <div class="topbar__spacer"></div>
 
-    <!-- Buscador global -->
+    <!-- Buscador por número de inventario -->
     <div class="topbar__search">
-      <i class="pi pi-search topbar__search-icon"></i>
+      @if (isSearching()) {
+        <i class="pi pi-spin pi-spinner topbar__search-icon"></i>
+      } @else {
+        <i class="pi pi-search topbar__search-icon" (click)="executeSearch()" style="cursor:pointer"></i>
+      }
       <input
         class="topbar__search-input"
         type="text"
-        placeholder="Buscar por núm. de inventario..."
+        placeholder="Buscar por núm. de inventario…"
+        [value]="searchQuery()"
+        (input)="searchQuery.set($any($event.target).value)"
+        (keydown)="onSearchKeydown($event)"
       />
+      @if (searchQuery()) {
+        <button class="topbar__search-clear" (click)="clearSearch()" title="Limpiar">
+          <i class="pi pi-times"></i>
+        </button>
+      }
     </div>
 
-    <!-- Usuario (placeholder hasta que llegue auth) -->
-    <div class="topbar__user">
-      <i class="pi pi-user topbar__user-icon"></i>
-      <span class="topbar__user-name">Administrador</span>
+    <!-- Usuario con menú desplegable -->
+    <div class="topbar__user" (click)="toggleUserMenu($event)">
+      <span class="topbar__user-avatar">{{ userInitial }}</span>
+      <span class="topbar__user-name">{{ fullName }}</span>
+      <i class="pi pi-chevron-down topbar__user-chevron"></i>
     </div>
   </header>
+
+  <!-- ── User menu (Popover) ────────────────────────────────────────────── -->
+  <p-popover #userMenu styleClass="user-popover">
+    <div class="user-menu">
+      <div class="user-menu__header">
+        <span class="user-menu__avatar">{{ userInitial }}</span>
+        <div class="user-menu__info">
+          <span class="user-menu__name">{{ fullName }}</span>
+          <span class="user-menu__meta">
+            {{ employeeNumber }}
+            <span class="user-menu__role-badge"
+                  [class.user-menu__role-badge--admin]="role === 'ADMIN'">
+              {{ roleLabel }}
+            </span>
+          </span>
+        </div>
+      </div>
+
+      <hr class="user-menu__divider">
+
+      <button class="user-menu__item" (click)="goToChangePassword()">
+        <i class="pi pi-key"></i>
+        <span>Cambiar contraseña</span>
+      </button>
+
+      <hr class="user-menu__divider">
+
+      <button class="user-menu__item user-menu__item--danger" (click)="logout()">
+        <i class="pi pi-sign-out"></i>
+        <span>Cerrar sesión</span>
+      </button>
+    </div>
+  </p-popover>
 
   <!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
   <aside class="sidebar">
