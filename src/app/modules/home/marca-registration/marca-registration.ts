@@ -37,17 +37,17 @@ import { BrandService, BrandResponse, BrandRequest } from '../../../core/service
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './marca-registration.html',
-  styleUrls: ['./marca-registration.css', '../../../shared/styles/primeng-overlays.css'],
+  styleUrls: ['./marca-registration.css'],
 })
 export class MarcaRegistration implements OnInit {
 
   // ── Estado reactivo ──────────────────────────────────────────────────────────
-  brands   = signal<BrandResponse[]>([]);
-  loading  = signal(true);
-  saving   = signal(false);
+  brands = signal<BrandResponse[]>([]);
+  loading = signal(true);
+  saving = signal(false);
   dialogVisible = signal(false);
-  editingBrand  = signal<BrandResponse | null>(null);
-  filterQuery   = signal('');
+  editingBrand = signal<BrandResponse | null>(null);
+  filterQuery = signal('');
 
   filteredBrands = computed(() => {
     const q = this.filterQuery().toLowerCase().trim();
@@ -63,7 +63,7 @@ export class MarcaRegistration implements OnInit {
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
     private fb: FormBuilder,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.form = this.fb.group({
@@ -162,9 +162,21 @@ export class MarcaRegistration implements OnInit {
             this.brands.update(list => list.filter(b => b.id !== brand.id));
             this.messageService.add({ severity: 'warn', summary: 'Desactivada', detail: `La marca "${brand.name}" fue desactivada.` });
           },
-          error: err => {
+          /*error: err => {
             const detail = err?.error?.message ?? 'No se pudo desactivar la marca.';
             this.messageService.add({ severity: 'error', summary: 'Error', detail });
+          },*/
+          error: err => {
+            const isBrandInUse = err.status === 409;
+            this.messageService.add({
+              severity: isBrandInUse ? 'warn' : 'error',
+              summary: isBrandInUse ? 'Marca en uso' : 'Error',
+              detail: err?.error?.message
+                ?? (isBrandInUse
+                  ? 'Esta marca está vinculada a bienes y no puede desactivarse.'
+                  : 'No se pudo desactivar la marca.'),
+              life: isBrandInUse ? 6000 : 4000,
+            });
           },
         });
       },

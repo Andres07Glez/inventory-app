@@ -153,3 +153,31 @@
 .p-tooltip.p-tooltip-bottom .p-tooltip-arrow { border-bottom-color: var(--ds-teal-800) !important; }
 .p-tooltip.p-tooltip-left   .p-tooltip-arrow { border-left-color:   var(--ds-teal-800) !important; }
 .p-tooltip.p-tooltip-right  .p-tooltip-arrow { border-right-color:  var(--ds-teal-800) !important; }
+
+/* ════════════════════════════════════════════════════════════
+   P-SELECT OVERLAY (panel dropdown — escapa del host)
+════════════════════════════════════════════════════════════ */
+.p-select-overlay {
+  background: var(--ds-surface) !important;
+  border: 1px solid var(--ds-border) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--ds-shadow) !important;
+}
+.p-select-overlay .p-select-filter-input {
+  font-family: var(--ds-font) !important;
+  background: var(--ds-surface-alt) !important;
+  border-bottom: 2px solid var(--ds-text-muted) !important;
+  color: var(--ds-text) !important;
+}
+.p-select-overlay .p-select-option {
+  font-family: var(--ds-font) !important;
+  color: var(--ds-text) !important;
+}
+.p-select-overlay .p-select-option:hover {
+  background: rgba(0, 125, 104, .08) !important;
+}
+.p-select-overlay .p-select-option.p-selected {
+  background: rgba(0, 125, 104, .15) !important;
+  color: var(--ds-primary) !important;
+  font-weight: 600;
+}

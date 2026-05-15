@@ -1,79 +1,66 @@
 <p-toast position="top-right" />
-<p-confirmDialog />
+<p-confirmDialog styleClass="cat-confirm-dialog" />
 
-<!-- ═══════════════════════════════════════════════════════════
-     ENCABEZADO
-════════════════════════════════════════════════════════════ -->
-<div class="page-header">
-  <div class="header-left">
-    <div class="header-icon">
-      <i class="pi pi-tag"></i>
-    </div>
-    <div>
-      <h1 class="page-title">Marcas</h1>
-      <p class="page-subtitle">Administra el catálogo de marcas del inventario</p>
-    </div>
-  </div>
-
-  <p-button
-    label="Nueva marca"
-    icon="pi pi-plus"
-    (onClick)="openCreate()"
-  />
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════
-     CARD PRINCIPAL
-════════════════════════════════════════════════════════════ -->
-<div class="card">
-
-  <!-- Toolbar -->
-  <div class="toolbar">
+<div class="cat-tab-content">
+  <!-- ── Toolbar ── -->
+  <div class="cat-toolbar">
     <span class="stat-chip">
       <i class="pi pi-tag"></i>
       {{ filteredBrands().length }}
       {{ filteredBrands().length === 1 ? 'marca' : 'marcas' }}
     </span>
 
-    <p-iconfield>
+    <p-iconfield styleClass="cat-search-field">
       <p-inputicon styleClass="pi pi-search" />
       <input
         pInputText
         type="text"
+        class="cat-search-input"
         placeholder="Buscar por nombre…"
         (input)="onFilterInput($event)"
       />
     </p-iconfield>
+
+    <button
+      pButton
+      icon="pi pi-plus"
+      label="Nueva marca"
+      class="cat-btn cat-btn--primary"
+      (click)="openCreate()"
+    ></button>
   </div>
 
-  <!-- Skeleton carga -->
+  <!-- ── Skeleton carga ── -->
   @if (loading()) {
     <div class="skeleton-list">
       @for (_ of [1,2,3,4,5]; track $index) {
         <div class="skeleton-row">
-          <p-skeleton width="3rem"  height="1.1rem" borderRadius="6px" />
-          <p-skeleton width="55%"   height="1.1rem" borderRadius="6px" />
-          <p-skeleton width="5rem"  height="1.5rem" borderRadius="20px" />
-          <p-skeleton width="5.5rem" height="1.9rem" borderRadius="8px" />
+          <p-skeleton width="3rem"   height="1.1rem" styleClass="cat-skeleton" />
+          <p-skeleton width="55%"    height="1.1rem" styleClass="cat-skeleton" />
+          <p-skeleton width="5rem"   height="1.5rem" styleClass="cat-skeleton" />
+          <p-skeleton width="5.5rem" height="1.9rem" styleClass="cat-skeleton" />
         </div>
       }
     </div>
   }
 
-  <!-- Tabla -->
+  <!-- ── Tabla ── -->
   @if (!loading()) {
     <p-table
       [value]="filteredBrands()"
       [paginator]="filteredBrands().length > 10"
       [rows]="10"
-      [rowsPerPageOptions]="[10, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}–{last} de {totalRecords} marcas"
       sortField="name"
       [sortOrder]="1"
       [tableStyle]="{ 'min-width': '36rem' }"
+      styleClass="cat-table"
+      responsiveLayout="scroll"
     >
       <ng-template pTemplate="header">
         <tr>
-          <th pSortableColumn="id"   style="width:5rem">ID <p-sortIcon field="id" /></th>
+          <th pSortableColumn="id" style="width:5rem">ID <p-sortIcon field="id" /></th>
           <th pSortableColumn="name">Nombre <p-sortIcon field="name" /></th>
           <th style="width:9rem; text-align:center">Estado</th>
           <th style="width:9rem; text-align:center">Acciones</th>
@@ -82,11 +69,11 @@
 
       <ng-template pTemplate="body" let-brand>
         <tr>
-          <td class="id-cell">#{{ brand.id }}</td>
+          <td class="cat-cell-id">#{{ brand.id }}</td>
 
           <td>
-            <div class="brand-name-cell">
-              <span class="brand-avatar"><i class="pi pi-tag"></i></span>
+            <div class="cat-brand-name-cell">
+              <span class="cat-brand-avatar"><i class="pi pi-tag"></i></span>
               {{ brand.name }}
             </div>
           </td>
@@ -95,30 +82,31 @@
             <p-tag
               [value]="brand.isActive ? 'Activa' : 'Inactiva'"
               [severity]="brand.isActive ? 'success' : 'secondary'"
+              styleClass="cat-tag"
               [rounded]="true"
             />
           </td>
 
           <td>
-            <div class="action-cell">
-              <p-button
+            <div class="cat-actions">
+              <button
+                pButton
+                type="button"
                 icon="pi pi-pencil"
-                [rounded]="true"
-                [text]="true"
-                severity="info"
+                class="cat-btn-icon cat-btn-icon--edit"
                 pTooltip="Editar"
                 tooltipPosition="top"
-                (onClick)="openEdit(brand)"
-              />
-              <p-button
-                icon="pi pi-trash"
-                [rounded]="true"
-                [text]="true"
-                severity="danger"
+                (click)="openEdit(brand)"
+              ></button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-ban"
+                class="cat-btn-icon cat-btn-icon--danger"
                 pTooltip="Desactivar"
                 tooltipPosition="top"
-                (onClick)="confirmDelete(brand)"
-              />
+                (click)="confirmDelete(brand)"
+              ></button>
             </div>
           </td>
         </tr>
@@ -127,21 +115,31 @@
       <ng-template pTemplate="emptymessage">
         <tr>
           <td colspan="4">
-            <div class="empty-state">
-              <i class="pi pi-inbox"></i>
-              <p>No se encontraron marcas</p>
-              <small>Intenta ajustar el filtro de búsqueda</small>
+            <div class="cat-empty">
+              <i class="pi pi-inbox cat-empty__icon"></i>
+              <p class="cat-empty__title">Sin marcas</p>
+              <p class="cat-empty__sub">
+                Agrega la primera marca con el botón "Nueva marca".
+              </p>
             </div>
           </td>
         </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        @for (_ of [1,2,3,4,5]; track $index) {
+          <tr>
+            @for (__ of [1,2,3,4]; track $index) {
+              <td><p-skeleton height="1.25rem" styleClass="cat-skeleton" /></td>
+            }
+          </tr>
+        }
       </ng-template>
     </p-table>
   }
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     DIÁLOGO CREAR / EDITAR
-════════════════════════════════════════════════════════════ -->
+<!-- ── Diálogo Crear / Editar ── -->
 <p-dialog
   [header]="dialogTitle"
   [(visible)]="dialogVisible"
@@ -149,55 +147,56 @@
   [draggable]="false"
   [resizable]="false"
   [style]="{ width: '26rem' }"
-  styleClass="marca-dialog"
+  styleClass="cat-dialog"
+  [closeOnEscape]="true"
   (onHide)="closeDialog()"
 >
-  <form [formGroup]="form" (ngSubmit)="save()" novalidate>
-    <div class="field">
-      <label for="brandName" class="field-label">
-        Nombre <span class="required">*</span>
+  <form [formGroup]="form" (ngSubmit)="save()" novalidate class="cat-form">
+    <div class="cat-field cat-field--full">
+      <label for="brandName" class="cat-label">
+        Nombre <span class="cat-req">*</span>
       </label>
-
-      <p-iconfield class="field-input">
-        <p-inputicon styleClass="pi pi-tag" />
-        <input
-          id="brandName"
-          pInputText
-          formControlName="name"
-          placeholder="Ej. Dell, HP, Lenovo…"
-          [class.ng-invalid]="hasError('name','required') || hasError('name','maxlength')"
-          autocomplete="off"
-          class="w-full"
-        />
-      </p-iconfield>
-
+      <input
+        id="brandName"
+        pInputText
+        formControlName="name"
+        class="cat-input"
+        placeholder="Ej. Dell, HP, Lenovo…"
+        autocomplete="off"
+      />
       @if (hasError('name', 'required')) {
-        <small class="field-error">
-          <i class="pi pi-times-circle"></i> El nombre es obligatorio.
+        <small class="cat-error">
+          <i class="pi pi-exclamation-circle"></i> El nombre es obligatorio.
         </small>
       }
       @if (hasError('name', 'maxlength')) {
-        <small class="field-error">
-          <i class="pi pi-times-circle"></i> Máximo 100 caracteres.
+        <small class="cat-error">
+          <i class="pi pi-exclamation-circle"></i> Máximo 100 caracteres.
         </small>
       }
     </div>
+  </form>
 
-    <div class="dialog-footer">
-      <p-button
+  <ng-template pTemplate="footer">
+    <div class="cat-dialog-footer">
+      <button
+        pButton
+        type="button"
         label="Cancelar"
         icon="pi pi-times"
-        [text]="true"
-        severity="secondary"
-        (onClick)="closeDialog()"
+        class="cat-btn cat-btn--secondary"
+        (click)="closeDialog()"
         [disabled]="saving()"
-      />
-      <p-button
+      ></button>
+      <button
+        pButton
+        type="button"
         [label]="saving() ? 'Guardando…' : (isEditing ? 'Actualizar' : 'Guardar')"
         [icon]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
-        type="submit"
-        [disabled]="saving()"
-      />
+        class="cat-btn cat-btn--primary"
+        [loading]="saving()"
+        (click)="save()"
+      ></button>
     </div>
-  </form>
+  </ng-template>
 </p-dialog>

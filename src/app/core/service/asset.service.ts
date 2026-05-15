@@ -7,7 +7,7 @@ import { environment } from '../../config/environment';
 export interface AssetRequest {
   inventoryNumber?: string;  // ← agrega esta línea
   description: string;
-  brand?: string;
+  brand?: number | null;
   model?: string;
   serialNumber?: string;
   barcode?: string;
@@ -45,13 +45,6 @@ export interface Location {
   building?: string;
   campus?: string;
 }
-
-/*export interface Invoice {
-  id: number;
-  invoiceNumber: string;
-  supplier?: string;
-  invoiceDate: string;
-}*/
 
 export interface Invoice {
   id: number;

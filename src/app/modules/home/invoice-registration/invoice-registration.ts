@@ -1,126 +1,237 @@
-import { Component, OnInit, signal, computed, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-
-import { TableModule } from 'primeng/table';
+import {
+  ChangeDetectionStrategy, ChangeDetectorRef, Component,
+  DestroyRef, ElementRef, inject, OnInit, signal, ViewChild
+} from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { debounceTime, distinctUntilChanged, Subject, switchMap } from 'rxjs';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
-import { TextareaModule } from 'primeng/textarea';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ToastModule } from 'primeng/toast';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { InputTextModule } from 'primeng/inputtext';
+import { SelectModule } from 'primeng/select';
 import { SkeletonModule } from 'primeng/skeleton';
+import { TableLazyLoadEvent, TableModule } from 'primeng/table';
+import { TextareaModule } from 'primeng/textarea';
+import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import {
+  InvoiceRequest, InvoiceResponse, InvoiceService,
+  SpringPage, SupplierResponse
+} from '../../../core/service/invoice.service';
 
-import { InvoiceService, InvoiceResponse, InvoiceRequest } from '../../../core/service/invoice.service';
+const PAGE_SIZE = 10;
 
 @Component({
   selector: 'app-invoice-registration',
   standalone: true,
   imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    TableModule,
-    ButtonModule,
-    InputTextModule,
-    TextareaModule,
-    DatePickerModule,
-    DialogModule,
-    ConfirmDialogModule,
-    ToastModule,
-    IconFieldModule,
-    InputIconModule,
-    SkeletonModule,
-    TooltipModule,
+    CommonModule, ReactiveFormsModule, TableModule, DialogModule, ConfirmDialogModule,
+    ButtonModule, InputTextModule, TextareaModule, DatePickerModule, SelectModule,
+    ToastModule, TooltipModule, SkeletonModule, IconFieldModule, InputIconModule,
   ],
-  providers: [ConfirmationService, MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './invoice-registration.html',
-  styleUrls: ['./invoice-registration.css', '../../../shared/styles/primeng-overlays.css'],
+  styleUrls: ['./invoice-registration.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InvoiceRegistration implements OnInit {
 
-  // Referencia al input oculto de archivo
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
-  // ── Estado reactivo ──────────────────────────────────────────────────────────
-  invoices         = signal<InvoiceResponse[]>([]);
-  loading          = signal(true);
-  saving           = signal(false);
-  dialogVisible    = signal(false);
-  editingInvoice   = signal<InvoiceResponse | null>(null);
-  filterQuery      = signal('');
-  selectedFileName = signal<string>('');
+  private readonly invoiceService      = inject(InvoiceService);
+  private readonly fb                  = inject(FormBuilder);
+  private readonly messageService      = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
+  private readonly cdr                 = inject(ChangeDetectorRef);
+  private readonly destroyRef          = inject(DestroyRef);
 
-  // Solo los últimos 15 registros, respetando el filtro de búsqueda
-  filteredInvoices = computed(() => {
-    const q = this.filterQuery().toLowerCase().trim();
-    const list = q
-      ? this.invoices().filter(inv =>
-          inv.invoiceNumber.toLowerCase().includes(q) ||
-          inv.supplier?.toLowerCase().includes(q)     ||
-          inv.createdByName?.toLowerCase().includes(q)
-        )
-      : this.invoices();
-    return list.slice(0, 15);
-  });
+  readonly pageSize = PAGE_SIZE;
 
-  // ── Formulario ───────────────────────────────────────────────────────────────
-  form!: FormGroup;
+  // ── Tabla ────────────────────────────────────────────────────────────────
+  invoices      = signal<InvoiceResponse[]>([]);
+  invoiceTotal  = signal(0);
+  invoiceLoading = signal(true);
+  invoicePage   = 0;
+  invoiceSort   = 'invoiceDate,desc';
+  invoiceKeyword = '';
+  private readonly invoiceSearch$ = new Subject<string>();
+
+  // ── Diálogo ──────────────────────────────────────────────────────────────
+  dialogVisible   = signal(false);
+  dialogMode      = signal<'create' | 'edit'>('create');
+  dialogLoading   = signal(false);
+  editingId       = signal<number | null>(null);
+  selectedFileName = signal('');
+
+  // ── Proveedores ──────────────────────────────────────────────────────────
+  suppliers        = signal<SupplierResponse[]>([]);
+  loadingSuppliers = signal(false);
 
   readonly today   = new Date();
   readonly maxDate = new Date();
 
-  constructor(
-    private invoiceService: InvoiceService,
-    private confirmationService: ConfirmationService,
-    private messageService: MessageService,
-    private fb: FormBuilder,
-  ) {}
+  form: FormGroup = this.fb.group({
+    invoiceNumber: ['', [Validators.required, Validators.maxLength(100)]],
+    supplierId:    [null, Validators.required],
+    invoiceDate:   [this.today, Validators.required],
+    documentPath:  ['', Validators.maxLength(500)],
+    notes:         ['', Validators.maxLength(1000)],
+  });
 
   ngOnInit(): void {
-    this.form = this.fb.group({
-      invoiceNumber: ['', [Validators.required, Validators.maxLength(100)]],
-      supplier:      ['', [Validators.required, Validators.maxLength(200)]],  // ahora obligatorio
-      invoiceDate:   [this.today, [Validators.required]],                     // predefinida: hoy
-      documentPath:  ['', [Validators.maxLength(500)]],
-      notes:         ['', [Validators.maxLength(1000)]],
+    this.loadInvoices();
+    this.loadSuppliers();
+    this.setupSearch();
+  }
+
+  private setupSearch(): void {
+    this.invoiceSearch$.pipe(
+      debounceTime(350),
+      distinctUntilChanged(),
+      switchMap(kw => {
+        this.invoiceLoading.set(true);
+        this.invoicePage = 0;
+        return this.invoiceService.getAll(0, PAGE_SIZE, kw.trim());
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: page => this.applyPage(page),
+      error: () => { this.invoiceLoading.set(false); this.cdr.markForCheck(); },
     });
+  }
+
+  private loadInvoices(): void {
+    this.invoiceLoading.set(true);
+    this.invoiceService.getAll(this.invoicePage, PAGE_SIZE, this.invoiceKeyword)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: page => this.applyPage(page),
+        error: () => { this.invoiceLoading.set(false); this.cdr.markForCheck(); },
+      });
+  }
+
+  private applyPage(page: SpringPage<InvoiceResponse>): void {
+    this.invoices.set(page.content);
+    this.invoiceTotal.set(page.totalElements);
+    this.invoiceLoading.set(false);
+    this.cdr.markForCheck();
+  }
+
+  private loadSuppliers(): void {
+    this.loadingSuppliers.set(true);
+    this.invoiceService.getSuppliers()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: page => { this.suppliers.set(page.content); this.loadingSuppliers.set(false); this.cdr.markForCheck(); },
+        error: () => { this.loadingSuppliers.set(false); },
+      });
+  }
+
+  onSearch(value: string): void {
+    this.invoiceKeyword = value;
+    this.invoiceSearch$.next(value);
+  }
+
+  onLazyLoad(event: TableLazyLoadEvent): void {
+    this.invoicePage = Math.floor((event.first ?? 0) / PAGE_SIZE);
+    if (event.sortField) {
+      this.invoiceSort = `${event.sortField},${(event.sortOrder ?? -1) === 1 ? 'asc' : 'desc'}`;
+    }
     this.loadInvoices();
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────────────────
-  get isEditing(): boolean { return this.editingInvoice() !== null; }
-  get dialogTitle(): string { return this.isEditing ? 'Editar factura' : 'Nueva factura'; }
-
-  hasError(field: string, error: string): boolean {
-    const ctrl = this.form.get(field);
-    return !!(ctrl?.hasError(error) && ctrl.touched);
+  // ── Diálogo ───────────────────────────────────────────────────────────────
+  openCreate(): void {
+    this.form.reset({ invoiceNumber: '', supplierId: null, invoiceDate: this.today, documentPath: '', notes: '' });
+    this.selectedFileName.set('');
+    this.editingId.set(null);
+    this.dialogMode.set('create');
+    this.dialogVisible.set(true);
   }
 
-  onFilterInput(event: Event): void {
-    this.filterQuery.set((event.target as HTMLInputElement).value);
+  openEdit(inv: InvoiceResponse): void {
+    this.form.patchValue({
+      invoiceNumber: inv.invoiceNumber,
+      supplierId:    inv.supplierId ?? null,
+      invoiceDate:   inv.invoiceDate ? this.toDate(inv.invoiceDate) : this.today,
+      documentPath:  inv.documentPath ?? '',
+      notes:         inv.notes ?? '',
+    });
+    this.selectedFileName.set(inv.documentPath ?? '');
+    this.editingId.set(inv.id);
+    this.dialogMode.set('edit');
+    this.dialogVisible.set(true);
   }
 
-  formatDate(dateStr: string | number[]): string {
-    if (!dateStr) return '—';
-    let y: number, m: number, d: number;
-    if (Array.isArray(dateStr)) {
-      [y, m, d] = dateStr;
-    } else {
-      const parts = (dateStr as string).split('-');
-      [y, m, d] = [Number(parts[0]), Number(parts[1]), Number(parts[2])];
-    }
-    return `${String(d).padStart(2,'0')}/${String(m).padStart(2,'0')}/${y}`;
+  save(): void {
+    this.form.markAllAsTouched();
+    if (this.form.invalid) return;
+
+    this.dialogLoading.set(true);
+    const raw = this.form.value;
+    const payload: InvoiceRequest = {
+      invoiceNumber: raw.invoiceNumber.trim().toUpperCase(),
+      supplierId:    raw.supplierId,
+      invoiceDate:   this.toIsoDate(raw.invoiceDate),
+      totalAmount:   1,
+      documentPath:  raw.documentPath?.trim() || undefined,
+      notes:         raw.notes?.trim() || undefined,
+    };
+
+    const isEdit = this.dialogMode() === 'edit';
+    const obs = isEdit
+      ? this.invoiceService.update(this.editingId()!, payload)
+      : this.invoiceService.create(payload);
+
+    obs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: saved => {
+        this.dialogLoading.set(false);
+        this.dialogVisible.set(false);
+        this.messageService.add({
+          severity: 'success',
+          summary: isEdit ? 'Factura actualizada' : 'Factura registrada',
+          detail: `"${saved.invoiceNumber}" guardada correctamente.`, life: 4000,
+        });
+        this.loadInvoices();
+      },
+      error: err => {
+        this.dialogLoading.set(false);
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.message ?? 'No se pudo guardar la factura.' });
+        this.cdr.markForCheck();
+      },
+    });
   }
 
-  // ── Selección de archivo ─────────────────────────────────────────────────────
-  triggerFileSelect(): void {
-    this.fileInput.nativeElement.click();
+  confirmDelete(inv: InvoiceResponse): void {
+    this.confirmationService.confirm({
+      header: 'Eliminar factura',
+      message: `¿Deseas eliminar la factura <strong>${inv.invoiceNumber}</strong>?<br><small>Solo es posible si no tiene bienes asociados.</small>`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.invoiceService.delete(inv.id)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: () => {
+              this.messageService.add({ severity: 'info', summary: 'Eliminada', detail: `"${inv.invoiceNumber}" fue eliminada.`, life: 4000 });
+              this.loadInvoices();
+            },
+            error: err => this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.message ?? 'No se pudo eliminar la factura.' }),
+          });
+      },
+    });
   }
+
+  // ── Archivo ───────────────────────────────────────────────────────────────
+  triggerFileSelect(): void { this.fileInput.nativeElement.click(); }
 
   onFileSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
@@ -129,133 +240,27 @@ export class InvoiceRegistration implements OnInit {
     this.form.patchValue({ documentPath: file.name });
   }
 
-  // ── Carga ────────────────────────────────────────────────────────────────────
-  loadInvoices(): void {
-    this.loading.set(true);
-    this.invoiceService.getAll().subscribe({
-      next: data => { this.invoices.set(data); this.loading.set(false); },
-      error: () => {
-        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar el catálogo de facturas.' });
-        this.loading.set(false);
-      },
-    });
+  // ── Utils ─────────────────────────────────────────────────────────────────
+  formatDate(d: string | number[]): string {
+    if (!d) return '—';
+    const [y, m, day] = Array.isArray(d) ? d : (d as string).split('-').map(Number);
+    return `${String(day).padStart(2,'0')}/${String(m).padStart(2,'0')}/${y}`;
   }
 
-  // ── Diálogo ──────────────────────────────────────────────────────────────────
-  openCreate(): void {
-    this.editingInvoice.set(null);
-    this.selectedFileName.set('');
-    this.form.reset({
-      invoiceNumber: '',
-      supplier:      '',
-      invoiceDate:   this.today,
-      documentPath:  '',
-      notes:         '',
-    });
-    this.dialogVisible.set(true);
+  private toDate(d: string | number[]): Date {
+    if (Array.isArray(d)) return new Date(d[0], d[1] - 1, d[2]);
+    const [y, m, day] = (d as string).split('-').map(Number);
+    return new Date(y, m - 1, day);
   }
 
-  openEdit(invoice: InvoiceResponse): void {
-    this.editingInvoice.set(invoice);
-    this.selectedFileName.set(invoice.documentPath ?? '');
-    this.form.patchValue({
-      invoiceNumber: invoice.invoiceNumber,
-      supplier:      invoice.supplier ?? '',
-      invoiceDate:   invoice.invoiceDate ? this.toDate(invoice.invoiceDate) : this.today,
-      documentPath:  invoice.documentPath ?? '',
-      notes:         invoice.notes ?? '',
-    });
-    this.dialogVisible.set(true);
+  private toIsoDate(d: Date | string): string {
+    if (!d) return '';
+    if (typeof d === 'string') return d;
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   }
 
-  closeDialog(): void {
-    this.dialogVisible.set(false);
-    this.editingInvoice.set(null);
-    this.selectedFileName.set('');
-    this.form.reset();
-  }
-
-  // ── Guardar ──────────────────────────────────────────────────────────────────
-  save(): void {
-    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
-
-    const raw = this.form.value;
-    const payload: InvoiceRequest = {
-      invoiceNumber: raw.invoiceNumber.trim(),
-      supplier:      raw.supplier.trim(),
-      invoiceDate:   this.toIsoDate(raw.invoiceDate),
-      totalAmount:   1,                                  // siempre 0 por defecto
-      documentPath:  raw.documentPath?.trim() || undefined,
-      notes:         raw.notes?.trim() || undefined,
-    };
-
-    this.saving.set(true);
-
-    const op$ = this.isEditing
-      ? this.invoiceService.update(this.editingInvoice()!.id, payload)
-      : this.invoiceService.create(payload);
-
-    op$.subscribe({
-      next: saved => {
-        if (this.isEditing) {
-          this.invoices.update(list => list.map(i => i.id === saved.id ? saved : i));
-          this.messageService.add({ severity: 'success', summary: 'Actualizada', detail: `Factura "${saved.invoiceNumber}" actualizada.` });
-        } else {
-          this.invoices.update(list => [saved, ...list]);
-          this.messageService.add({ severity: 'success', summary: 'Registrada', detail: `Factura "${saved.invoiceNumber}" registrada.` });
-        }
-        this.saving.set(false);
-        this.closeDialog();
-      },
-      error: err => {
-        const detail = err?.error?.message ?? 'Ocurrió un error al guardar.';
-        this.messageService.add({ severity: 'error', summary: 'Error', detail });
-        this.saving.set(false);
-      },
-    });
-  }
-
-  // ── Eliminar ─────────────────────────────────────────────────────────────────
-  confirmDelete(invoice: InvoiceResponse): void {
-    this.confirmationService.confirm({
-      message: `¿Desea eliminar la factura <strong>${invoice.invoiceNumber}</strong>?<br>
-                <small>Solo es posible si no tiene bienes asociados.</small>`,
-      header: 'Confirmar eliminación',
-      icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí, eliminar',
-      rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-danger',
-      accept: () => {
-        this.invoiceService.delete(invoice.id).subscribe({
-          next: () => {
-            this.invoices.update(list => list.filter(i => i.id !== invoice.id));
-            this.messageService.add({ severity: 'warn', summary: 'Eliminada', detail: `Factura "${invoice.invoiceNumber}" eliminada.` });
-          },
-          error: err => {
-            const detail = err?.error?.message ?? 'No se puede eliminar: la factura tiene bienes asociados.';
-            this.messageService.add({ severity: 'error', summary: 'No se pudo eliminar', detail });
-          },
-        });
-      },
-    });
-  }
-
-  // ── Utils ────────────────────────────────────────────────────────────────────
-  private toDate(dateStr: string | number[]): Date {
-    if (Array.isArray(dateStr)) {
-      const [y, m, d] = dateStr;
-      return new Date(y, m - 1, d);
-    }
-    const [y, m, d] = (dateStr as string).split('-').map(Number);
-    return new Date(y, m - 1, d);
-  }
-
-  private toIsoDate(date: Date | string): string {
-    if (!date) return '';
-    if (typeof date === 'string') return date;
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
+  hasError(field: string, error: string): boolean {
+    const c = this.form.get(field);
+    return !!(c?.hasError(error) && c.touched);
   }
 }

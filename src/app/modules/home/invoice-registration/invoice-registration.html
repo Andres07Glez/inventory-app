@@ -1,308 +1,241 @@
 <p-toast position="top-right" />
-<p-confirmDialog />
+<p-confirmDialog styleClass="inv-confirm-dialog" />
 
-<!-- ═══════════════════════════════════════════════════════════
-     ENCABEZADO
-════════════════════════════════════════════════════════════ -->
-<div class="page-header">
-  <div class="header-left">
-    <div class="header-icon">
-      <i class="pi pi-file-edit"></i>
-    </div>
-    <div>
-      <h1 class="page-title">Facturas</h1>
-      <p class="page-subtitle">Administra las facturas de compra del inventario</p>
-    </div>
-  </div>
-  <p-button label="Nueva factura" icon="pi pi-plus" (onClick)="openCreate()" />
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════
-     TARJETA DE RESUMEN
-════════════════════════════════════════════════════════════ -->
-<!--div class="summary-grid">
-  <div class="summary-card">
-    <span class="summary-card__icon"><i class="pi pi-file-edit"></i></span>
-    <div>
-      <p class="summary-card__value">{{ invoices().length }}</p>
-      <p class="summary-card__label">Total de facturas</p>
-    </div>
-  </div>
-</div-->
-
-<!-- ═══════════════════════════════════════════════════════════
-     CARD PRINCIPAL
-════════════════════════════════════════════════════════════ -->
-<div class="card">
+<div class="inv-tab-content">
 
   <!-- Toolbar -->
-  <div class="toolbar">
-    <span class="stat-chip">
-      <i class="pi pi-list"></i>
-      {{ filteredInvoices().length }}
-      {{ filteredInvoices().length === 1 ? 'factura' : 'facturas' }}
-      <span class="stat-chip__limit">— últimas 15</span>
-    </span>
-
-    <p-iconfield>
+  <div class="inv-toolbar">
+    <p-iconfield styleClass="inv-search-field">
       <p-inputicon styleClass="pi pi-search" />
       <input
         pInputText
-        type="text"
-        placeholder="Buscar por núm. de factura, proveedor o usuario…"
-        title="Buscar por núm. de factura, proveedor o usuario…"
-        (input)="onFilterInput($event)"
+        class="inv-search-input"
+        placeholder="Buscar por ID, número de factura o proveedor…"
+        [value]="invoiceKeyword"
+        (input)="onSearch($any($event.target).value)"
       />
     </p-iconfield>
+    <button
+      pButton
+      icon="pi pi-plus"
+      label="Nueva factura"
+      class="inv-btn inv-btn--primary"
+      (click)="openCreate()"
+    ></button>
   </div>
 
-  <!-- Skeleton carga -->
-  @if (loading()) {
-    <div class="skeleton-list">
-      @for (_ of [1,2,3,4,5]; track $index) {
-        <div class="skeleton-row">
-          <p-skeleton width="3rem"  height="1.1rem" borderRadius="6px" />
-          <p-skeleton width="14%"   height="1.1rem" borderRadius="6px" />
-          <p-skeleton width="28%"   height="1.1rem" borderRadius="6px" />
-          <p-skeleton width="10%"   height="1.1rem" borderRadius="6px" />
-          <p-skeleton width="14%"   height="1.1rem" borderRadius="6px" />
-          <p-skeleton width="6rem"  height="1.9rem" borderRadius="8px" />
+  <!-- Tabla con lazy load -->
+  <p-table
+    [value]="invoices()"
+    dataKey="id"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="pageSize"
+    [totalRecords]="invoiceTotal()"
+    [loading]="invoiceLoading()"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="{first}–{last} de {totalRecords} facturas"
+    (onLazyLoad)="onLazyLoad($event)"
+    sortMode="single"
+    sortField="invoiceDate"
+    [sortOrder]="-1"
+    styleClass="inv-table"
+    responsiveLayout="scroll"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="id"           style="width:5rem">ID <p-sortIcon field="id" /></th>
+        <th pSortableColumn="invoiceNumber" style="width:15rem">Núm. Factura <p-sortIcon field="invoiceNumber" /></th>
+        <th pSortableColumn="supplierName">Proveedor <p-sortIcon field="supplierName" /></th>
+        <th pSortableColumn="invoiceDate"  style="width:10rem">Fecha <p-sortIcon field="invoiceDate" /></th>
+        <th pSortableColumn="createdByName" style="width:13rem">Registrado por <p-sortIcon field="createdByName" /></th>
+        <th style="width:110px; text-align:center">Acciones</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-inv>
+      <tr>
+        <td><span class="inv-id">#{{ inv.id }}</span></td>
+
+        <td>
+          <div class="inv-cell-primary">
+            <i class="pi pi-file-edit inv-cell-icon"></i>
+            {{ inv.invoiceNumber }}
+          </div>
+        </td>
+
+        <td>{{ inv.supplierName || '—' }}</td>
+
+        <td>
+          <span class="inv-date">
+            <i class="pi pi-calendar"></i>
+            {{ formatDate(inv.invoiceDate) }}
+          </span>
+        </td>
+
+        <td>
+          <div class="inv-user">
+            <i class="pi pi-user inv-user-icon"></i>
+            {{ inv.createdByName || '—' }}
+          </div>
+        </td>
+
+        <td style="text-align:center">
+          <div class="inv-actions">
+            <button
+              pButton type="button"
+              icon="pi pi-pencil"
+              class="inv-btn-icon inv-btn-icon--edit"
+              pTooltip="Editar" tooltipPosition="top"
+              (click)="openEdit(inv)"
+            ></button>
+            <button
+              pButton type="button"
+              icon="pi pi-trash"
+              class="inv-btn-icon inv-btn-icon--danger"
+              pTooltip="Eliminar" tooltipPosition="top"
+              (click)="confirmDelete(inv)"
+            ></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="6">
+        <div class="inv-empty">
+          <i class="pi pi-file inv-empty__icon"></i>
+          <p class="inv-empty__title">Sin facturas</p>
+          <p class="inv-empty__sub">
+            @if (invoiceKeyword) { No hay resultados para "{{ invoiceKeyword }}". }
+            @else { Agrega la primera factura con el botón "Nueva factura". }
+          </p>
         </div>
+      </td></tr>
+    </ng-template>
+
+    <ng-template pTemplate="loadingbody">
+      @for (_ of [1,2,3,4,5]; track $index) {
+        <tr>
+          @for (__ of [1,2,3,4,5,6]; track $index) {
+            <td><p-skeleton height="1.25rem" styleClass="inv-skeleton" /></td>
+          }
+        </tr>
       }
-    </div>
-  }
-
-  <!-- Tabla — sin columna Monto -->
-  @if (!loading()) {
-    <p-table
-      [value]="filteredInvoices()"
-      [paginator]="false"
-      sortField="invoiceDate"
-      [sortOrder]="-1"
-      [tableStyle]="{ 'min-width': '50rem' }"
-    >
-      <ng-template pTemplate="header">
-        <tr>
-          <th pSortableColumn="id"           style="width:4.5rem">ID <p-sortIcon field="id" /></th>
-          <th pSortableColumn="invoiceNumber" style="width:14rem">Núm. Factura <p-sortIcon field="invoiceNumber" /></th>
-          <th pSortableColumn="supplier">Proveedor <p-sortIcon field="supplier" /></th>
-          <th pSortableColumn="invoiceDate"   style="width:10rem">Fecha <p-sortIcon field="invoiceDate" /></th>
-          <th pSortableColumn="createdByName" style="width:12rem">Registrado por <p-sortIcon field="createdByName" /></th>
-          <th style="width:9rem; text-align:center">Acciones</th>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="body" let-inv>
-        <tr>
-          <td class="id-cell">#{{ inv.id }}</td>
-
-          <td>
-            <div class="invoice-number-cell">
-              <span class="invoice-avatar"><i class="pi pi-file-edit"></i></span>
-              <span>{{ inv.invoiceNumber }}</span>
-            </div>
-          </td>
-
-          <td class="supplier-cell">{{ inv.supplier || '—' }}</td>
-
-          <td class="date-cell">
-            <span class="date-cell-inner">
-              <i class="pi pi-calendar date-icon"></i>
-              {{ formatDate(inv.invoiceDate) }}
-            </span>
-          </td>
-
-          <td>
-            <div class="user-cell">
-              <span class="user-avatar"><i class="pi pi-user"></i></span>
-              {{ inv.createdByName || '—' }}
-            </div>
-          </td>
-
-          <td>
-            <div class="action-cell">
-              <p-button
-                icon="pi pi-pencil"
-                [rounded]="true" [text]="true"
-                severity="info"
-                pTooltip="Editar" tooltipPosition="top"
-                (onClick)="openEdit(inv)"
-              />
-              <p-button
-                icon="pi pi-trash"
-                [rounded]="true" [text]="true"
-                severity="danger"
-                pTooltip="Eliminar" tooltipPosition="top"
-                (onClick)="confirmDelete(inv)"
-              />
-            </div>
-          </td>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="6">
-            <div class="empty-state">
-              <i class="pi pi-inbox"></i>
-              <p>No se encontraron facturas</p>
-              <small>Intenta ajustar el filtro de búsqueda</small>
-            </div>
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
-  }
+    </ng-template>
+  </p-table>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     DIÁLOGO CREAR / EDITAR
-════════════════════════════════════════════════════════════ -->
+<!-- Input archivo oculto -->
+<input #fileInput type="file" accept=".pdf,.xml,.jpg,.jpeg,.png"
+  style="display:none" (change)="onFileSelected($event)" />
 
-<!-- Input de archivo oculto -->
-<input
-  #fileInput
-  type="file"
-  accept=".pdf,.xml,.jpg,.jpeg,.png"
-  style="display:none"
-  (change)="onFileSelected($event)"
-/>
-
+<!-- ═══ DIÁLOGO ═══ -->
 <p-dialog
-  [header]="dialogTitle"
-  [(visible)]="dialogVisible"
+  [header]="dialogMode() === 'create' ? 'Nueva factura' : 'Editar factura'"
   [modal]="true"
+  [(visible)]="dialogVisible"
+  [style]="{ width: '580px' }"
+  styleClass="inv-dialog"
   [draggable]="false"
   [resizable]="false"
-  [style]="{ width: '38rem' }"
-  styleClass="invoice-dialog"
-  (onHide)="closeDialog()"
+  [closeOnEscape]="true"
 >
-  <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+  <form [formGroup]="form" class="inv-form">
 
     <!-- Número de factura -->
-    <div class="field">
-      <label class="field-label">
-        Número de factura <span class="required">*</span>
-      </label>
-      <p-iconfield class="field-input">
-        <p-inputicon styleClass="pi pi-hashtag" />
-        <input
-          pInputText
-          formControlName="invoiceNumber"
-          placeholder="Ej. FAC-2024-001"
-          [class.ng-invalid]="hasError('invoiceNumber','required') || hasError('invoiceNumber','maxlength')"
-          autocomplete="off"
-          class="w-full"
-        />
-      </p-iconfield>
+    <div class="inv-field inv-field--full">
+      <label class="inv-label">Número de factura <span class="inv-req">*</span></label>
+      <input
+        pInputText
+        formControlName="invoiceNumber"
+        class="inv-input"
+        placeholder="Ej. FAC-2024-001"
+        maxlength="100"
+        style="text-transform: uppercase;"
+        autocomplete="off"
+      />
       @if (hasError('invoiceNumber', 'required')) {
-        <small class="field-error"><i class="pi pi-times-circle"></i> El número de factura es obligatorio.</small>
+        <small class="inv-error"><i class="pi pi-exclamation-circle"></i> El número de factura es requerido.</small>
       }
       @if (hasError('invoiceNumber', 'maxlength')) {
-        <small class="field-error"><i class="pi pi-times-circle"></i> Máximo 100 caracteres.</small>
+        <small class="inv-error"><i class="pi pi-exclamation-circle"></i> Máximo 100 caracteres.</small>
       }
     </div>
 
     <!-- Proveedor + Fecha -->
-    <div class="form-row">
-      <div class="field">
-        <label class="field-label">
-          Proveedor <span class="required">*</span>
-        </label>
-        <p-iconfield class="field-input">
-          <p-inputicon styleClass="pi pi-building" />
-          <input
-            pInputText
-            formControlName="supplier"
-            placeholder="Nombre del proveedor"
-            [class.ng-invalid]="hasError('supplier','required') || hasError('supplier','maxlength')"
-            autocomplete="off"
-            class="w-full"
-          />
-        </p-iconfield>
-        @if (hasError('supplier', 'required')) {
-          <small class="field-error"><i class="pi pi-times-circle"></i> El proveedor es obligatorio.</small>
-        }
-        @if (hasError('supplier', 'maxlength')) {
-          <small class="field-error"><i class="pi pi-times-circle"></i> Máximo 200 caracteres.</small>
+    <div class="inv-form-row">
+      <div class="inv-field">
+        <label class="inv-label">Proveedor <span class="inv-req">*</span></label>
+        <p-select
+          formControlName="supplierId"
+          [options]="suppliers()"
+          optionLabel="name"
+          optionValue="id"
+          placeholder="Selecciona un proveedor"
+          [filter]="true"
+          filterPlaceholder="Buscar proveedor…"
+          [loading]="loadingSuppliers()"
+          styleClass="inv-select"
+        />
+        @if (hasError('supplierId', 'required')) {
+          <small class="inv-error"><i class="pi pi-exclamation-circle"></i> El proveedor es requerido.</small>
         }
       </div>
 
-      <div class="field">
-        <label class="field-label">
-          Fecha de factura <span class="required">*</span>
-        </label>
+      <div class="inv-field">
+        <label class="inv-label">Fecha de factura <span class="inv-req">*</span></label>
         <p-datepicker
           formControlName="invoiceDate"
           [maxDate]="maxDate"
           dateFormat="dd/mm/yy"
           placeholder="DD/MM/AAAA"
           [showIcon]="true"
-          [class.ng-invalid]="hasError('invoiceDate','required')"
-          styleClass="w-full"
+          styleClass="inv-datepicker"
         />
         @if (hasError('invoiceDate', 'required')) {
-          <small class="field-error"><i class="pi pi-times-circle"></i> La fecha es obligatoria.</small>
+          <small class="inv-error"><i class="pi pi-exclamation-circle"></i> La fecha es requerida.</small>
         }
       </div>
     </div>
 
     <!-- Documento -->
-    <div class="field">
-      <label class="field-label">Documento de factura</label>
-      <div class="file-selector">
-        <div class="file-selector__preview" [class.file-selector__preview--active]="selectedFileName()">
-          <i class="pi pi-paperclip file-selector__icon"></i>
-          <span class="file-selector__name">
-            {{ selectedFileName() || 'Ningún archivo seleccionado' }}
-          </span>
+    <div class="inv-field inv-field--full">
+      <label class="inv-label">Documento <span class="inv-opt">(opcional)</span></label>
+      <div class="inv-file-row">
+        <div class="inv-file-preview" [class.inv-file-preview--active]="selectedFileName()">
+          <i class="pi pi-paperclip"></i>
+          <span>{{ selectedFileName() || 'Ningún archivo seleccionado' }}</span>
         </div>
-        <p-button
-          label="Seleccionar"
-          icon="pi pi-upload"
-          [outlined]="true"
-          type="button"
-          (onClick)="triggerFileSelect()"
-        />
+        <button pButton type="button" icon="pi pi-upload" label="Seleccionar"
+          class="inv-btn inv-btn--secondary inv-btn--sm"
+          (click)="triggerFileSelect()"></button>
       </div>
-      @if (hasError('documentPath', 'maxlength')) {
-        <small class="field-error"><i class="pi pi-times-circle"></i> Máximo 500 caracteres.</small>
-      }
     </div>
 
     <!-- Notas -->
-    <div class="field">
-      <label class="field-label">Notas</label>
-      <textarea
-        pTextarea
-        formControlName="notes"
-        placeholder="Observaciones adicionales…"
-        rows="3"
-        [class.ng-invalid]="hasError('notes','maxlength')"
-        class="w-full notes-textarea"
-      ></textarea>
+    <div class="inv-field inv-field--full">
+      <label class="inv-label">Notas <span class="inv-opt">(opcional)</span></label>
+      <textarea pTextarea formControlName="notes" class="inv-textarea"
+        rows="3" placeholder="Observaciones adicionales…" maxlength="1000"></textarea>
       @if (hasError('notes', 'maxlength')) {
-        <small class="field-error"><i class="pi pi-times-circle"></i> Máximo 1000 caracteres.</small>
+        <small class="inv-error"><i class="pi pi-exclamation-circle"></i> Máximo 1000 caracteres.</small>
       }
     </div>
 
-    <!-- Pie -->
-    <div class="dialog-footer">
-      <p-button
-        label="Cancelar"
-        icon="pi pi-times"
-        [text]="true"
-        severity="secondary"
-        (onClick)="closeDialog()"
-        [disabled]="saving()"
-      />
-      <p-button
-        [label]="saving() ? 'Guardando…' : (isEditing ? 'Actualizar' : 'Guardar')"
-        [icon]="saving() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
-        type="submit"
-        [disabled]="saving()"
-      />
-    </div>
   </form>
+
+  <ng-template pTemplate="footer">
+    <div class="inv-dialog-footer">
+      <button pButton type="button" label="Cancelar" icon="pi pi-times"
+        class="inv-btn inv-btn--secondary"
+        (click)="dialogVisible.set(false)"></button>
+      <button pButton type="button"
+        [label]="dialogMode() === 'create' ? 'Registrar factura' : 'Guardar cambios'"
+        icon="pi pi-check"
+        class="inv-btn inv-btn--primary"
+        [loading]="dialogLoading()"
+        (click)="save()"></button>
+    </div>
+  </ng-template>
 </p-dialog>
