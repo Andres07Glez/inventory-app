@@ -1,0 +1,103 @@
+<p-toast />
+
+<section class="img-upload">
+
+  <!-- ── Galería de imágenes existentes ─────────────────────────────────── -->
+  @if (isLoading()) {
+    <div class="img-upload__skeleton-row">
+      @for (_ of [1,2,3]; track $index) {
+        <div class="img-upload__skeleton"></div>
+      }
+    </div>
+  }
+
+  @if (!isLoading() && images().length > 0) {
+    <div class="img-upload__gallery">
+      @for (img of images(); track img.id) {
+        <div class="img-upload__thumb" [class.img-upload__thumb--primary]="img.isPrimary">
+
+          <img [src]="img.url" [alt]="img.fileName" loading="lazy">
+
+          <!-- Badge primaria -->
+          @if (img.isPrimary) {
+            <span class="img-upload__badge">
+              <i class="pi pi-star-fill"></i> Principal
+            </span>
+          }
+
+          <!-- Overlay de acciones -->
+          <div class="img-upload__thumb-overlay">
+            @if (!img.isPrimary) {
+              <button
+                class="img-upload__action-btn"
+                pTooltip="Establecer como principal"
+                tooltipPosition="top"
+                (click)="setPrimary(img)"
+              >
+                <i class="pi pi-star"></i>
+              </button>
+            }
+            <button
+              class="img-upload__action-btn img-upload__action-btn--danger"
+              pTooltip="Eliminar imagen"
+              tooltipPosition="top"
+              (click)="confirmDelete(img)"
+            >
+              <i class="pi pi-trash"></i>
+            </button>
+          </div>
+
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ── Zona de carga ──────────────────────────────────────────────────── -->
+  @if (canUploadMore()) {
+    <label
+      class="img-upload__dropzone"
+      [class.img-upload__dropzone--dragging]="isDragging()"
+      [class.img-upload__dropzone--busy]="uploadProgress() !== null"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave()"
+      (drop)="onDrop($event)"
+      [attr.title]="uploadProgress() !== null ? 'Subiendo imagen…' : null"
+    >
+      <input
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        class="img-upload__file-input"
+        (change)="onFileSelected($event)"
+        [disabled]="uploadProgress() !== null"
+      >
+
+      @if (uploadProgress() !== null) {
+        <div class="img-upload__progress-wrap">
+          <i class="pi pi-spin pi-spinner img-upload__drop-icon"></i>
+          <span class="img-upload__drop-hint">Comprimiendo y subiendo…</span>
+          <p-progressBar
+            [value]="uploadProgress()!"
+            styleClass="img-upload__progress-bar"
+            [showValue]="false"
+          />
+        </div>
+      } @else {
+        <i class="pi pi-cloud-upload img-upload__drop-icon"></i>
+        <span class="img-upload__drop-title">Arrastra fotos aquí</span>
+        <span class="img-upload__drop-hint">
+          o <u>haz clic para seleccionar</u> · JPEG, PNG, WEBP · máx. 10 MB
+        </span>
+        <span class="img-upload__drop-counter">
+          {{ images().length }} / {{ 5 }} imágenes
+        </span>
+      }
+    </label>
+  } @else {
+    <p class="img-upload__limit-msg">
+      <i class="pi pi-info-circle"></i>
+      Límite de 5 imágenes alcanzado. Elimina una para subir otra.
+    </p>
+  }
+
+</section>
