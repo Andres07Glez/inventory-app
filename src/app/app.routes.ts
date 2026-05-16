@@ -1,7 +1,18 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/guards/auth-guard';
 
 
 export const routes: Routes = [
+  {
+    path: 'login',
+    loadComponent: () => import('./modules/home/auth/login/login').then(m => m.Login),
+  },
+  {
+    path: 'cambiar-password',
+    loadComponent: () =>
+      import('./modules/home/auth/change-password/change-password').then(m => m.ChangePassword),
+    canActivate: [authGuard],
+  },
   {
     path: '',
     loadComponent: () => import('./layout/shell/shell').then(m => m.Shell),
@@ -56,5 +67,5 @@ export const routes: Routes = [
       }
     ],
   },
-  { path: '**', redirectTo: '' },
+  { path: '**', redirectTo: 'login' },
 ];

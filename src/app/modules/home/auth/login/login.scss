@@ -1,0 +1,189 @@
+
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+// ── Página ─────────────────────────────────────────────────────────────────
+
+.login-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px 16px;
+  background: #00332A; // verde oscuro institucional (paleta 900)
+  box-sizing: border-box;
+  position: relative;
+}
+
+// ── Logo ───────────────────────────────────────────────────────────────────
+
+.login-header {
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.login-logo {
+  width: 160px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+// ── Tarjeta / formulario ───────────────────────────────────────────────────
+
+.login-card {
+  width: 100%;
+  max-width: 340px;
+}
+
+// ── Campos ────────────────────────────────────────────────────────────────
+
+.field {
+  margin-bottom: 20px;
+}
+
+.pill-input {
+  width: 100%;
+  background: transparent;
+  border: 1.5px solid rgba(94, 201, 181, 0.6); // teal semitransparente
+  padding: 13px 20px;
+  border-radius: var(--border-radius-xl); // 24px — coincide con la paleta
+  font-family: var(--font-primary);
+  font-size: var(--text-16);
+  color: #ffffff;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  &:focus {
+    border-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
+  }
+}
+
+.password-wrap {
+  position: relative;
+
+  .pill-input {
+    padding-right: 50px; // espacio para el ojo
+  }
+}
+
+.eye-btn {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.55);
+  display: flex;
+  align-items: center;
+  transition: color var(--transition-fast);
+
+  &:hover { color: #ffffff; }
+}
+
+// ── Mensajes de error ─────────────────────────────────────────────────────
+
+.field-error {
+  display: block;
+  margin-top: 6px;
+  padding-left: 16px;
+  font-size: 0.8rem;
+  color: #f8a5a5; // rojo suave sobre fondo oscuro
+}
+
+.api-error {
+  margin: 0 0 16px;
+  padding: 10px 16px;
+  border-radius: var(--border-radius-md);
+  background: rgba(179, 24, 24, 0.25);
+  border: 1px solid rgba(179, 24, 24, 0.5);
+  color: #ffb3b3;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+// ── Botón ─────────────────────────────────────────────────────────────────
+
+.btn-login {
+  width: 100%;
+  padding: 14px;
+  background: #d6d6d6;
+  color: #00332A;
+  border: none;
+  border-radius: var(--border-radius-xl);
+  font-family: var(--font-primary);
+  font-size: var(--text-16);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+
+  &:hover:not(:disabled) {
+    background: #ffffff;
+    transform: scale(1.02);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+// Spinner inline
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(0, 51, 42, 0.3);
+  border-top-color: #00332A;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// ── Link "Olvidaste contraseña" ───────────────────────────────────────────
+
+.forgot-password {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.45); // deshabilitado visualmente (pendiente)
+  cursor: default;
+  user-select: none;
+}
+
+// ── Footer ────────────────────────────────────────────────────────────────
+
+.login-footer {
+  position: absolute;
+  bottom: 20px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.3);
+  text-align: center;
+  width: 100%;
+  padding: 0 16px;
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────
+
+@media (max-width: 480px) {
+  .login-logo   { width: 130px; }
+  .login-footer { position: relative; bottom: auto; margin-top: 40px; }
+}

@@ -109,6 +109,13 @@ export interface GuardianSummary {
   employeeNumber?: string;
   department?: string;
 }
+export interface AssetImageDTO {
+  id: number;
+  fileName: string;
+  url: string;
+  mimeType: string;
+  isPrimary: boolean;
+}
 
 /**
  * Respuesta del endpoint GET /v1/assets/{id}
@@ -134,6 +141,7 @@ export interface AssetDetailResponseDTO {
   createdAt?: string;
   updatedAt: string;
   guardian?: GuardianSummary;  // null si el bien no tiene asignación activa
+  images: AssetImageDTO[];
 }
 
 /**

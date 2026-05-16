@@ -48,4 +48,11 @@ export class AssetService {
       .patch<ApiResponse<UpdateConditionResponse>>(`${this.endpoint}/${id}/condition`, request)
       .pipe(map(r => r.data));
   }
+  findByInventoryNumber(inventoryNumber: string): Observable<AssetDetailResponseDTO> {
+    return this.http
+      .get<ApiResponse<AssetDetailResponseDTO>>(
+        `${this.endpoint}/inventory-number/${encodeURIComponent(inventoryNumber)}`
+      )
+      .pipe(map(r => r.data));
+  }
 }
