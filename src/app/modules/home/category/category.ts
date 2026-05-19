@@ -50,7 +50,7 @@ export class CategoryComponent implements OnInit {
   categoryTotal   = signal(0);
   categoryLoading = signal(true);
   categoryPage    = 0;
-  categorySort    = 'name,asc';
+  categorySort    = 'id,asc';
   categoryKeyword = '';
   private readonly categorySearch$ = new Subject<string>();
  
@@ -69,12 +69,33 @@ export class CategoryComponent implements OnInit {
     return ids;
   });
  
-  /** Filas visibles: raíces siempre, hijos sólo si su padre está expandido */
+  /** Filas visibles: raíces en orden de registro; hijos insertados
+   *  inmediatamente debajo de su padre cuando éste está expandido. */
   visibleCategories = computed(() => {
     const expanded = this.expandedCategories();
-    return this.categories().filter(
-      cat => cat.parentId == null || expanded.has(cat.parentId)
-    );
+    const all      = this.categories();
+ 
+    // Agrupar hijos por parentId para inserción rápida
+    const childrenByParent = new Map<number, CategoryResponseDTO[]>();
+    for (const cat of all) {
+      if (cat.parentId != null) {
+        const siblings = childrenByParent.get(cat.parentId) ?? [];
+        siblings.push(cat);
+        childrenByParent.set(cat.parentId, siblings);
+      }
+    }
+ 
+    // Construir lista: cada raíz seguida de sus hijos (si está expandida)
+    const result: CategoryResponseDTO[] = [];
+    for (const cat of all) {
+      if (cat.parentId != null) continue;   // los hijos se insertan con su padre
+      result.push(cat);
+      if (expanded.has(cat.id)) {
+        const children = childrenByParent.get(cat.id) ?? [];
+        result.push(...children);
+      }
+    }
+    return result;
   });
  
   /** Expande o colapsa una categoría padre */

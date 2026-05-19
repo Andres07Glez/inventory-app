@@ -52,6 +52,11 @@ export class SupplierComponent implements OnInit {
   supplierKeyword = '';
   private readonly supplierSearch$ = new Subject<string>();
 
+  // Estados para el modal de VISTA (solo lectura)
+  viewDialogVisible = signal(false);
+  selectedSupplier  = signal<SupplierResponseDTO | null>(null);
+
+  // Estados para el modal de CREAR/EDITAR
   supplierDialogVisible = signal(false);
   supplierDialogMode    = signal<DialogMode>('create');
   supplierDialogLoading = signal(false);
@@ -126,6 +131,12 @@ export class SupplierComponent implements OnInit {
     });
   }
 
+  // Abre el modal de solo lectura
+  openViewSupplier(supplier: SupplierResponseDTO): void {
+    this.selectedSupplier.set(supplier);
+    this.viewDialogVisible.set(true);
+  }
+
   openCreateSupplier(): void {
     this.supplierForm.reset();
     this.editingSupplierId.set(null);
@@ -148,7 +159,7 @@ export class SupplierComponent implements OnInit {
     this.supplierDialogVisible.set(true);
   }
 
-  saveSupplier(): void {
+saveSupplier(): void {
     this.supplierForm.markAllAsTouched();
     if (this.supplierForm.invalid) return;
 
@@ -169,12 +180,30 @@ export class SupplierComponent implements OnInit {
         });
         this.loadSuppliers();
       },
-      error: () => {
+      error: (err) => {
         this.supplierDialogLoading.set(false);
-        this.messageService.add({
-          severity: 'error', summary: 'Error',
-          detail: 'No se pudo guardar el proveedor.',
-        });
+        
+        // Evaluamos la respuesta de tu backend.
+        // Ajusta esta lógica dependiendo de cómo tu API envíe el error.
+        // Por ejemplo, si manda un código HTTP 409 (Conflict) o un mensaje específico.
+        const errorMessage = err.error?.message?.toLowerCase() || '';
+        const isDuplicateRfc = err.status === 409 || errorMessage.includes('rfc');
+
+        if (isDuplicateRfc) {
+          this.messageService.add({
+            severity: 'warn', 
+            summary: 'RFC duplicado',
+            detail: 'El RFC ingresado ya se encuentra registrado en otro proveedor. Por favor, verifica los datos.',
+            life: 6000 // Le damos un poco más de tiempo para que el usuario lo lea
+          });
+        } else {
+          this.messageService.add({
+            severity: 'error', 
+            summary: 'Error',
+            detail: 'No se pudo guardar el proveedor. Inténtalo nuevamente.',
+          });
+        }
+        
         this.cdr.markForCheck();
       },
     });

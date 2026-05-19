@@ -51,39 +51,6 @@
   font-family: var(--cat-font);
 }
 
-@media (prefers-color-scheme: dark) {
-  :host {
-    --cat-bg:              #1A1A1A; 
-    --cat-surface:         #333333; 
-    --cat-surface-raised:  #4D4D4D; 
-    --cat-border:          #666666; 
-    --cat-border-focus:    #5EC9B5; 
-
-    --cat-primary:         #00CCAA; 
-    --cat-primary-hover:   #5EC9B5; 
-    --cat-primary-light:   #00332A; 
-    --cat-primary-text:    #1A1A1A; 
-
-    --cat-text-primary:    #F7F7F7; 
-    --cat-text-secondary:  #CCCCCC; 
-    --cat-text-muted:      #999999; 
-
-    --cat-input-bg:          #333333; 
-    --cat-input-text:        #F7F7F7; 
-    --cat-input-border:      #666666; 
-    --cat-input-placeholder: #999999; 
-
-    --cat-danger:     #F07A7A; 
-    --cat-danger-bg:  #350303; 
-    --cat-warn:       #EFD47B; 
-    --cat-edit-color: #7A9FF0; 
-    --cat-edit-bg:    #031335; 
-
-    --cat-shadow:    0 2px 8px rgba(0,0,0,.4);
-    --cat-shadow-lg: 0 8px 28px rgba(0,0,0,.5);
-  }
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // CONTENIDO DEL TAB & TOOLBAR
 // ─────────────────────────────────────────────────────────────────────────────
@@ -321,4 +288,28 @@
   .p-dialog-footer { background: var(--cat-surface-raised); border-top: 1px solid var(--cat-border); }
   .p-button-danger { background: var(--cat-danger); border-color: var(--cat-danger); color: white; font-family: var(--cat-font); font-weight: 500; border-radius: var(--cat-radius-sm); font-size: 1rem; &:hover { filter: brightness(0.9); } }
   .p-confirmdialog-reject-button { background: transparent; border: 1px solid var(--cat-border); color: var(--cat-text-secondary); font-family: var(--cat-font); font-weight: 500; border-radius: var(--cat-radius-sm); font-size: 1rem; &:hover { background: var(--cat-surface-raised); } }
+}
+
+/* ── Colores específicos para botones alineados al sistema global ── */
+
+.cat-btn-icon--edit {
+  background-color: var(--color-info) !important;
+  border-color: var(--color-info) !important;
+  color: #FFFFFF !important;
+
+  &:hover {
+    background-color: var(--color-info-dark) !important;
+    border-color: var(--color-info-dark) !important;
+  }
+}
+
+.cat-btn-icon--danger {
+  background-color: var(--color-danger) !important; 
+  border-color: var(--color-danger) !important;
+  color: #FFFFFF !important;
+
+  &:hover {
+    background-color: var(--color-danger-dark) !important;
+    border-color: var(--color-danger-dark) !important;
+  }
 }
