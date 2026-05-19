@@ -185,6 +185,18 @@
             </p-iconfield>
           </div>
 
+          <div class="ar-field">      <!-- Codigo de barra -->
+            <label class="ar-label" for="barcode">
+              Código de barras
+              <p-tag value="Opcional" severity="secondary" styleClass="ar-label__badge" />
+            </label>
+            <p-iconfield>
+              <p-inputicon styleClass="pi pi-barcode" />
+              <input pInputText id="barcode" formControlName="barcode" placeholder="Ej: 7501234567890" class="ar-input"
+                autocomplete="off" (input)="f['barcode'].setValue($any($event.target).value.toUpperCase())" />
+            </p-iconfield>
+          </div>
+
           <!-- Número de Serie -->
           <div class="ar-field ar-field--full">
             <label class="ar-label" for="serial_number">
@@ -197,6 +209,9 @@
                 class="ar-input" />
             </p-iconfield>
           </div>
+
+          
+
         </div>
       </p-card>
 

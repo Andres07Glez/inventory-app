@@ -37,7 +37,7 @@ const PAGE_SIZE = 10;
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './invoice-registration.html',
-  styleUrls: ['./invoice-registration.css'],
+  styleUrls: ['./invoice-registration.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InvoiceRegistration implements OnInit {

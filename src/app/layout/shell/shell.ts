@@ -49,8 +49,8 @@ export class Shell {
       section: 'Catálogos',
       items: [
         { label: 'Categorías',    icon: 'pi pi-tag',        route: '/catalogos/categories' },
-        { label: 'Resguardantes', icon: 'pi pi-users',      route: '/catalogos/resguardantes' },
-        { label: 'Ubicaciones',   icon: 'pi pi-map-marker', route: '/catalogos/ubicaciones' },
+        { label: 'Resguardantes', icon: 'pi pi-users',      route: '/catalogos/guardians' },
+        { label: 'Ubicaciones',   icon: 'pi pi-map-marker', route: '/catalogos/locations' },
         { label: 'Marcas',        icon: 'pi pi-bookmark',   route: '/catalogos/brands' },
         { label: 'Proveedores',   icon: 'pi pi-truck',      route: '/catalogos/suppliers' },
         { label: 'Facturas',      icon: 'pi pi-receipt',    route: '/catalogos/invoices' },
