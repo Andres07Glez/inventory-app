@@ -33,8 +33,7 @@
               }
             ],
             "styles": [
-              "src/styles.scss",
-              "src/app/shared/styles/ds-variables.css"
+              "src/styles.scss"
             ]
           },
           "configurations": {

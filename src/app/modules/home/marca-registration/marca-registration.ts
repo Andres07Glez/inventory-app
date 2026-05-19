@@ -37,7 +37,7 @@ import { BrandService, BrandResponse, BrandRequest } from '../../../core/service
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './marca-registration.html',
-  styleUrls: ['./marca-registration.css'],
+  styleUrls: ['./marca-registration.scss'],
 })
 export class MarcaRegistration implements OnInit {
 
