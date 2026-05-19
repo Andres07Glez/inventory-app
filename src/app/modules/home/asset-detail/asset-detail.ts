@@ -16,6 +16,8 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { TableModule } from 'primeng/table';
 import { TabsModule } from 'primeng/tabs';
+import { HasRoleDirective } from '../../../shared/directives/has-role.directive';
+import { DisableIfNoRoleDirective } from '../../../shared/directives/disable-if-no-role-directive';
 
 
 
@@ -48,7 +50,7 @@ const LIFECYCLE_SEVERITY: Record<string, LifecycleSeverity> = {
   imports: [CommonModule, FormsModule, ReactiveFormsModule,
     TabsModule, TagModule, ButtonModule, SelectModule, ToastModule,
     SkeletonModule, TimelineModule, ConfirmDialogModule, TableModule,
-    TooltipModule, CardModule],
+    TooltipModule, CardModule,HasRoleDirective,DisableIfNoRoleDirective],
   templateUrl: './asset-detail.html',
   styleUrl: './asset-detail.scss',
 })

@@ -178,10 +178,12 @@
                     optionValue="value"
                     placeholder="Selecciona una condición"
                     styleClass="condition-form__select"
+                    [disableIfNoRole]="['ADMIN', 'OPERADOR']"
                   />
                 </div>
                 <button
                   pButton
+                  *hasRole="['ADMIN', 'OPERADOR']"
                   icon="pi pi-check"
                   label="Actualizar condición"
                   class="p-button-warning"
