@@ -1,0 +1,466 @@
+// guardian-registration.component.scss
+// Sigue el mismo sistema de diseño que supplier.scss,
+// consumiendo variables CSS de styles.scss (:root).
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VARIABLES LOCALES — espejo del supplier, apuntando a los tokens globales
+// ─────────────────────────────────────────────────────────────────────────────
+:host {
+  --cat-bg:              var(--surface-ground);
+  --cat-surface:         var(--surface-card);
+  --cat-surface-raised:  var(--surface-section);
+
+  --cat-border:          var(--surface-border);
+  --cat-border-focus:    var(--color-primary);
+
+  --cat-primary:         var(--color-primary);
+  --cat-primary-hover:   var(--color-primary-dark);
+  --cat-primary-light:   var(--color-primary-light);
+  --cat-primary-text:    #ffffff;
+
+  --cat-text-primary:    var(--text-color);
+  --cat-text-secondary:  var(--text-color-secondary);
+  --cat-text-muted:      var(--text-color-muted);
+
+  --cat-input-bg:          var(--surface-card);
+  --cat-input-text:        var(--text-color);
+  --cat-input-border:      var(--surface-border);
+  --cat-input-placeholder: var(--text-color-muted);
+
+  --cat-danger:     var(--color-danger);
+  --cat-danger-bg:  var(--color-danger-light);
+  --cat-warn:       var(--color-warning);
+  --cat-edit-color: var(--color-info);
+  --cat-edit-bg:    var(--color-info-light);
+  --cat-success:    var(--color-success);
+
+  --cat-radius-sm: var(--border-radius-sm);
+  --cat-radius-md: var(--border-radius-md);
+  --cat-radius-lg: var(--border-radius-lg);
+  --cat-shadow:    var(--shadow-sm);
+  --cat-shadow-lg: var(--shadow-lg);
+
+  --cat-font: var(--font-primary);
+
+  display: block;
+  font-family: var(--cat-font);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TOOLBAR
+// ─────────────────────────────────────────────────────────────────────────────
+.cat-tab-content {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  @media (max-width: 640px) { padding: 1rem; }
+}
+
+.cat-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  flex-wrap: wrap;
+
+  @media (max-width: 560px) {
+    flex-direction: column;
+    align-items: stretch;
+    .cat-btn { width: 100%; justify-content: center; }
+  }
+}
+
+:host ::ng-deep .cat-search-field {
+  flex: 1;
+  min-width: 220px;
+
+  .p-iconfield   { width: 100%; }
+  .p-inputicon   { color: var(--cat-text-muted); }
+
+  .cat-search-input {
+    width: 100%;
+    font-family: var(--cat-font);
+    font-size: 1rem;
+    border-radius: var(--cat-radius-sm);
+    background: var(--cat-input-bg) !important;
+    color: var(--cat-input-text) !important;
+    border: 1px solid var(--cat-input-border) !important;
+    padding-left: 2.25rem !important;
+
+    &::placeholder { color: var(--cat-input-placeholder) !important; }
+
+    &:focus {
+      border-color: var(--cat-border-focus) !important;
+      box-shadow: 0 0 0 3px rgba(0,125,104,.12) !important;
+      outline: none;
+    }
+  }
+}
+
+.cat-total-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--cat-text-muted);
+  white-space: nowrap;
+
+  i { font-size: 0.85rem; }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TABLA
+// ─────────────────────────────────────────────────────────────────────────────
+:host ::ng-deep .cat-table {
+  font-family: var(--cat-font);
+
+  .p-datatable-thead > tr > th {
+    background: var(--cat-surface-raised);
+    color: var(--cat-text-secondary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--cat-border);
+    padding: 0.75rem 1rem;
+    white-space: nowrap;
+
+    &.p-highlight,
+    &:hover {
+      background: var(--cat-primary-light) !important;
+      color: var(--cat-primary) !important;
+    }
+
+    .p-sortable-column-icon { color: var(--cat-text-muted); font-size: 0.875rem; }
+  }
+
+  .p-datatable-tbody > tr {
+    border-bottom: 1px solid var(--cat-border);
+    transition: background var(--transition-fast);
+
+    &:last-child { border-bottom: none; }
+    &:hover { background: var(--cat-primary-light) !important; }
+
+    > td {
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      color: var(--cat-text-primary);
+      vertical-align: middle;
+    }
+  }
+
+  .p-paginator {
+    background: var(--cat-surface-raised);
+    border-top: 1px solid var(--cat-border);
+    padding: 0.625rem 1rem;
+    font-size: 1rem;
+    font-family: var(--cat-font);
+
+    .p-paginator-current { color: var(--cat-text-secondary); }
+
+    .p-paginator-page.p-highlight {
+      background: var(--cat-primary);
+      color: var(--cat-primary-text);
+      border-radius: var(--cat-radius-sm);
+    }
+
+    .p-paginator-page:not(.p-highlight):hover,
+    .p-paginator-prev:hover,
+    .p-paginator-next:hover {
+      background: var(--cat-primary-light);
+      color: var(--cat-primary);
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CELDAS
+// ─────────────────────────────────────────────────────────────────────────────
+.cat-cell-primary {
+  font-weight: 500;
+  font-size: 1rem;
+  color: var(--cat-primary);
+}
+
+.cat-emp-chip {
+  display: inline-block;
+  background: var(--cat-primary-light);
+  color: var(--cat-primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: var(--font-condensed, monospace);
+  letter-spacing: 0.03em;
+  border-radius: 4px;
+  padding: 0.15rem 0.5rem;
+}
+
+.cat-contact-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.cat-contact-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  color: var(--cat-text-secondary);
+
+  i { font-size: 0.75rem; color: var(--cat-primary); }
+}
+
+.cat-link {
+  color: var(--cat-primary);
+  text-decoration: none;
+  &:hover { text-decoration: underline; }
+}
+
+.cat-muted {
+  color: var(--cat-text-muted);
+  font-size: 1rem;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AVATAR
+// ─────────────────────────────────────────────────────────────────────────────
+:host ::ng-deep .guardian-avatar.p-avatar {
+  width: 34px;
+  height: 34px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: var(--cat-primary-light);
+  color: var(--cat-primary);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BOTONES DE ACCIÓN
+// ─────────────────────────────────────────────────────────────────────────────
+.cat-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+}
+
+.cat-btn-icon {
+  &.p-button {
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: none;
+    border-radius: var(--cat-radius-sm);
+    font-size: 0.875rem;
+    transition: all var(--transition-fast);
+  }
+
+  &--edit.p-button {
+    background: var(--cat-edit-bg);
+    color: var(--cat-edit-color);
+    &:hover:not(:disabled) { filter: brightness(0.92); }
+  }
+
+  &--danger.p-button {
+    background: var(--cat-danger-bg);
+    color: var(--cat-danger);
+    &:hover:not(:disabled) { filter: brightness(0.92); }
+    &:disabled { opacity: 0.35; cursor: not-allowed; }
+  }
+}
+
+.cat-btn {
+  &.p-button {
+    font-family: var(--cat-font);
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: var(--cat-radius-sm);
+    padding: 0.5rem 1.25rem;
+    transition: all var(--transition-fast);
+  }
+
+  &--primary.p-button {
+    background: var(--cat-primary);
+    border-color: var(--cat-primary);
+    color: var(--cat-primary-text);
+    &:hover:not(:disabled) {
+      background: var(--cat-primary-hover);
+      border-color: var(--cat-primary-hover);
+    }
+  }
+
+  &--secondary.p-button {
+    background: transparent;
+    border: 1px solid var(--cat-border);
+    color: var(--cat-text-secondary);
+    &:hover:not(:disabled) { background: var(--cat-surface-raised); }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SKELETON & EMPTY STATE
+// ─────────────────────────────────────────────────────────────────────────────
+:host ::ng-deep .cat-skeleton.p-skeleton {
+  background-color: var(--cat-border);
+  border-radius: var(--cat-radius-sm);
+}
+
+.cat-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--cat-text-muted);
+  gap: 0.5rem;
+
+  &__icon  { font-size: 2.5rem; opacity: 0.35; margin-bottom: 0.25rem; }
+  &__title { font-size: 1.5rem; font-weight: 500; color: var(--cat-text-secondary); margin: 0; }
+  &__sub   { font-size: 1rem; line-height: 1.6; margin: 0; max-width: 320px; }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DIÁLOGO
+// ─────────────────────────────────────────────────────────────────────────────
+:host ::ng-deep .cat-dialog {
+  .p-dialog {
+    border-radius: var(--cat-radius-lg);
+    background: var(--cat-surface);
+    box-shadow: var(--cat-shadow-lg);
+    border: 1px solid var(--cat-border);
+    font-family: var(--cat-font);
+  }
+
+  .p-dialog-header {
+    background: var(--cat-surface);
+    border-bottom: 1px solid var(--cat-border);
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--cat-radius-lg) var(--cat-radius-lg) 0 0;
+
+    .p-dialog-title { font-size: 1.5rem; font-weight: 700; color: var(--cat-text-primary); }
+
+    .p-dialog-header-icon {
+      color: var(--cat-text-muted);
+      &:hover { background: var(--cat-surface-raised); color: var(--cat-text-secondary); }
+    }
+  }
+
+  .p-dialog-content {
+    background: var(--cat-surface);
+    padding: 1.5rem;
+    overflow-y: auto;
+  }
+
+  .p-dialog-footer {
+    background: var(--cat-surface-raised);
+    border-top: 1px solid var(--cat-border);
+    padding: 1rem 1.5rem;
+    border-radius: 0 0 var(--cat-radius-lg) var(--cat-radius-lg);
+  }
+
+  // Select dentro del diálogo — ancho completo
+  .p-select {
+    width: 100%;
+    font-family: var(--cat-font);
+    font-size: 1rem;
+    border-radius: var(--cat-radius-sm);
+    background: var(--cat-input-bg) !important;
+    color: var(--cat-input-text) !important;
+    border: 1px solid var(--cat-input-border) !important;
+
+    &:focus-within {
+      border-color: var(--cat-border-focus) !important;
+      box-shadow: 0 0 0 3px rgba(0,125,104,.12) !important;
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FORMULARIO DEL DIÁLOGO
+// ─────────────────────────────────────────────────────────────────────────────
+.cat-form      { display: flex; flex-direction: column; gap: 1.125rem; }
+.cat-form-row  { display: grid; grid-template-columns: 1fr 1fr; gap: 1.125rem; }
+.cat-field     { display: flex; flex-direction: column; gap: 0.375rem; &--full { grid-column: 1 / -1; } }
+.cat-label     { font-size: 1rem; font-weight: 500; color: var(--cat-text-secondary); }
+.cat-req       { color: var(--cat-danger); margin-left: 2px; }
+.cat-opt       { color: var(--cat-text-muted); font-weight: 400; font-size: 0.75rem; }
+.cat-error     { display: flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; color: var(--cat-danger); i { font-size: 0.75rem; } }
+
+.cat-input {
+  width: 100%;
+  font-family: var(--cat-font);
+  font-size: 1rem;
+  border-radius: var(--cat-radius-sm);
+  background: var(--cat-input-bg) !important;
+  color: var(--cat-input-text) !important;
+  border: 1px solid var(--cat-input-border) !important;
+
+  &::placeholder { color: var(--cat-input-placeholder) !important; }
+
+  &:focus {
+    border-color: var(--cat-border-focus) !important;
+    box-shadow: 0 0 0 3px rgba(0,125,104,.12) !important;
+    outline: none;
+  }
+}
+
+.cat-dialog-footer { display: flex; justify-content: flex-end; gap: 0.75rem; }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONFIRM DIALOG
+// ─────────────────────────────────────────────────────────────────────────────
+:host ::ng-deep .cat-confirm-dialog {
+  .p-confirmdialog {
+    border-radius: var(--cat-radius-lg);
+    background: var(--cat-surface);
+    box-shadow: var(--cat-shadow-lg);
+    border: 1px solid var(--cat-border);
+    font-family: var(--cat-font);
+  }
+
+  .p-confirmdialog-icon    { color: var(--cat-warn); font-size: 2rem; }
+  .p-confirmdialog-message { color: var(--cat-text-primary); font-size: 1rem; line-height: 1.6; }
+
+  .p-dialog-header {
+    background: var(--cat-surface);
+    border-bottom: 1px solid var(--cat-border);
+    .p-dialog-title { font-size: 1.5rem; font-weight: 700; color: var(--cat-text-primary); }
+    .p-dialog-header-icon { color: var(--cat-text-muted); }
+  }
+
+  .p-dialog-content { background: var(--cat-surface); }
+
+  .p-dialog-footer {
+    background: var(--cat-surface-raised);
+    border-top: 1px solid var(--cat-border);
+  }
+
+  .p-button-danger {
+    background: var(--cat-danger);
+    border-color: var(--cat-danger);
+    color: white;
+    font-family: var(--cat-font);
+    font-weight: 500;
+    border-radius: var(--cat-radius-sm);
+    font-size: 1rem;
+    &:hover { filter: brightness(0.9); }
+  }
+
+  .p-confirmdialog-reject-button {
+    background: transparent;
+    border: 1px solid var(--cat-border);
+    color: var(--cat-text-secondary);
+    font-family: var(--cat-font);
+    font-weight: 500;
+    border-radius: var(--cat-radius-sm);
+    font-size: 1rem;
+    &:hover { background: var(--cat-surface-raised); }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RESPONSIVE
+// ─────────────────────────────────────────────────────────────────────────────
+@media (max-width: 640px) {
+  .cat-form-row { grid-template-columns: 1fr; }
+}

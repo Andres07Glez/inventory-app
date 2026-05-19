@@ -46,8 +46,8 @@
 
     <!-- Usuario con menú desplegable -->
     <div class="topbar__user" (click)="toggleUserMenu($event)">
-      <span class="topbar__user-avatar">{{ userInitial }}</span>
-      <span class="topbar__user-name">{{ fullName }}</span>
+      <span class="topbar__user-avatar">{{ userInitial() }}</span>
+      <span class="topbar__user-name">{{ fullName() }}</span>
       <i class="pi pi-chevron-down topbar__user-chevron"></i>
     </div>
   </header>
@@ -56,14 +56,17 @@
   <p-popover #userMenu styleClass="user-popover">
     <div class="user-menu">
       <div class="user-menu__header">
-        <span class="user-menu__avatar">{{ userInitial }}</span>
+        <span class="user-menu__avatar">{{ userInitial() }}</span>
         <div class="user-menu__info">
-          <span class="user-menu__name">{{ fullName }}</span>
+          <span class="user-menu__name">{{ fullName() }}</span>
           <span class="user-menu__meta">
-            {{ employeeNumber }}
-            <span class="user-menu__role-badge"
-                  [class.user-menu__role-badge--admin]="role === 'ADMIN'">
-              {{ roleLabel }}
+            {{ employeeNumber() }}
+            <span
+              class="user-menu__role-badge"
+              [class.user-menu__role-badge--admin]="role() === 'ADMIN'"
+              [class.user-menu__role-badge--auditor]="role() === 'AUDITOR'"
+            >
+              {{ roleLabel() }}
             </span>
           </span>
         </div>
@@ -88,7 +91,7 @@
   <!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
   <aside class="sidebar">
     <nav class="sidebar__nav">
-      @for (group of navGroups; track group.section) {
+      @for (group of navGroups(); track group.section) {
         <div class="sidebar__group">
           @if (!sidebarCollapsed()) {
             <span class="sidebar__section-label">{{ group.section }}</span>

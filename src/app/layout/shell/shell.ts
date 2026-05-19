@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal, ViewChild } from '@angular/core';
+import { Component, computed, inject, signal, ViewChild } from '@angular/core';
 import { RouterModule, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
@@ -8,10 +8,61 @@ import { MessageService } from 'primeng/api';
 import { AuthService } from '../../core/services/auth/auth.service';
 import { AssetService } from '../../core/services/asset/asset.service';
 import { ToastModule } from 'primeng/toast';
+import { UserRole } from '../../core/models/auth.model';
 
 
-interface NavItem  { label: string; icon: string; route: string; }
-interface NavGroup { section: string; items: NavItem[]; }
+interface NavItem  { label: string; icon: string; route: string; roles?: UserRole[]; }
+interface NavGroup { section: string; items: NavItem[]; roles?: UserRole[]; }
+/** Definición completa del menú. roles=undefined → visible para todos. */
+const ALL_NAV_GROUPS: NavGroup[] = [
+  {
+    section: 'Principal',
+    items: [
+      { label: 'Dashboard', icon: 'pi pi-home', route: '/inventario/dashboard' },
+    ],
+  },
+  {
+    section: 'Inventario',
+    items: [
+      { label: 'Bienes',       icon: 'pi pi-box',       route: '/inventario/bienes' },
+      { label: 'Asignaciones', icon: 'pi pi-user-plus', route: '/inventario/asignaciones', roles: ['ADMIN', 'OPERADOR'] },
+      { label: 'Registrar',   icon: 'pi pi-plus',      route: '/inventario/registro',     roles: ['ADMIN', 'OPERADOR'] },
+    ],
+  },
+  {
+    section: 'Operaciones',
+    roles: ['ADMIN', 'OPERADOR'],
+    items: [
+      { label: 'Incidencias',   icon: 'pi pi-exclamation-triangle', route: '/incidencias' },
+      { label: 'Mantenimiento', icon: 'pi pi-wrench',               route: '/mantenimiento' },
+    ],
+  },
+  {
+    section: 'Catálogos',
+    roles: ['ADMIN', 'OPERADOR'],
+    items: [
+      { label: 'Categorías',    icon: 'pi pi-tag',        route: '/catalogos/categories' },
+      { label: 'Resguardantes', icon: 'pi pi-users',      route: '/catalogos/guardians' },
+      { label: 'Ubicaciones',   icon: 'pi pi-map-marker', route: '/catalogos/locations' },
+      { label: 'Marcas',        icon: 'pi pi-bookmark',   route: '/catalogos/brands' },
+      { label: 'Proveedores',   icon: 'pi pi-truck',      route: '/catalogos/suppliers' },
+      { label: 'Facturas',      icon: 'pi pi-receipt',    route: '/catalogos/invoices' },
+    ],
+  },
+  {
+    section: 'Administración',
+    roles: ['ADMIN'],
+    items: [
+      { label: 'Usuarios', icon: 'pi pi-user-edit', route: '/admin/usuarios' },
+    ],
+  },
+];
+
+const ROLE_LABELS: Record<UserRole, string> = {
+  ADMIN:    'Administrador',
+  OPERADOR: 'Operador',
+  AUDITOR:  'Auditor',
+};
 @Component({
   selector: 'app-shell',
   standalone:true,
@@ -35,46 +86,24 @@ export class Shell {
 
   // ── Datos del usuario desde el token ─────────────────────────────────────
 
-  readonly fullName       = this.authService.currentUser()?.fullName ?? 'Usuario';
-  readonly employeeNumber = this.authService.currentUser()?.username  ?? '';
-  readonly role           = this.authService.currentUser()?.role      ?? 'USER';
-  readonly roleLabel      = this.role === 'ADMIN' ? 'Administrador' : 'Operador';
-  readonly userInitial    = this.fullName.charAt(0).toUpperCase();
+// ── Datos del usuario (computed → reactivos al signal de AuthService) ─────
+  readonly fullName       = computed(() => this.authService.currentUser()?.fullName       ?? 'Usuario');
+  readonly employeeNumber = computed(() => this.authService.currentUser()?.username       ?? '');
+  readonly role           = computed(() => this.authService.currentUser()?.role           ?? 'OPERADOR');
+  readonly userInitial    = computed(() => this.fullName().charAt(0).toUpperCase());
+  readonly roleLabel      = computed(() => ROLE_LABELS[this.role()] ?? 'Usuario');
 
-  readonly navGroups: NavGroup[] = [
-    {
-      section: 'Principal',
-      items: [
-        { label: 'Dashboard',    icon: 'pi pi-home',      route: '/inventario/dashboard' },
-      ],
-    },
-    {
-      section: 'Inventario',
-      items: [
-        { label: 'Bienes',       icon: 'pi pi-box',       route: '/inventario/bienes' },
-        { label: 'Asignaciones', icon: 'pi pi-user-plus', route: '/inventario/asignaciones' }, // ← NUEVO
-        { label: 'Registrar',   icon: 'pi pi-plus',      route: '/inventario/registro' },
-      ],
-    },
-    {
-      section: 'Operaciones',
-      items: [
-        { label: 'Incidencias',   icon: 'pi pi-exclamation-triangle', route: '/incidencias' },
-        { label: 'Mantenimiento', icon: 'pi pi-wrench',               route: '/mantenimiento' },
-      ],
-    },
-    {
-      section: 'Catálogos',
-      items: [
-        { label: 'Categorías',    icon: 'pi pi-tag',        route: '/catalogos/categories' },
-        { label: 'Resguardantes', icon: 'pi pi-users',      route: '/catalogos/resguardantes' },
-        { label: 'Ubicaciones',   icon: 'pi pi-map-marker', route: '/catalogos/ubicaciones' },
-        { label: 'Marcas',        icon: 'pi pi-bookmark',   route: '/catalogos/brands' },
-        { label: 'Proveedores',   icon: 'pi pi-truck',      route: '/catalogos/suppliers' },
-        { label: 'Facturas',      icon: 'pi pi-receipt',    route: '/catalogos/invoices' },
-      ],
-    },
-  ];
+  // ── Navegación filtrada por rol ────────────────────────────────────────────
+  readonly navGroups = computed(() => {
+    const role = this.role();
+    return ALL_NAV_GROUPS
+      .filter(g => !g.roles || g.roles.includes(role))
+      .map(g => ({
+        ...g,
+        items: g.items.filter(i => !i.roles || i.roles.includes(role)),
+      }))
+      .filter(g => g.items.length > 0);
+  });
 
   toggleSidebar(): void {
     this.sidebarCollapsed.update(v => !v);

@@ -234,6 +234,7 @@ export class AssetRegistration implements OnInit {
       brand: [null, Validators.required],
       model: [''],
       serial_number: [''],
+      barcode: [''],
       category_id: [null, Validators.required],
 
       // Step 1 — Ubicación y Fechas
@@ -382,7 +383,7 @@ export class AssetRegistration implements OnInit {
       brandId: raw.brand,
       model: raw.model || undefined,
       serialNumber: raw.serial_number || undefined,
-      barcode: undefined,
+      barcode: raw.barcode || undefined,
       notes: raw.notes || undefined,
       categoryId: raw.category_id,
       locationId: this.DEFAULT_LOCATION_ID,
