@@ -1,3 +1,4 @@
+export type UserRole = 'ADMIN' | 'OPERADOR' | 'AUDITOR';
 export interface LoginRequest {
   employeeNumber: string;
   password: string;
@@ -14,6 +15,6 @@ export interface AuthUser {
   userId: number;
   username: string;
   fullName: string;
-  role: 'ADMIN' | 'USER';
+  role: UserRole;
   mustChangePassword: boolean;
 }

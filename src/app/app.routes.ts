@@ -64,7 +64,14 @@ export const routes: Routes = [
         path:'catalogos/suppliers',
         loadComponent:()=>
           import('./modules/home/supplier/supplier').then(m=>m.SupplierComponent),
-      }
+      },
+      {
+        path: 'admin/usuarios',
+        loadComponent: () =>
+          import('./modules/home/user-management/user-management')
+            .then(m => m.UserManagement),
+        canActivate: [authGuard], // doble protección frontend
+      },
     ],
   },
   { path: '**', redirectTo: 'login' },

@@ -1,0 +1,289 @@
+<p-confirmpopup />
+
+<div class="um-page">
+
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <div class="um-page__header">
+    <div class="um-page__title-group">
+      <h1 class="um-page__title">Gestión de Usuarios</h1>
+      <span class="um-page__subtitle">Administra las cuentas y roles del sistema</span>
+    </div>
+    <p-button
+      label="Nuevo usuario"
+      icon="pi pi-plus"
+      (onClick)="openCreateDialog()"
+    />
+  </div>
+
+  <!-- ── Tabla ───────────────────────────────────────────────────────────── -->
+  <div class="um-card">
+    <p-table
+      [value]="users()"
+      [lazy]="true"
+      [paginator]="true"
+      [rows]="pageSize()"
+      [totalRecords]="totalRecords()"
+      [rowsPerPageOptions]="[10, 15, 25]"
+      [loading]="loading()"
+      (onLazyLoad)="onLazyLoad($event)"
+      styleClass="p-datatable-sm"
+      [tableStyle]="{ 'min-width': '60rem' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 3rem"></th>
+          <th pSortableColumn="fullName">
+            Nombre <p-sortIcon field="fullName" />
+          </th>
+          <th>Número de empleado</th>
+          <th>Correo</th>
+          <th>Rol</th>
+          <th>Estado</th>
+          <th>Último acceso</th>
+          <th style="width: 8rem">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-user>
+        <tr [class.um-row--inactive]="!user.isActive">
+
+          <!-- Avatar con inicial -->
+          <td>
+            <div class="um-avatar" [class.um-avatar--inactive]="!user.isActive">
+              {{ getInitial(user.fullName) }}
+            </div>
+          </td>
+
+          <!-- Nombre -->
+          <td>
+            <span class="um-cell__name">{{ user.fullName }}</span>
+            <span class="um-cell__username">&#64;{{ user.username }}</span>
+          </td>
+
+          <!-- Número de empleado -->
+          <td>
+            <span class="font-mono">{{ user.employeeNumber }}</span>
+          </td>
+
+          <!-- Correo -->
+          <td class="um-cell__email">{{ user.email }}</td>
+
+          <!-- Rol -->
+          <td>
+            <p-tag
+              [value]="getRoleLabel(user.role)"
+              [severity]="getRoleSeverity(user.role)"
+            />
+          </td>
+
+          <!-- Estado -->
+          <td>
+            <p-tag
+              [value]="user.isActive ? 'Activo' : 'Inactivo'"
+              [severity]="user.isActive ? 'success' : 'danger'"
+            />
+          </td>
+
+          <!-- Último acceso -->
+          <td class="um-cell__date">
+            @if (user.lastLoginAt) {
+              {{ user.lastLoginAt | date:'dd/MM/yyyy HH:mm' }}
+            } @else {
+              <span class="text-muted">Sin accesos</span>
+            }
+          </td>
+
+          <!-- Acciones -->
+          <td>
+            <div class="um-actions">
+              <p-button
+                icon="pi pi-shield"
+                [text]="true"
+                size="small"
+                pTooltip="Cambiar rol"
+                tooltipPosition="top"
+                (onClick)="openRoleDialog(user)"
+              />
+              <p-button
+                [icon]="user.isActive ? 'pi pi-ban' : 'pi pi-check-circle'"
+                [text]="true"
+                size="small"
+                [severity]="user.isActive ? 'danger' : 'success'"
+                [pTooltip]="user.isActive ? 'Desactivar' : 'Activar'"
+                tooltipPosition="top"
+                (onClick)="confirmToggleStatus(user, $event)"
+              />
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="um-empty">
+            <i class="pi pi-users um-empty__icon"></i>
+            <span>No hay usuarios registrados.</span>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+</div>
+
+<!-- ── Diálogo: Crear usuario ───────────────────────────────────────────── -->
+<p-dialog
+  header="Nuevo usuario"
+  [visible]="showCreateDialog()"
+  (visibleChange)="showCreateDialog.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '480px' }"
+  styleClass="um-dialog"
+>
+  <div class="um-form">
+
+    <div class="um-form__field">
+      <label class="um-form__label">Nombre completo *</label>
+      <input
+        pInputText
+        class="um-form__input"
+        placeholder="Ej. María García López"
+        [value]="createForm().fullName"
+        (input)="updateField('fullName', $any($event.target).value)"
+      />
+    </div>
+
+    <div class="um-form__row">
+      <div class="um-form__field">
+        <label class="um-form__label">Nombre de usuario *</label>
+        <input
+          pInputText
+          class="um-form__input"
+          placeholder="Ej. mgarcia"
+          [value]="createForm().username"
+          (input)="updateField('username', $any($event.target).value)"
+        />
+        <span class="um-form__hint">Mín. 3 caracteres, sin espacios</span>
+      </div>
+
+      <div class="um-form__field">
+        <label class="um-form__label">Núm. de empleado *</label>
+        <input
+          pInputText
+          class="um-form__input"
+          placeholder="EMP-000"
+          [value]="createForm().employeeNumber"
+          (input)="updateField('employeeNumber', $any($event.target).value)"
+        />
+        <span class="um-form__hint">Formato: EMP-000</span>
+      </div>
+    </div>
+
+    <div class="um-form__field">
+      <label class="um-form__label">Correo electrónico *</label>
+      <input
+        pInputText
+        class="um-form__input"
+        placeholder="correo@unpa.edu.mx"
+        type="email"
+        [value]="createForm().email"
+        (input)="updateField('email', $any($event.target).value)"
+      />
+    </div>
+
+    <div class="um-form__field">
+      <label class="um-form__label">Rol *</label>
+      <p-select
+        [options]="roleOptions"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Seleccionar rol"
+        [ngModel]="createForm().role"
+        (onChange)="updateField('role', $event.value)"
+        appendTo="body"
+        styleClass="um-form__select"
+      />
+    </div>
+
+    <div class="um-form__info">
+      <i class="pi pi-info-circle"></i>
+      <span>La contraseña inicial será el número de empleado. El usuario deberá cambiarla en su primer acceso.</span>
+    </div>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      [text]="true"
+      (onClick)="showCreateDialog.set(false)"
+    />
+    <p-button
+      label="Crear usuario"
+      icon="pi pi-check"
+      [loading]="saving()"
+      [disabled]="!createFormValid()"
+      (onClick)="create()"
+    />
+  </ng-template>
+</p-dialog>
+
+<!-- ── Diálogo: Cambiar rol ─────────────────────────────────────────────── -->
+<p-dialog
+  header="Cambiar rol"
+  [visible]="showRoleDialog()"
+  (visibleChange)="showRoleDialog.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '360px' }"
+  styleClass="um-dialog"
+>
+  @if (selectedUser()) {
+    <div class="um-role-form">
+      <div class="um-role-form__user">
+        <div class="um-avatar um-avatar--lg">{{ getInitial(selectedUser()!.fullName) }}</div>
+        <div>
+          <p class="um-role-form__name">{{ selectedUser()!.fullName }}</p>
+          <p class="um-role-form__sub">{{ selectedUser()!.employeeNumber }}</p>
+        </div>
+      </div>
+
+      <div class="um-form__field">
+        <label class="um-form__label">Nuevo rol</label>
+        <p-select
+          [options]="roleOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="newRole()"
+          (onChange)="newRole.set($event.value)"
+          appendTo="body"
+          styleClass="um-form__select"
+        />
+      </div>
+
+      @if (newRole() === 'ADMIN') {
+        <div class="um-form__warn">
+          <i class="pi pi-exclamation-triangle"></i>
+          <span>El rol ADMIN tiene acceso total al sistema, incluyendo la gestión de otros usuarios.</span>
+        </div>
+      }
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      [text]="true"
+      (onClick)="showRoleDialog.set(false)"
+    />
+    <p-button
+      label="Guardar rol"
+      icon="pi pi-check"
+      [loading]="saving()"
+      (onClick)="saveRole()"
+    />
+  </ng-template>
+</p-dialog>
