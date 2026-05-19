@@ -41,7 +41,6 @@
   >
     <ng-template pTemplate="header">
       <tr>
-        <th style="width: 3rem"></th>
         <th pSortableColumn="name">Nombre <p-sortIcon field="name" /></th>
         <th>Contacto</th>
         <th style="width:100px;text-align:center">Estado</th>
@@ -49,19 +48,12 @@
       </tr>
     </ng-template>
 
-    <ng-template pTemplate="body" let-s let-expanded="expanded">
-      <tr>
+    <ng-template pTemplate="body" let-s>
+      <tr class="cat-row-clickable" (click)="openViewSupplier(s)">
         <td>
-          <button 
-            type="button" 
-            pButton 
-            [pRowToggler]="s" 
-            class="p-button-text p-button-rounded p-button-plain p-button-sm" 
-            [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'">
-          </button>
-        </td>
-        <td>
-          <div class="cat-cell-primary">{{ s.name }}</div>
+          <div class="cat-cell-primary">
+            {{ s.name }}
+          </div>
         </td>
         <td>{{ s.contactName || '—' }}</td>
         <td style="text-align:center">
@@ -71,7 +63,7 @@
             styleClass="cat-tag"
           />
         </td>
-        <td style="text-align:center">
+        <td style="text-align:center" (click)="$event.stopPropagation()">
           <div class="cat-actions">
             <button
               pButton
@@ -97,45 +89,8 @@
       </tr>
     </ng-template>
 
-    <ng-template pTemplate="rowexpansion" let-s>
-      <tr>
-        <td colspan="5">
-          <div class="cat-expanded-row">
-            <div class="cat-detail-grid">
-              <div class="cat-detail-item">
-                <span class="cat-detail-label">RFC</span>
-                <span class="cat-detail-value">{{ s.rfc || '—' }}</span>
-              </div>
-              <div class="cat-detail-item">
-                <span class="cat-detail-label">Teléfono</span>
-                <span class="cat-detail-value">{{ s.phone || '—' }}</span>
-              </div>
-              <div class="cat-detail-item">
-                <span class="cat-detail-label">Correo electrónico</span>
-                <span class="cat-detail-value">
-                  @if (s.email) {
-                    <a [href]="'mailto:' + s.email" class="cat-link">{{ s.email }}</a>
-                  } @else { <span class="cat-muted">—</span> }
-                </span>
-              </div>
-              <div class="cat-detail-item cat-detail-item--full">
-                <span class="cat-detail-label">Dirección</span>
-                <span class="cat-detail-value">{{ s.address || '—' }}</span>
-              </div>
-              @if (s.notes) {
-                <div class="cat-detail-item cat-detail-item--full">
-                  <span class="cat-detail-label">Notas</span>
-                  <span class="cat-detail-value">{{ s.notes }}</span>
-                </div>
-              }
-            </div>
-          </div>
-        </td>
-      </tr>
-    </ng-template>
-
     <ng-template pTemplate="emptymessage">
-      <tr><td colspan="5">
+      <tr><td colspan="4">
         <div class="cat-empty">
           <i class="pi pi-building cat-empty__icon"></i>
           <p class="cat-empty__title">Sin proveedores</p>
@@ -150,7 +105,7 @@
     <ng-template pTemplate="loadingbody">
       @for (_ of [1,2,3,4,5]; track $index) {
         <tr>
-          @for (__ of [1,2,3,4,5]; track $index) {
+          @for (__ of [1,2,3,4]; track $index) {
             <td><p-skeleton height="1.25rem" styleClass="cat-skeleton" /></td>
           }
         </tr>
@@ -158,6 +113,62 @@
     </ng-template>
   </p-table>
 </div>
+
+<p-dialog
+  header="Detalles del proveedor"
+  [modal]="true"
+  [(visible)]="viewDialogVisible"
+  [style]="{ width: '550px' }"
+  styleClass="cat-dialog"
+  [draggable]="false"
+  [resizable]="false"
+  [closeOnEscape]="true"
+>
+  @if (selectedSupplier(); as s) {
+    <div class="cat-detail-grid">
+      <div class="cat-detail-item cat-detail-item--full">
+        <span class="cat-detail-label">Razón Social / Nombre</span>
+        <span class="cat-detail-value" style="font-weight: 500; color: var(--cat-primary);">{{ s.name }}</span>
+      </div>
+      <div class="cat-detail-item">
+        <span class="cat-detail-label">RFC</span>
+        <span class="cat-detail-value">{{ s.rfc || '—' }}</span>
+      </div>
+      <div class="cat-detail-item">
+        <span class="cat-detail-label">Contacto principal</span>
+        <span class="cat-detail-value">{{ s.contactName || '—' }}</span>
+      </div>
+      <div class="cat-detail-item">
+        <span class="cat-detail-label">Teléfono</span>
+        <span class="cat-detail-value">{{ s.phone || '—' }}</span>
+      </div>
+      <div class="cat-detail-item">
+        <span class="cat-detail-label">Correo electrónico</span>
+        <span class="cat-detail-value">
+          @if (s.email) {
+            <a [href]="'mailto:' + s.email" class="cat-link">{{ s.email }}</a>
+          } @else { <span class="cat-muted">—</span> }
+        </span>
+      </div>
+      <div class="cat-detail-item cat-detail-item--full">
+        <span class="cat-detail-label">Dirección</span>
+        <span class="cat-detail-value">{{ s.address || '—' }}</span>
+      </div>
+      @if (s.notes) {
+        <div class="cat-detail-item cat-detail-item--full">
+          <span class="cat-detail-label">Notas adicionales</span>
+          <span class="cat-detail-value">{{ s.notes }}</span>
+        </div>
+      }
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <div class="cat-dialog-footer">
+      <button pButton type="button" label="Cerrar" icon="pi pi-times"
+        class="cat-btn cat-btn--secondary" (click)="viewDialogVisible.set(false)"></button>
+    </div>
+  </ng-template>
+</p-dialog>
 
 <p-dialog
   [header]="supplierDialogMode() === 'create' ? 'Nuevo proveedor' : 'Editar proveedor'"
