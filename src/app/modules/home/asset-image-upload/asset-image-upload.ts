@@ -1,12 +1,14 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { AssetImageDTO } from '../../../core/models/asset.model';
 import { AssetImageService } from '../../../core/services/asset-image/asset-image.service';
 import imageCompression from 'browser-image-compression';
+import { ConfirmPopupModule } from 'primeng/confirmpopup';
+import { DialogModule } from 'primeng/dialog';
 
 
 const MAX_IMAGES    = 5;
@@ -20,7 +22,7 @@ const COMPRESSION_OPTIONS = {
 @Component({
   selector: 'app-asset-image-upload',
   standalone:true,
-  imports: [ToastModule, TooltipModule, ProgressBarModule],
+  imports: [ToastModule, TooltipModule, ProgressBarModule,ConfirmPopupModule, DialogModule],
   templateUrl: './asset-image-upload.html',
   styleUrl: './asset-image-upload.scss',
 })
@@ -31,11 +33,15 @@ export class AssetImageUpload implements OnInit{
 
   private readonly imageService   = inject(AssetImageService);
   private readonly messageService = inject(MessageService);
+  private readonly confirmSvc = inject(ConfirmationService);
+
 
   readonly images         = signal<AssetImageDTO[]>([]);
   readonly isLoading      = signal(false);
   readonly uploadProgress = signal<number | null>(null);
   readonly isDragging     = signal(false);
+  readonly previewUrl = signal<string | null>(null);
+
 
   readonly canUploadMore = computed(
     () => !this.readOnly() && this.images().length < MAX_IMAGES
@@ -153,14 +159,29 @@ export class AssetImageUpload implements OnInit{
       },
     });
   }
+  openPreview(img: AssetImageDTO): void {
+    this.previewUrl.set(img.url);
+  }
 
-  confirmDelete(image: AssetImageDTO): void {
-    // Sin ConfirmDialog para no añadir dependencia extra; usamos el toast de acción
+  confirmDelete(image: AssetImageDTO, event: Event): void {
+    this.confirmSvc.confirm({
+      key: 'img-delete',
+      target: event.target as EventTarget,
+      message: '¿Eliminar esta imagen? La acción no se puede deshacer.',
+      acceptLabel: 'Eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonProps: { severity: 'danger', size: 'small' },
+      accept: () => this.deleteImage(image),
+    });
+  }
+
+  private deleteImage(image: AssetImageDTO): void {
     this.imageService.delete(this.assetId(), image.id).subscribe({
       next: () => {
         this.images.update(list => list.filter(img => img.id !== image.id));
         this.messageService.add({
-          severity: 'info', summary: 'Eliminada', detail: 'Imagen eliminada.', life: 3000,
+          severity: 'info', summary: 'Eliminada',
+          detail: 'Imagen eliminada correctamente.', life: 3000,
         });
       },
     });
