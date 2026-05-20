@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { AssetDetailResponseDTO, AssignmentHistoryDTO, CONDITION_STATUS_OPTIONS, ConditionStatus, SelectOption, UpdateConditionRequest } from '../../../core/models/asset.model';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MessageService, ConfirmationService } from 'primeng/api';
@@ -18,6 +18,8 @@ import { TableModule } from 'primeng/table';
 import { TabsModule } from 'primeng/tabs';
 import { HasRoleDirective } from '../../../shared/directives/has-role.directive';
 import { DisableIfNoRoleDirective } from '../../../shared/directives/disable-if-no-role-directive';
+import { AssetImageUpload } from '../asset-image-upload/asset-image-upload';
+import { AuthService } from '../../../core/services/auth/auth.service';
 
 
 
@@ -50,7 +52,7 @@ const LIFECYCLE_SEVERITY: Record<string, LifecycleSeverity> = {
   imports: [CommonModule, FormsModule, ReactiveFormsModule,
     TabsModule, TagModule, ButtonModule, SelectModule, ToastModule,
     SkeletonModule, TimelineModule, ConfirmDialogModule, TableModule,
-    TooltipModule, CardModule,HasRoleDirective,DisableIfNoRoleDirective],
+    TooltipModule, CardModule,HasRoleDirective,DisableIfNoRoleDirective,AssetImageUpload],
   templateUrl: './asset-detail.html',
   styleUrl: './asset-detail.scss',
 })
@@ -61,6 +63,7 @@ export class AssetDetail implements OnInit{
   private readonly assetService        = inject(AssetService);
   private readonly messageService      = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
+  private readonly authService = inject(AuthService);
 
   // ── Estado de la vista ────────────────────────────────────────────────────
   asset             = signal<AssetDetailResponseDTO | null>(null);
@@ -74,6 +77,10 @@ export class AssetDetail implements OnInit{
   activeTab = 'resumen';
 
   readonly conditionOptions: SelectOption<ConditionStatus>[] = CONDITION_STATUS_OPTIONS;
+  readonly canEditImages = computed(() => {
+    const role = this.authService.currentUser()?.role;
+    return role === 'ADMIN' || role === 'OPERADOR';
+  });
 
   // ─────────────────────────────────────────────────────────────────────────
   ngOnInit(): void {

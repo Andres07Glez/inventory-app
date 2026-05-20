@@ -27,24 +27,26 @@
 
           <!-- Overlay de acciones -->
           <div class="img-upload__thumb-overlay">
-            @if (!img.isPrimary) {
+            @if (!readOnly()) {
+              @if (!img.isPrimary) {
+                <button
+                  class="img-upload__action-btn"
+                  pTooltip="Establecer como principal"
+                  tooltipPosition="top"
+                  (click)="setPrimary(img)"
+                >
+                  <i class="pi pi-star"></i>
+                </button>
+              }
               <button
-                class="img-upload__action-btn"
-                pTooltip="Establecer como principal"
+                class="img-upload__action-btn img-upload__action-btn--danger"
+                pTooltip="Eliminar imagen"
                 tooltipPosition="top"
-                (click)="setPrimary(img)"
+                (click)="confirmDelete(img)"
               >
-                <i class="pi pi-star"></i>
+                <i class="pi pi-trash"></i>
               </button>
             }
-            <button
-              class="img-upload__action-btn img-upload__action-btn--danger"
-              pTooltip="Eliminar imagen"
-              tooltipPosition="top"
-              (click)="confirmDelete(img)"
-            >
-              <i class="pi pi-trash"></i>
-            </button>
           </div>
 
         </div>

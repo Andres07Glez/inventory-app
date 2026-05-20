@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, input, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { ToastModule } from 'primeng/toast';
@@ -27,6 +27,7 @@ const COMPRESSION_OPTIONS = {
 export class AssetImageUpload implements OnInit{
   /** ID del bien al que pertenecen las imágenes. Requerido. */
   readonly assetId = input.required<number>();
+  readonly readOnly = input<boolean>(false);
 
   private readonly imageService   = inject(AssetImageService);
   private readonly messageService = inject(MessageService);
@@ -36,7 +37,9 @@ export class AssetImageUpload implements OnInit{
   readonly uploadProgress = signal<number | null>(null);
   readonly isDragging     = signal(false);
 
-  readonly canUploadMore = () => this.images().length < MAX_IMAGES;
+  readonly canUploadMore = computed(
+    () => !this.readOnly() && this.images().length < MAX_IMAGES
+  );
 
   ngOnInit(): void {
     this.loadImages();
