@@ -1,8 +1,29 @@
 <p-toast />
+<p-confirmpopup key="img-delete"/>
+
+<!-- ── Preview lightbox ────────────────────────────────────────────────── -->
+<p-dialog
+  [visible]="previewUrl() !== null"
+  (visibleChange)="!$event && previewUrl.set(null)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="true"
+  styleClass="img-preview-dialog"
+  [style]="{ width: 'auto', maxWidth: '92vw' }"
+>
+  @if (previewUrl()) {
+    <img
+      [src]="previewUrl()!"
+      alt="Vista previa"
+      class="img-preview-dialog__img"
+    />
+  }
+</p-dialog>
 
 <section class="img-upload">
 
-  <!-- ── Galería de imágenes existentes ─────────────────────────────────── -->
+  <!-- ── Skeleton ───────────────────────────────────────────────────────── -->
   @if (isLoading()) {
     <div class="img-upload__skeleton-row">
       @for (_ of [1,2,3]; track $index) {
@@ -11,6 +32,7 @@
     </div>
   }
 
+  <!-- ── Galería ────────────────────────────────────────────────────────── -->
   @if (!isLoading() && images().length > 0) {
     <div class="img-upload__gallery">
       @for (img of images(); track img.id) {
@@ -18,33 +40,43 @@
 
           <img [src]="img.url" [alt]="img.fileName" loading="lazy">
 
-          <!-- Badge primaria -->
           @if (img.isPrimary) {
             <span class="img-upload__badge">
               <i class="pi pi-star-fill"></i> Principal
             </span>
           }
 
-          <!-- Overlay de acciones -->
+          <!-- Overlay: el botón de ver siempre disponible; edición solo si !readOnly -->
           <div class="img-upload__thumb-overlay">
-            @if (!img.isPrimary) {
+            <button
+              class="img-upload__action-btn"
+              pTooltip="Ver imagen"
+              tooltipPosition="top"
+              (click)="openPreview(img)"
+            >
+              <i class="pi pi-eye"></i>
+            </button>
+
+            @if (!readOnly()) {
+              @if (!img.isPrimary) {
+                <button
+                  class="img-upload__action-btn"
+                  pTooltip="Establecer como principal"
+                  tooltipPosition="top"
+                  (click)="setPrimary(img)"
+                >
+                  <i class="pi pi-star"></i>
+                </button>
+              }
               <button
-                class="img-upload__action-btn"
-                pTooltip="Establecer como principal"
+                class="img-upload__action-btn img-upload__action-btn--danger"
+                pTooltip="Eliminar imagen"
                 tooltipPosition="top"
-                (click)="setPrimary(img)"
+                (click)="confirmDelete(img, $event)"
               >
-                <i class="pi pi-star"></i>
+                <i class="pi pi-trash"></i>
               </button>
             }
-            <button
-              class="img-upload__action-btn img-upload__action-btn--danger"
-              pTooltip="Eliminar imagen"
-              tooltipPosition="top"
-              (click)="confirmDelete(img)"
-            >
-              <i class="pi pi-trash"></i>
-            </button>
           </div>
 
         </div>
@@ -52,7 +84,14 @@
     </div>
   }
 
-  <!-- ── Zona de carga ──────────────────────────────────────────────────── -->
+  <!-- ── Estado vacío para modo solo lectura ────────────────────────────── -->
+  @if (!isLoading() && images().length === 0 && readOnly()) {
+    <p class="img-upload__empty-msg">
+      <i class="pi pi-image"></i> Sin fotografías registradas.
+    </p>
+  }
+
+  <!-- ── Zona de carga (solo editores con espacio disponible) ──────────── -->
   @if (canUploadMore()) {
     <label
       class="img-upload__dropzone"
@@ -61,7 +100,6 @@
       (dragover)="onDragOver($event)"
       (dragleave)="onDragLeave()"
       (drop)="onDrop($event)"
-      [attr.title]="uploadProgress() !== null ? 'Subiendo imagen…' : null"
     >
       <input
         type="file"
@@ -93,7 +131,10 @@
         </span>
       }
     </label>
-  } @else {
+  }
+
+  <!-- ── Límite alcanzado (solo para editores) ──────────────────────────── -->
+  @if (!readOnly() && !canUploadMore()) {
     <p class="img-upload__limit-msg">
       <i class="pi pi-info-circle"></i>
       Límite de 5 imágenes alcanzado. Elimina una para subir otra.

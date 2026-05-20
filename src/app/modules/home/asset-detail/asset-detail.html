@@ -70,10 +70,10 @@
         <p-tabpanel value="resumen">
           <div class="tab-content">
 
-            <div class="asset-img-placeholder">
-              <i class="pi pi-image"></i>
-              <span>Sin fotografía</span>
-            </div>
+            <app-asset-image-upload
+              [assetId]="bien.id"
+              [readOnly]="!canEditImages()"
+            />
 
             <!-- Datos técnicos -->
             <section class="detail-section">
