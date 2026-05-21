@@ -1,5 +1,5 @@
 //import { Brand } from './../../../core/service/asset.service';
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { catchError, of } from 'rxjs';
@@ -29,6 +29,8 @@ import { InputIconModule } from 'primeng/inputicon';
 import { ToggleButtonModule } from 'primeng/togglebutton';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { InplaceModule } from 'primeng/inplace';
+import { AssetImageUpload } from '../asset-image-upload/asset-image-upload';
+import { AuthService } from '../../../core/services/auth/auth.service';
 
 // ─── Interfaces ────────────────────────────────────────────
 interface Category {
@@ -99,16 +101,27 @@ interface Brand {
     ToggleButtonModule,
     SelectButtonModule,
     InplaceModule,
+    AssetImageUpload
   ],
   providers: [MessageService],
   templateUrl: './asset-registration.html',
   styleUrl: './asset-registration.css',
 })
 export class AssetRegistration implements OnInit {
+  private readonly authService = inject(AuthService);
   // ── Stepper state
   activeStep = signal(0);
-  totalSteps = 2;
+  totalSteps = 3;
   readonly DEFAULT_LOCATION_ID = 3; // ID del Almacén General en la BD
+
+  // ── Modal "¿Agregar imágenes?"
+  showImageModal = signal(false);
+  lastRegisteredFolio = signal<string>('');
+
+  readonly canEditImages = computed(() => {
+    const role = this.authService.currentUser()?.role;
+    return role === 'ADMIN' || role === 'OPERADOR';
+  });
 
   progressValue = computed(() => ((this.activeStep() + 1) / this.totalSteps) * 100);
 
@@ -209,9 +222,11 @@ export class AssetRegistration implements OnInit {
     { label: 'Malo', value: 'BAD' },
   ];
 
-  selectButtonLifecycle = [
-    { label: 'Registrado', value: 'REGISTERED' },
-    { label: 'Disponible', value: 'AVAILABLE' },
+  // Nuevo orden: 0=Datos, 1=Confirmación, 2=Evidencia
+  readonly stepLabels = [
+    { label: 'Datos del Bien', icon: 'pi-tag' },
+    { label: 'Confirmación', icon: 'pi-list-check' },
+    { label: 'Evidencia', icon: 'pi-images' },
   ];
 
   constructor(
@@ -294,6 +309,7 @@ export class AssetRegistration implements OnInit {
         !!this.form.get('invoice_id')?.value
       );
     }
+    // Step 1 (Confirmación) y Step 2 (Evidencia) siempre pueden avanzar/retroceder
     return true;
   }
 
@@ -370,16 +386,9 @@ export class AssetRegistration implements OnInit {
       ? this.customInventoryNumber().trim()
       : this.nextInventoryNumber();
 
-    console.log('invoice_id del form:', raw.invoice_id);
-    console.log('invoiceId en payload:', raw.invoice_id ?? undefined);
-    console.log('invoice seleccionada:', this.getSelectedInvoice());
-    console.log('brandID en consola: ', raw.brand);
-    console.log('brandNombre en consola: ', this.getBrandName);
-
     const payload = {
       inventoryNumber: inventoryNumber,
       description: raw.description?.trim().toUpperCase(),
-      //brand: selectedBrand?.name ?? undefined,
       brandId: raw.brand,
       model: raw.model || undefined,
       serialNumber: raw.serial_number || undefined,
@@ -400,20 +409,11 @@ export class AssetRegistration implements OnInit {
           detail: `Folio asignado: ${res.inventoryNumber}`,
           life: 5000
         });
-
+        // Guardar folio y abrir modal de imágenes
+        this.lastRegisteredFolio.set(res.inventoryNumber);
         setTimeout(() => {
-          this.form.reset();
-          this.form.patchValue({
-            entry_date: new Date(),
-            condition_status: 'GOOD',
-            lifecycle_status: 'REGISTERED'
-          });
-          this.useCustomInventoryNumber.set(false);
-          this.customInventoryNumber.set('');
-          this.activeStep.set(0);
-          this.uploadedImages = [];
-          this.loadNextFolio();
-        }, 1500);
+          this.showImageModal.set(true);
+        }, 600);
       },
       error: (err) => {
         const msg = err.error?.message ?? 'Ocurrió un error al registrar el bien.';
@@ -424,6 +424,39 @@ export class AssetRegistration implements OnInit {
         });
       }
     });
+  }
+
+  // ── Modal handlers
+  /** El usuario acepta agregar imágenes → ir al step de Evidencia */
+  onModalAddImages() {
+    this.showImageModal.set(false);
+    this.activeStep.set(2);
+  }
+
+  /** El usuario omite las imágenes → reiniciar y volver al step 0 */
+  onModalSkipImages() {
+    this.showImageModal.set(false);
+    this._resetForm();
+  }
+
+  private _resetForm() {
+    this.form.reset();
+    this.form.patchValue({
+      entry_date: new Date(),
+      condition_status: 'GOOD',
+      lifecycle_status: 'REGISTERED'
+    });
+    this.useCustomInventoryNumber.set(false);
+    this.customInventoryNumber.set('');
+    this.activeStep.set(0);
+    this.uploadedImages = [];
+    this.lastRegisteredFolio.set('');
+    this.loadNextFolio();
+  }
+
+  /** Llamado desde el step de Evidencia al terminar de subir imágenes */
+  finishWithImages() {
+    this._resetForm();
   }
 
   // ── Category grouped label helper

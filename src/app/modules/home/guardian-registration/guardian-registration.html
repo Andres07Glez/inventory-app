@@ -150,7 +150,7 @@
             <button
               pButton
               type="button"
-              icon="pi pi-ban"
+              icon="pi pi-trash"
               class="cat-btn-icon cat-btn-icon--danger"
               pTooltip="Dar de baja"
               tooltipPosition="top"
@@ -259,6 +259,9 @@
           placeholder="Ej. 287 123 4567"
           maxlength="25"
         />
+        @if (hasError('phone', 'pattern')) {
+          <small class="cat-error"><i class="pi pi-exclamation-circle"></i> El teléfono debe tener 10 dígitos.</small>
+        }
       </div>
     </div>
 
