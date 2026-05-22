@@ -9,29 +9,29 @@
 // ─────────────────────────────────────────────────────────────────────────────
 :root {
 
-  // ── Colores de marca (valores hex directos)
-  --color-primary:      #007D68;   // Verde institucional
-  --color-success:      #18B32A;   // Éxito
-  --color-danger:       #B31818;   // Error / Peligro
-  --color-warning:      #D4A91D;   // Advertencia
-  --color-info:         #1F4F97;   // Informativo
-  --color-neutral:      #7F7F7F;   // Neutro
+  // ── Colores de marca (valores MAIN - índice 600)
+  --color-primary:      #007D68;
+  --color-success:      #18B32A;
+  --color-danger:       #D92D2D;
+  --color-warning:      #D9B12D;
+  --color-info:         #2D63D9;
+  --color-neutral:      #7F7F7F;
 
-  // Variantes light (fondos de chips/badges)
-  --color-primary-light:  #e0f5f2;
-  --color-success-light:  #e6f7e8;
-  --color-danger-light:   #fce8e8;
-  --color-warning-light:  #fdf5dc;
-  --color-info-light:     #e8eef8;
-  --color-neutral-light:  #f0f0f0;
+  // Variantes light (fondos de chips/badges - índice 100)
+  --color-primary-light:  #F5FFFD;
+  --color-success-light:  #F0FEF2;
+  --color-danger-light:   #FFF5F5;
+  --color-warning-light:  #FFFCF5;
+  --color-info-light:     #F5F8FF;
+  --color-neutral-light:  #F7F7F7;
 
-  // Variantes dark (hover, textos sobre fondos claros)
-  --color-primary-dark:   #006355;
-  --color-success-dark:   #138f21;
-  --color-danger-dark:    #8f1212;
-  --color-warning-dark:   #a98417;
-  --color-info-dark:      #183d75;
-  --color-neutral-dark:   #5c5c5c;
+  // Variantes dark (hover, textos sobre fondos claros - índice 800)
+  --color-primary-dark:   #0E5247;
+  --color-success-dark:   #086814;
+  --color-danger-dark:    #8E1010;
+  --color-warning-dark:   #8D6811;
+  --color-info-dark:      #10388E;
+  --color-neutral-dark:   #4D4D4D;
 
   // ── Superficies y estructura ──────────────────────────────────────────────
   --surface-ground:  #F4F6F8;   // fondo de página
