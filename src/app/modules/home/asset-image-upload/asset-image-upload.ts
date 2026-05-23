@@ -94,6 +94,7 @@ export class AssetImageUpload implements OnInit{
 
     if (files.length > remaining) {
       this.messageService.add({
+        key: 'img-toast',
         severity: 'warn', summary: 'Límite alcanzado',
         detail: `Solo se pueden subir ${remaining} imagen(es) más.`, life: 4000,
       });
@@ -102,6 +103,7 @@ export class AssetImageUpload implements OnInit{
     for (const file of toProcess) {
       if (!ALLOWED_TYPES.has(file.type)) {
         this.messageService.add({
+          key: 'img-toast',
           severity: 'warn', summary: 'Formato inválido',
           detail: `"${file.name}" no es JPEG, PNG ni WEBP.`, life: 4000,
         });
@@ -121,6 +123,7 @@ export class AssetImageUpload implements OnInit{
       this.uploadProgress.set(30);
     } catch {
       this.messageService.add({
+        key: 'img-toast',
         severity: 'error', summary: 'Error de compresión',
         detail: `No se pudo comprimir "${file.name}".`, life: 4000,
       });
@@ -133,6 +136,7 @@ export class AssetImageUpload implements OnInit{
         this.images.update(list => [...list, img]);
         this.uploadProgress.set(null);
         this.messageService.add({
+          key: 'img-toast',
           severity: 'success', summary: 'Imagen subida',
           detail: img.isPrimary ? 'Establecida como imagen principal.' : 'Imagen añadida.', life: 3000,
         });
@@ -140,6 +144,7 @@ export class AssetImageUpload implements OnInit{
       error: (err: HttpErrorResponse) => {
         this.uploadProgress.set(null);
         this.messageService.add({
+          key: 'img-toast',
           severity: 'error', summary: 'Error al subir',
           detail: err.error?.message ?? 'No se pudo subir la imagen.', life: 5000,
         });
@@ -180,6 +185,7 @@ export class AssetImageUpload implements OnInit{
       next: () => {
         this.images.update(list => list.filter(img => img.id !== image.id));
         this.messageService.add({
+          key: 'img-toast',
           severity: 'info', summary: 'Eliminada',
           detail: 'Imagen eliminada correctamente.', life: 3000,
         });

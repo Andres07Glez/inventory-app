@@ -1,16 +1,14 @@
-<p-toast position="top-right" />
-
 <div class="ar-page">
   <!-- ═══════════════════════════════════════════
        PAGE HEADER
   ═══════════════════════════════════════════ -->
   <div class="ar-header">
     <div class="ar-header__left">
-      <div class="ar-header__breadcrumb">
+      <!--div class="ar-header__breadcrumb">
         <span class="ar-header__breadcrumb-item">Inventario</span>
         <i class="pi pi-chevron-right ar-header__breadcrumb-sep"></i>
         <span class="ar-header__breadcrumb-item ar-header__breadcrumb-item--active">Registro de Bienes</span>
-      </div>
+      <--div-->
       <h1 class="ar-header__title">
         <i class="pi pi-box ar-header__title-icon"></i>
         Registrar Nuevo Bien
@@ -74,10 +72,7 @@
   <div class="ar-progress-bar-wrap">
     <p-progressBar [value]="progressValue()" [showValue]="false" styleClass="ar-progress-bar" />
     <div class="ar-step-indicators">
-      @for (step of [
-      { label: 'Datos del Bien', icon: 'pi-tag' },
-      { label: 'Evidencia y Confirmación', icon: 'pi-images' }
-      ]; track $index) {
+      @for (step of stepLabels; track $index) {
       <button class="ar-step-btn" [class.ar-step-btn--done]="$index < activeStep()"
         [class.ar-step-btn--active]="$index === activeStep()" (click)="goToStep($index)">
         <span class="ar-step-btn__circle">
@@ -303,7 +298,7 @@
         <ng-template #footer>
           <div class="ar-card__footer">
             <div></div>
-            <p-button label="Siguiente: Evidencia y Confirmación" icon="pi pi-arrow-right" iconPos="right"
+            <p-button label="Siguiente: Evidencia" icon="pi pi-arrow-right" iconPos="right"
               (onClick)="nextStep()" [disabled]="!canAdvance()" styleClass="ar-btn ar-btn--primary" />
           </div>
         </ng-template>
@@ -313,161 +308,213 @@
     }
 
     <!-- ──────────────────────────────────────
-         STEP 1 — Evidencia y Confirmación
+         STEP 1 — Confirmación
     ────────────────────────────────────── -->
     @if (activeStep() === 1) {
     <div class="ar-step-panel ar-step-panel--enter">
-      <div class="ar-two-col">
 
-        <!-- Left: Evidencia fotográfica + Notas -->
-        <p-card styleClass="ar-card ar-card--primary">
-          <ng-template #header>
-            <div class="ar-card__header">
-              <div class="ar-card__header-icon ar-card__header-icon--violet">
-                <i class="pi pi-images"></i>
-              </div>
-              <div>
-                <h2 class="ar-card__title">Evidencia Fotográfica</h2>
-                <p class="ar-card__subtitle">Hasta {{ maxImages }} imágenes del bien (opcional)</p>
-              </div>
+      <!-- Resumen del registro -->
+      <p-card styleClass="ar-card ar-card--primary">
+        <ng-template #header>
+          <div class="ar-card__header">
+            <div class="ar-card__header-icon ar-card__header-icon--teal">
+              <i class="pi pi-list-check"></i>
             </div>
-          </ng-template>
+            <div>
+              <h2 class="ar-card__title">Resumen del Registro</h2>
+              <p class="ar-card__subtitle">Verifica los datos antes de guardar</p>
+            </div>
+          </div>
+        </ng-template>
 
-          <p-fileupload mode="advanced" accept="image/*" [maxFileSize]="5000000" [multiple]="true" [auto]="false"
-            chooseLabel="Seleccionar imágenes" uploadLabel="Subir" cancelLabel="Cancelar"
-            (onSelect)="onImageSelect($event)" styleClass="ar-fileupload">
-            <ng-template #empty>
-              <div class="ar-upload-empty">
-                <i class="pi pi-cloud-upload ar-upload-empty__icon"></i>
-                <p class="ar-upload-empty__text">Arrastra imágenes aquí o usa el botón</p>
-                <p class="ar-upload-empty__hint">JPG, PNG, WEBP · Máx. 5 MB por imagen</p>
-              </div>
-            </ng-template>
-          </p-fileupload>
+        <!-- Defaults automáticos -->
+        <div class="ar-defaults-banner">
+          <div class="ar-defaults-banner__item ar-defaults-banner__item--green">
+            <i class="pi pi-check-circle"></i>
+            <div>
+              <span class="ar-defaults-banner__label">Condición física</span>
+              <span class="ar-defaults-banner__val">Buena</span>
+            </div>
+          </div>
+          <div class="ar-defaults-banner__item ar-defaults-banner__item--blue">
+            <i class="pi pi-tag"></i>
+            <div>
+              <span class="ar-defaults-banner__label">Ciclo de vida</span>
+              <span class="ar-defaults-banner__val">Registrado</span>
+            </div>
+          </div>
+        </div>
 
-          @if (uploadedImages.length > 0) {
-          <div class="ar-image-chips">
-            @for (img of uploadedImages; track $index) {
-            <p-chip [label]="img.name" [removable]="true" (onRemove)="removeImage($index)" styleClass="ar-chip" />
-            }
+        <p-divider align="left">
+          <span class="ar-divider-label"><i class="pi pi-clipboard"></i> Datos capturados</span>
+        </p-divider>
+
+        <div class="ar-summary">
+          <div class="ar-summary__row ar-summary__row--folio">
+            <span class="ar-summary__key">N.° de inventario</span>
+            <span class="ar-summary__val ar-summary__val--folio">
+              {{ displayInventoryNumber }}
+              @if (useCustomInventoryNumber()) {
+              <p-tag value="Manual" severity="warn" styleClass="ar-summary__folio-tag" />
+              } @else {
+              <p-tag value="Auto" severity="info" styleClass="ar-summary__folio-tag" />
+              }
+            </span>
+          </div>
+          <div class="ar-summary__row">
+            <span class="ar-summary__key">Descripción</span>
+            <span class="ar-summary__val">{{ f['description'].value || '—' }}</span>
+          </div>
+          <div class="ar-summary__row">
+            <span class="ar-summary__key">Categoría</span>
+            <span class="ar-summary__val">{{ getCategoryName(f['category_id'].value) }}</span>
+          </div>
+          <div class="ar-summary__row">
+            <span class="ar-summary__key">Marca / Modelo</span>
+            <span class="ar-summary__val">
+              {{ getBrandName(f['brand'].value) }}{{ f['model'].value ? ' / ' + f['model'].value : '' }}
+            </span>
+          </div>
+          <div class="ar-summary__row">
+            <span class="ar-summary__key">N.° de Serie</span>
+            <span class="ar-summary__val">{{ f['serial_number'].value || '—' }}</span>
+          </div>
+          <div class="ar-summary__row">
+            <span class="ar-summary__key">Ubicación</span>
+            <span class="ar-summary__val">{{ DEFAULT_LOCATION_LABEL }} — {{ DEFAULT_LOCATION_CAMPUS }}</span>
+          </div>
+          <div class="ar-summary__row">
+            <span class="ar-summary__key">Factura</span>
+            <span class="ar-summary__val">{{ getInvoiceLabel(f['invoice_id'].value) }}</span>
+          </div>
+          @if (getSelectedInvoice()) {
+          <div class="ar-summary__row">
+            <span class="ar-summary__key">Fecha de factura</span>
+            <span class="ar-summary__val">{{ getSelectedInvoice()!.invoice_date }}</span>
           </div>
           }
-
-          <p-divider />
-
-          <!-- Notas adicionales -->
-          <div class="ar-field ar-field--full">
-            <label class="ar-label" for="notes">Notas adicionales</label>
-            <textarea pTextarea id="notes" formControlName="notes" rows="4"
-              placeholder="Observaciones, aclaraciones o comentarios sobre el bien..." class="ar-textarea"></textarea>
+          <div class="ar-summary__row">
+            <span class="ar-summary__key">Fecha de entrada</span>
+            <span class="ar-summary__val">{{ f['entry_date'].value | date: 'dd/MM/yyyy' }}</span>
           </div>
-        </p-card>
-
-        <!-- Right: Resumen del registro -->
-        <p-card styleClass="ar-card ar-card--primary">
-          <ng-template #header>
-            <div class="ar-card__header">
-              <div class="ar-card__header-icon ar-card__header-icon--teal">
-                <i class="pi pi-list-check"></i>
-              </div>
-              <div>
-                <h2 class="ar-card__title">Resumen del Registro</h2>
-                <p class="ar-card__subtitle">Verifica los datos antes de guardar</p>
-              </div>
-            </div>
-          </ng-template>
-
-          <!-- Defaults automáticos -->
-          <div class="ar-defaults-banner">
-            <div class="ar-defaults-banner__item ar-defaults-banner__item--green">
-              <i class="pi pi-check-circle"></i>
-              <div>
-                <span class="ar-defaults-banner__label">Condición física</span>
-                <span class="ar-defaults-banner__val">Buena</span>
-              </div>
-            </div>
-            <div class="ar-defaults-banner__item ar-defaults-banner__item--blue">
-              <i class="pi pi-tag"></i>
-              <div>
-                <span class="ar-defaults-banner__label">Ciclo de vida</span>
-                <span class="ar-defaults-banner__val">Registrado</span>
-              </div>
-            </div>
-          </div>
-
-          <p-divider align="left">
-            <span class="ar-divider-label"><i class="pi pi-clipboard"></i> Datos capturados</span>
-          </p-divider>
-
-          <div class="ar-summary">
-            <div class="ar-summary__row ar-summary__row--folio">
-              <span class="ar-summary__key">N.° de inventario</span>
-              <span class="ar-summary__val ar-summary__val--folio">
-                {{ displayInventoryNumber }}
-                @if (useCustomInventoryNumber()) {
-                <p-tag value="Manual" severity="warn" styleClass="ar-summary__folio-tag" />
-                } @else {
-                <p-tag value="Auto" severity="info" styleClass="ar-summary__folio-tag" />
-                }
-              </span>
-            </div>
-            <div class="ar-summary__row">
-              <span class="ar-summary__key">Descripción</span>
-              <span class="ar-summary__val">{{ f['description'].value || '—' }}</span>
-            </div>
-            <div class="ar-summary__row">
-              <span class="ar-summary__key">Categoría</span>
-              <span class="ar-summary__val">{{ getCategoryName(f['category_id'].value) }}</span>
-            </div>
-            <div class="ar-summary__row">
-              <span class="ar-summary__key">Marca / Modelo</span>
-              <span class="ar-summary__val">
-                {{ getBrandName(f['brand'].value) }}{{ f['model'].value ? ' / ' + f['model'].value : '' }}
-              </span>
-            </div>
-            <div class="ar-summary__row">
-              <span class="ar-summary__key">N.° de Serie</span>
-              <span class="ar-summary__val">{{ f['serial_number'].value || '—' }}</span>
-            </div>
-            <div class="ar-summary__row">
-              <span class="ar-summary__key">Ubicación</span>
-              <span class="ar-summary__val">{{ DEFAULT_LOCATION_LABEL }} — {{ DEFAULT_LOCATION_CAMPUS }}</span>
-            </div>
-            <div class="ar-summary__row">
-              <span class="ar-summary__key">Factura</span>
-              <span class="ar-summary__val">{{ getInvoiceLabel(f['invoice_id'].value) }}</span>
-            </div>
-            @if (getSelectedInvoice()) {
-            <div class="ar-summary__row">
-              <span class="ar-summary__key">Fecha de factura</span>
-              <span class="ar-summary__val">{{ getSelectedInvoice()!.invoice_date }}</span>
-            </div>
-            }
-            <div class="ar-summary__row">
-              <span class="ar-summary__key">Fecha de entrada</span>
-              <span class="ar-summary__val">{{ f['entry_date'].value | date: 'dd/MM/yyyy' }}</span>
-            </div>
-            <div class="ar-summary__row">
-              <span class="ar-summary__key">Imágenes adjuntas</span>
-              <span class="ar-summary__val">{{ uploadedImages.length }} archivo(s)</span>
-            </div>
-          </div>
-        </p-card>
-
-      </div>
-
-      <!-- Footer actions -->
-      <div class="ar-submit-footer">
-        <p-button label="Anterior" icon="pi pi-arrow-left" severity="secondary" (onClick)="prevStep()"
-          styleClass="ar-btn ar-btn--secondary" />
-        <div class="ar-submit-footer__right">
-          <p-button label="Cancelar" severity="danger" [outlined]="true" icon="pi pi-times" styleClass="ar-btn" />
-          <p-button type="submit" label="Registrar Bien" icon="pi pi-check" iconPos="right"
-            styleClass="ar-btn ar-btn--success" />
         </div>
-      </div>
+
+        <ng-template #footer>
+          <div class="ar-card__footer">
+            <p-button label="Anterior" icon="pi pi-arrow-left" severity="secondary" (onClick)="prevStep()"
+              styleClass="ar-btn ar-btn--secondary" />
+            <div class="ar-submit-footer__right">
+              <p-button label="Cancelar" severity="danger" [outlined]="true" icon="pi pi-times" styleClass="ar-btn"
+                (onClick)="goToStep(0)" />
+              <p-button type="submit" label="Registrar Bien" icon="pi pi-check" iconPos="right"
+                styleClass="ar-btn ar-btn--success" />
+            </div>
+          </div>
+        </ng-template>
+      </p-card>
+
     </div>
     }
 
   </form>
+
+  <!-- ──────────────────────────────────────
+       STEP 2 — Evidencia fotográfica
+       (fuera del form: no tiene campos propios y evita submit accidental)
+  ────────────────────────────────────── -->
+  @if (activeStep() === 2) {
+  <div class="ar-step-panel ar-step-panel--enter">
+
+    <p-card styleClass="ar-card ar-card--primary">
+      <ng-template #header>
+        <div class="ar-card__header">
+          <div class="ar-card__header-icon ar-card__header-icon--violet">
+            <i class="pi pi-images"></i>
+          </div>
+          <div>
+            <h2 class="ar-card__title">Evidencia Fotográfica</h2>
+            <p class="ar-card__subtitle">
+              Bien registrado:&nbsp;<strong>{{ lastRegisteredFolio() }}</strong>
+              &nbsp;·&nbsp;Hasta {{ maxImages }} imágenes (opcional)
+            </p>
+          </div>
+        </div>
+      </ng-template>
+
+      @if (lastRegisteredAssetId() !== null) {
+        <app-asset-image-upload
+          [assetId]="lastRegisteredAssetId()!"
+          [readOnly]="false"
+        />
+      } @else {
+        <div class="ar-step2-loading">
+          <i class="pi pi-spin pi-spinner"></i>
+          <span>Obteniendo información del bien…</span>
+        </div>
+      }
+
+      <ng-template #footer>
+        <div class="ar-card__footer">
+          <p-button
+            label="Omitir y registrar otro"
+            icon="pi pi-skip-forward"
+            severity="secondary"
+            (onClick)="finishWithImages()"
+            styleClass="ar-btn ar-btn--secondary" />
+          <p-button
+            label="Finalizar"
+            icon="pi pi-check"
+            iconPos="right"
+            (onClick)="finishWithImages()"
+            styleClass="ar-btn ar-btn--success" />
+        </div>
+      </ng-template>
+    </p-card>
+
+  </div>
+  }
+
+  <!-- ═══════════════════════════════════════════
+       MODAL — ¿Agregar imágenes al bien?
+  ═══════════════════════════════════════════ -->
+  @if (showImageModal()) {
+  <div class="ar-modal-backdrop" (click)="onModalSkipImages()">
+    <div class="ar-modal" (click)="$event.stopPropagation()">
+      <div class="ar-modal__icon-wrap">
+        <div class="ar-modal__icon">
+          <i class="pi pi-images"></i>
+        </div>
+      </div>
+      <div class="ar-modal__body">
+        <h3 class="ar-modal__title">¡Bien registrado exitosamente!</h3>
+        <p class="ar-modal__folio">
+          Folio: <strong>{{ lastRegisteredFolio() }}</strong>
+        </p>
+        <p class="ar-modal__desc">
+          ¿Deseas agregar fotografías de evidencia al bien recién registrado?
+        </p>
+        <p class="ar-modal__hint">
+          <i class="pi pi-info-circle"></i>
+          Este paso es opcional. Puedes omitirlo y registrar otro bien.
+        </p>
+      </div>
+      <div class="ar-modal__actions">
+        <p-button
+          label="Omitir, registrar otro"
+          icon="pi pi-plus"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="onModalSkipImages()"
+          styleClass="ar-btn ar-btn--secondary ar-modal__btn" />
+        <p-button
+          label="Sí, agregar imágenes"
+          icon="pi pi-images"
+          iconPos="right"
+          (onClick)="onModalAddImages()"
+          styleClass="ar-btn ar-btn--primary ar-modal__btn" />
+      </div>
+    </div>
+  </div>
+  }
+
 </div>

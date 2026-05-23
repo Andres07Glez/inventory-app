@@ -96,7 +96,7 @@ export class GuardianRegistration implements OnInit, OnDestroy {
       employeeNumber: ['', [Validators.required, Validators.maxLength(30)]],
       fullName:       ['', [Validators.required, Validators.maxLength(150)]],
       email:          ['', [Validators.email,    Validators.maxLength(150)]],
-      phone:          ['', [Validators.maxLength(25)]],
+      phone:          ['', [Validators.maxLength(25), Validators.pattern(/^[\d\s]{10,13}$/)]],
       department:     ['', [Validators.maxLength(150)]],
       locationId:     [null],
     });

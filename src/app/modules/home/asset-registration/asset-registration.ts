@@ -1,10 +1,10 @@
 //import { Brand } from './../../../core/service/asset.service';
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { catchError, of } from 'rxjs';
-//import { AssetService } from '../'; // ajusta la ruta según tu estructura
 import { AssetService } from '../../../core/service/asset.service';
+import { AssetDetailResponseDTO } from '../../../core/models/asset.model';
 
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
@@ -15,13 +15,10 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
 import { StepperModule } from 'primeng/stepper';
-import { FileUploadModule } from 'primeng/fileupload';
 import { TagModule } from 'primeng/tag';
-import { ToastModule } from 'primeng/toast';
-import { MessageService } from 'primeng/api';
+import { MessageService, ConfirmationService } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
 import { ProgressBarModule } from 'primeng/progressbar';
-import { ChipModule } from 'primeng/chip';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { IftaLabelModule } from 'primeng/iftalabel';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -29,6 +26,8 @@ import { InputIconModule } from 'primeng/inputicon';
 import { ToggleButtonModule } from 'primeng/togglebutton';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { InplaceModule } from 'primeng/inplace';
+import { AssetImageUpload } from '../asset-image-upload/asset-image-upload';
+import { AuthService } from '../../../core/services/auth/auth.service';
 
 // ─── Interfaces ────────────────────────────────────────────
 interface Category {
@@ -86,12 +85,9 @@ interface Brand {
     CardModule,
     DividerModule,
     StepperModule,
-    FileUploadModule,
     TagModule,
-    ToastModule,
     TooltipModule,
     ProgressBarModule,
-    ChipModule,
     FloatLabelModule,
     IftaLabelModule,
     IconFieldModule,
@@ -99,16 +95,29 @@ interface Brand {
     ToggleButtonModule,
     SelectButtonModule,
     InplaceModule,
+    AssetImageUpload,
   ],
-  providers: [MessageService],
+  providers: [],
   templateUrl: './asset-registration.html',
   styleUrl: './asset-registration.css',
 })
 export class AssetRegistration implements OnInit {
+  private readonly authService = inject(AuthService);
   // ── Stepper state
   activeStep = signal(0);
-  totalSteps = 2;
+  totalSteps = 3;
   readonly DEFAULT_LOCATION_ID = 3; // ID del Almacén General en la BD
+
+  // ── Modal "¿Agregar imágenes?"
+  showImageModal = signal(false);
+  lastRegisteredFolio = signal<string>('');
+  /** ID real en BD del bien recién registrado — se usa en AssetImageUpload */
+  lastRegisteredAssetId = signal<number | null>(null);
+
+  readonly canEditImages = computed(() => {
+    const role = this.authService.currentUser()?.role;
+    return role === 'ADMIN' || role === 'OPERADOR';
+  });
 
   progressValue = computed(() => ((this.activeStep() + 1) / this.totalSteps) * 100);
 
@@ -209,9 +218,11 @@ export class AssetRegistration implements OnInit {
     { label: 'Malo', value: 'BAD' },
   ];
 
-  selectButtonLifecycle = [
-    { label: 'Registrado', value: 'REGISTERED' },
-    { label: 'Disponible', value: 'AVAILABLE' },
+  // Nuevo orden: 0=Datos, 1=Confirmación, 2=Evidencia
+  readonly stepLabels = [
+    { label: 'Datos del Bien', icon: 'pi-tag' },
+    { label: 'Confirmación', icon: 'pi-list-check' },
+    { label: 'Evidencia', icon: 'pi-images' },
   ];
 
   constructor(
@@ -294,6 +305,7 @@ export class AssetRegistration implements OnInit {
         !!this.form.get('invoice_id')?.value
       );
     }
+    // Step 1 (Confirmación) y Step 2 (Evidencia) siempre pueden avanzar/retroceder
     return true;
   }
 
@@ -356,6 +368,7 @@ export class AssetRegistration implements OnInit {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.messageService.add({
+        key: 'app-toast',
         severity: 'error',
         summary: 'Formulario incompleto',
         detail: 'Verifica los campos requeridos antes de guardar.',
@@ -370,16 +383,9 @@ export class AssetRegistration implements OnInit {
       ? this.customInventoryNumber().trim()
       : this.nextInventoryNumber();
 
-    console.log('invoice_id del form:', raw.invoice_id);
-    console.log('invoiceId en payload:', raw.invoice_id ?? undefined);
-    console.log('invoice seleccionada:', this.getSelectedInvoice());
-    console.log('brandID en consola: ', raw.brand);
-    console.log('brandNombre en consola: ', this.getBrandName);
-
     const payload = {
       inventoryNumber: inventoryNumber,
       description: raw.description?.trim().toUpperCase(),
-      //brand: selectedBrand?.name ?? undefined,
       brandId: raw.brand,
       model: raw.model || undefined,
       serialNumber: raw.serial_number || undefined,
@@ -395,35 +401,76 @@ export class AssetRegistration implements OnInit {
     this.assetService.registerAsset(payload).subscribe({
       next: (res) => {
         this.messageService.add({
+          key: 'app-toast',
           severity: 'success',
           summary: '¡Bien registrado!',
           detail: `Folio asignado: ${res.inventoryNumber}`,
           life: 5000
         });
+        // Guardar folio para mostrarlo en el modal y en el step de evidencia
+        this.lastRegisteredFolio.set(res.inventoryNumber);
 
-        setTimeout(() => {
-          this.form.reset();
-          this.form.patchValue({
-            entry_date: new Date(),
-            condition_status: 'GOOD',
-            lifecycle_status: 'REGISTERED'
-          });
-          this.useCustomInventoryNumber.set(false);
-          this.customInventoryNumber.set('');
-          this.activeStep.set(0);
-          this.uploadedImages = [];
-          this.loadNextFolio();
-        }, 1500);
+        // Preferimos el id que viene directo en la respuesta del POST.
+        // Si por alguna razón no estuviera, lo resolvemos con el endpoint de inventario.
+        if (res.id) {
+          this.lastRegisteredAssetId.set(res.id);
+          setTimeout(() => this.showImageModal.set(true), 600);
+        } else {
+          // Fallback: consultar por número de inventario
+          this.assetService.getAssetByInventoryNumber(res.inventoryNumber)
+            .pipe(catchError(() => of(null)))
+            .subscribe(detail => {
+              if (detail) {
+                this.lastRegisteredAssetId.set(detail.id);
+              }
+              setTimeout(() => this.showImageModal.set(true), 600);
+            });
+        }
       },
       error: (err) => {
         const msg = err.error?.message ?? 'Ocurrió un error al registrar el bien.';
         this.messageService.add({
+          key: 'app-toast',
           severity: 'error',
           summary: 'Error al guardar',
           detail: msg
         });
       }
     });
+  }
+
+  // ── Modal handlers
+  /** El usuario acepta agregar imágenes → ir al step de Evidencia */
+  onModalAddImages() {
+    this.showImageModal.set(false);
+    this.activeStep.set(2);
+  }
+
+  /** El usuario omite las imágenes → reiniciar y volver al step 0 */
+  onModalSkipImages() {
+    this.showImageModal.set(false);
+    this._resetForm();
+  }
+
+  private _resetForm() {
+    this.form.reset();
+    this.form.patchValue({
+      entry_date: new Date(),
+      condition_status: 'GOOD',
+      lifecycle_status: 'REGISTERED'
+    });
+    this.useCustomInventoryNumber.set(false);
+    this.customInventoryNumber.set('');
+    this.activeStep.set(0);
+    this.uploadedImages = [];
+    this.lastRegisteredFolio.set('');
+    this.lastRegisteredAssetId.set(null);
+    this.loadNextFolio();
+  }
+
+  /** Llamado desde el step de Evidencia al terminar de subir imágenes */
+  finishWithImages() {
+    this._resetForm();
   }
 
   // ── Category grouped label helper
