@@ -16,7 +16,6 @@ import { TooltipModule } from 'primeng/tooltip';
 import { debounceTime, distinctUntilChanged, of, Subject, switchMap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PaginatorModule, PaginatorState } from 'primeng/paginator';
-
 // ── Helpers de UI ─────────────────────────────────────────────────────────────
  import { ActivatedRoute, Router } from '@angular/router';
 

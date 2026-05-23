@@ -64,53 +64,7 @@
   font-family: var(--asg-font);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ✦ VARIABLES — MODO OSCURO
-// ─────────────────────────────────────────────────────────────────────────────
-@media (prefers-color-scheme: dark) {
-  :host {
-    --asg-bg:              #111318;
-    --asg-surface:         #1C1F29;
-    --asg-surface-raised:  #252835;
-    --asg-surface-overlay: rgba(28,31,41,0.97);
-    --asg-border:          #2E3347;
-    --asg-border-focus:    #6B7FD4;
 
-    --asg-primary:         #6B7FD4;
-    --asg-primary-hover:   #8090DC;
-    --asg-primary-light:   #1E2240;
-    --asg-primary-text:    #FFFFFF;
-
-    --asg-text-primary:    #E8EAF0;
-    --asg-text-secondary:  #9AA3BC;
-    --asg-text-muted:      #5C6480;
-
-    // ← Estos son los que evitan el texto invisible
-    --asg-input-bg:          #252835;
-    --asg-input-text:        #E8EAF0;
-    --asg-input-border:      #2E3347;
-    --asg-input-placeholder: #5C6480;
-
-    --asg-error:    #F87171;
-    --asg-error-bg: #2C1515;
-    --asg-warn:     #FCD34D;
-    --asg-warn-bg:  #2A2010;
-    --asg-success:  #4ADE80;
-    --asg-info:     #60A5FA;
-    --asg-info-bg:  #1E2A3D;
-
-    --asg-guardian-assigned-bg:   #0F2D1A;
-    --asg-guardian-assigned-text: #4ADE80;
-    --asg-guardian-free-bg:       #1C1F29;
-    --asg-guardian-free-text:     #5C6480;
-
-    --asg-card-selected-bg:     #1E2240;
-    --asg-card-selected-border: #6B7FD4;
-
-    --asg-shadow-card:   0 2px 8px rgba(0,0,0,.4);
-    --asg-shadow-raised: 0 6px 24px rgba(0,0,0,.5);
-  }
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PÁGINA

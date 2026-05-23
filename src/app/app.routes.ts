@@ -52,7 +52,13 @@ export const routes: Routes = [
       },
       {
         path: 'incidencias',
-        loadComponent: () => import('./modules/home/dashboard/dashboard').then(m => m.Dashboard),
+        loadComponent: () => import('./modules/home/incident/incident').then(m => m.IncidentComponent),
+        canActivate: [roleGuard],
+        data: forRoles('ADMIN', 'OPERADOR'),
+      },
+      {
+        path: 'incidencias/:id',
+        loadComponent: () => import('./modules/home/incident-detail/incident-detail').then(m => m.IncidentDetailComponent),
         canActivate: [roleGuard],
         data: forRoles('ADMIN', 'OPERADOR'),
       },
