@@ -1,5 +1,3 @@
-<p-toast position="top-right" />
-
 <div class="ar-page">
   <!-- ═══════════════════════════════════════════
        PAGE HEADER
@@ -418,73 +416,63 @@
     </div>
     }
 
-    <!-- ──────────────────────────────────────
-         STEP 2 — Evidencia fotográfica
-    ────────────────────────────────────── -->
-    @if (activeStep() === 2) {
-    <div class="ar-step-panel ar-step-panel--enter">
-
-      <!-- Evidencia fotográfica + Notas -->
-      <p-card styleClass="ar-card ar-card--primary">
-        <ng-template #header>
-          <div class="ar-card__header">
-            <div class="ar-card__header-icon ar-card__header-icon--violet">
-              <i class="pi pi-images"></i>
-            </div>
-            <div>
-              <h2 class="ar-card__title">Evidencia Fotográfica</h2>
-              <p class="ar-card__subtitle">
-                Bien registrado: <strong>{{ lastRegisteredFolio() }}</strong> · Hasta {{ maxImages }} imágenes (opcional)
-              </p>
-            </div>
-          </div>
-        </ng-template>
-
-        
-
-        <p-fileupload mode="advanced" accept="image/*" [maxFileSize]="5000000" [multiple]="true" [auto]="false"
-          chooseLabel="Seleccionar imágenes" uploadLabel="Subir" cancelLabel="Cancelar"
-          (onSelect)="onImageSelect($event)" styleClass="ar-fileupload">
-          <ng-template #empty>
-            <div class="ar-upload-empty">
-              <i class="pi pi-cloud-upload ar-upload-empty__icon"></i>
-              <p class="ar-upload-empty__text">Arrastra imágenes aquí o usa el botón</p>
-              <p class="ar-upload-empty__hint">JPG, PNG, WEBP · Máx. 5 MB por imagen</p>
-            </div>
-          </ng-template>
-        </p-fileupload>
-
-        @if (uploadedImages.length > 0) {
-        <div class="ar-image-chips">
-          @for (img of uploadedImages; track $index) {
-          <p-chip [label]="img.name" [removable]="true" (onRemove)="removeImage($index)" styleClass="ar-chip" />
-          }
-        </div>
-        }
-
-        <p-divider />
-
-        <!-- Notas adicionales -->
-        <div class="ar-field ar-field--full">
-          <label class="ar-label" for="notes">Notas adicionales</label>
-          <textarea pTextarea id="notes" formControlName="notes" rows="4"
-            placeholder="Observaciones, aclaraciones o comentarios sobre el bien..." class="ar-textarea"></textarea>
-        </div>
-
-        <ng-template #footer>
-          <div class="ar-card__footer">
-            <p-button label="Omitir y registrar otro" icon="pi pi-skip-forward" severity="secondary"
-              (onClick)="finishWithImages()" styleClass="ar-btn ar-btn--secondary" />
-            <p-button label="Guardar imágenes y finalizar" icon="pi pi-check" iconPos="right"
-              (onClick)="finishWithImages()" styleClass="ar-btn ar-btn--success" />
-          </div>
-        </ng-template>
-      </p-card>
-
-    </div>
-    }
-
   </form>
+
+  <!-- ──────────────────────────────────────
+       STEP 2 — Evidencia fotográfica
+       (fuera del form: no tiene campos propios y evita submit accidental)
+  ────────────────────────────────────── -->
+  @if (activeStep() === 2) {
+  <div class="ar-step-panel ar-step-panel--enter">
+
+    <p-card styleClass="ar-card ar-card--primary">
+      <ng-template #header>
+        <div class="ar-card__header">
+          <div class="ar-card__header-icon ar-card__header-icon--violet">
+            <i class="pi pi-images"></i>
+          </div>
+          <div>
+            <h2 class="ar-card__title">Evidencia Fotográfica</h2>
+            <p class="ar-card__subtitle">
+              Bien registrado:&nbsp;<strong>{{ lastRegisteredFolio() }}</strong>
+              &nbsp;·&nbsp;Hasta {{ maxImages }} imágenes (opcional)
+            </p>
+          </div>
+        </div>
+      </ng-template>
+
+      @if (lastRegisteredAssetId() !== null) {
+        <app-asset-image-upload
+          [assetId]="lastRegisteredAssetId()!"
+          [readOnly]="false"
+        />
+      } @else {
+        <div class="ar-step2-loading">
+          <i class="pi pi-spin pi-spinner"></i>
+          <span>Obteniendo información del bien…</span>
+        </div>
+      }
+
+      <ng-template #footer>
+        <div class="ar-card__footer">
+          <p-button
+            label="Omitir y registrar otro"
+            icon="pi pi-skip-forward"
+            severity="secondary"
+            (onClick)="finishWithImages()"
+            styleClass="ar-btn ar-btn--secondary" />
+          <p-button
+            label="Finalizar"
+            icon="pi pi-check"
+            iconPos="right"
+            (onClick)="finishWithImages()"
+            styleClass="ar-btn ar-btn--success" />
+        </div>
+      </ng-template>
+    </p-card>
+
+  </div>
+  }
 
   <!-- ═══════════════════════════════════════════
        MODAL — ¿Agregar imágenes al bien?

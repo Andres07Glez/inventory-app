@@ -901,3 +901,18 @@
   background: #1d4ed8;
   border-color: #1d4ed8;
 }
+
+/* ── Step 2: estado de espera del assetId ──────────────── */
+.ar-step2-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  color: var(--ar-muted);
+  font-size: 0.9rem;
+  justify-content: center;
+}
+.ar-step2-loading .pi-spinner {
+  font-size: 1.3rem;
+  color: var(--ar-blue);
+}

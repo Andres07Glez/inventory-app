@@ -3,8 +3,8 @@ import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { catchError, of } from 'rxjs';
-//import { AssetService } from '../'; // ajusta la ruta según tu estructura
 import { AssetService } from '../../../core/service/asset.service';
+import { AssetDetailResponseDTO } from '../../../core/models/asset.model';
 
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
@@ -15,13 +15,10 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
 import { StepperModule } from 'primeng/stepper';
-import { FileUploadModule } from 'primeng/fileupload';
 import { TagModule } from 'primeng/tag';
-import { ToastModule } from 'primeng/toast';
-import { MessageService } from 'primeng/api';
+import { MessageService, ConfirmationService } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
 import { ProgressBarModule } from 'primeng/progressbar';
-import { ChipModule } from 'primeng/chip';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { IftaLabelModule } from 'primeng/iftalabel';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -88,12 +85,9 @@ interface Brand {
     CardModule,
     DividerModule,
     StepperModule,
-    FileUploadModule,
     TagModule,
-    ToastModule,
     TooltipModule,
     ProgressBarModule,
-    ChipModule,
     FloatLabelModule,
     IftaLabelModule,
     IconFieldModule,
@@ -101,9 +95,9 @@ interface Brand {
     ToggleButtonModule,
     SelectButtonModule,
     InplaceModule,
-    AssetImageUpload
+    AssetImageUpload,
   ],
-  providers: [MessageService],
+  providers: [],
   templateUrl: './asset-registration.html',
   styleUrl: './asset-registration.css',
 })
@@ -117,6 +111,8 @@ export class AssetRegistration implements OnInit {
   // ── Modal "¿Agregar imágenes?"
   showImageModal = signal(false);
   lastRegisteredFolio = signal<string>('');
+  /** ID real en BD del bien recién registrado — se usa en AssetImageUpload */
+  lastRegisteredAssetId = signal<number | null>(null);
 
   readonly canEditImages = computed(() => {
     const role = this.authService.currentUser()?.role;
@@ -372,6 +368,7 @@ export class AssetRegistration implements OnInit {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.messageService.add({
+        key: 'app-toast',
         severity: 'error',
         summary: 'Formulario incompleto',
         detail: 'Verifica los campos requeridos antes de guardar.',
@@ -404,20 +401,36 @@ export class AssetRegistration implements OnInit {
     this.assetService.registerAsset(payload).subscribe({
       next: (res) => {
         this.messageService.add({
+          key: 'app-toast',
           severity: 'success',
           summary: '¡Bien registrado!',
           detail: `Folio asignado: ${res.inventoryNumber}`,
           life: 5000
         });
-        // Guardar folio y abrir modal de imágenes
+        // Guardar folio para mostrarlo en el modal y en el step de evidencia
         this.lastRegisteredFolio.set(res.inventoryNumber);
-        setTimeout(() => {
-          this.showImageModal.set(true);
-        }, 600);
+
+        // Preferimos el id que viene directo en la respuesta del POST.
+        // Si por alguna razón no estuviera, lo resolvemos con el endpoint de inventario.
+        if (res.id) {
+          this.lastRegisteredAssetId.set(res.id);
+          setTimeout(() => this.showImageModal.set(true), 600);
+        } else {
+          // Fallback: consultar por número de inventario
+          this.assetService.getAssetByInventoryNumber(res.inventoryNumber)
+            .pipe(catchError(() => of(null)))
+            .subscribe(detail => {
+              if (detail) {
+                this.lastRegisteredAssetId.set(detail.id);
+              }
+              setTimeout(() => this.showImageModal.set(true), 600);
+            });
+        }
       },
       error: (err) => {
         const msg = err.error?.message ?? 'Ocurrió un error al registrar el bien.';
         this.messageService.add({
+          key: 'app-toast',
           severity: 'error',
           summary: 'Error al guardar',
           detail: msg
@@ -451,6 +464,7 @@ export class AssetRegistration implements OnInit {
     this.activeStep.set(0);
     this.uploadedImages = [];
     this.lastRegisteredFolio.set('');
+    this.lastRegisteredAssetId.set(null);
     this.loadNextFolio();
   }
 

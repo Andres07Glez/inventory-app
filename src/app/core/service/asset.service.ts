@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../config/environment';
+import { AssetDetailResponseDTO } from '../models/asset.model';
 
 export interface AssetRequest {
   inventoryNumber?: string;  // ← agrega esta línea
@@ -107,6 +108,19 @@ export class AssetService {
   getBrands(): Observable<Brand[]> {
     return this.http
       .get<{ success: boolean; data: Brand[] }>(`${this.base}/catalogs/brands`)
+      .pipe(map(res => res.data));
+  }
+
+  /**
+   * Obtiene el detalle completo de un bien por su número de inventario.
+   * Útil para recuperar el ID asignado en BD tras el registro.
+   * Endpoint: GET /v1/assets/inventory-number/{inventoryNumber}
+   */
+  getAssetByInventoryNumber(inventoryNumber: string): Observable<AssetDetailResponseDTO> {
+    return this.http
+      .get<{ success: boolean; data: AssetDetailResponseDTO }>(
+        `${this.base}/assets/inventory-number/${encodeURIComponent(inventoryNumber)}`
+      )
       .pipe(map(res => res.data));
   }
 }
