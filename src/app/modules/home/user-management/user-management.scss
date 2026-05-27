@@ -220,3 +220,116 @@
     color: var(--text-color-muted);
   }
 }
+// ── Filtros ────────────────────────────────────────────────────────────────────
+.um-filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  &__search {
+    flex: 1;
+    min-width: 220px;
+
+    input { width: 100%; }
+  }
+
+  &__select {
+    width: 180px !important;
+  }
+}
+
+// ── Fila clickeable ────────────────────────────────────────────────────────────
+.um-row--clickable {
+  cursor: pointer;
+}
+
+// ── Modal de detalle ───────────────────────────────────────────────────────────
+.um-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  &__identity {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__name {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  &__username {
+    font-size: 0.8rem;
+    color: var(--text-color-muted);
+  }
+
+  &__tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+
+  &__meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 24px;
+    padding: 16px;
+    background: var(--surface-section);
+    border-radius: var(--border-radius-md);
+  }
+
+  &__meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__meta-label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--text-color-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__meta-value {
+    font-size: 0.875rem;
+    color: var(--text-color);
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+}
+
+// ── Avatar XL (para el modal de detalle) ──────────────────────────────────────
+.um-avatar--xl {
+  width: 56px;
+  height: 56px;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+// ── EFECTO HOVER EN FILAS (Consistencia con Inventario de Bienes) ─────────────
+:host ::ng-deep .p-datatable-tbody > tr {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: var(--color-primary-light) !important;
+  }
+}

@@ -167,6 +167,17 @@
                 Condición física
                 <span class="detail-section__hint">Identificar activos que requieren atención</span>
               </h3>
+              <p-message severity="info" styleClass="mb-4" [style]="{ width: '100%', marginBottom: '1rem' }">
+                <div style="line-height: 1.5; font-size: 0.9rem;">
+                  <strong>Guía de condiciones:</strong>
+                  <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem;">
+                    <li><i class="pi pi-circle-fill" style="color: #18B32A; font-size: 0.5rem; vertical-align: middle; margin-right: 4px;"></i> <strong>Bueno:</strong> Funcional y en buen estado.</li>
+                    <li><i class="pi pi-circle-fill" style="color: #D4A91D; font-size: 0.5rem; vertical-align: middle; margin-right: 4px;"></i> <strong>Regular:</strong> Funcional pero con desgaste o años de uso.</li>
+                    <li><i class="pi pi-circle-fill" style="color: #B31818; font-size: 0.5rem; vertical-align: middle; margin-right: 4px;"></i> <strong>Malo:</strong> No funcional o muy deteriorado; candidato a baja.</li>
+                  </ul>
+                </div>
+              </p-message>
+
               <div class="condition-form">
                 <div class="condition-form__field">
                   <label class="condition-form__label" for="condition-select">Estado de condición</label>
@@ -204,6 +215,7 @@
               <h3 class="tab-toolbar__title">Historial de asignaciones</h3>
               <button
                 pButton
+                *hasRole="['ADMIN', 'OPERADOR']"
                 icon="pi pi-user-plus"
                 label="Nueva asignación"
                 [disabled]="bien.lifecycleStatus === 'DECOMMISSIONED'"

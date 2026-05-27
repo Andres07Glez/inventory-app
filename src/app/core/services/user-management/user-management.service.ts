@@ -3,7 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../config/environment';
 import { PageResponse } from '../../models/asset.model';
-import { UserSummary, UserDetail, CreateUserRequest, UpdateUserRoleRequest } from '../../models/user.model';
+import { UserSummary, UserDetail, CreateUserRequest, UpdateUserRoleRequest, UserRole } from '../../models/user.model';
 
 interface ApiResponse<T> {
   success: boolean;
@@ -18,19 +18,20 @@ export class UserManagementService {
   private readonly base = `${environment.apiUrl}/admin/users`;
 
   findAll(params: {
-    search?: string;
-    page: number;
-    size: number;
+    search?:   string;
+    role?:     UserRole | null;
+    isActive?: boolean | null;
+    page:      number;
+    size:      number;
   }): Observable<PageResponse<UserSummary>> {
     let httpParams = new HttpParams()
       .set('page', params.page)
       .set('size', params.size);
 
-    if (params.search?.trim()) {
-      httpParams = httpParams.set('search', params.search.trim());
-    }
+    if (params.search?.trim())   httpParams = httpParams.set('search',   params.search.trim());
+    if (params.role    != null)  httpParams = httpParams.set('role',     params.role);
+    if (params.isActive != null) httpParams = httpParams.set('isActive', params.isActive);
 
-    // GET /v1/admin/users devuelve Page<> directo (sin wrapper ApiResponse)
     return this.http.get<PageResponse<UserSummary>>(this.base, { params: httpParams });
   }
 
@@ -55,6 +56,11 @@ export class UserManagementService {
   toggleStatus(id: number): Observable<UserDetail> {
     return this.http
       .patch<ApiResponse<UserDetail>>(`${this.base}/${id}/status`, {})
+      .pipe(map(r => r.data));
+  }
+  resetPassword(id: number): Observable<UserDetail> {
+    return this.http
+      .post<ApiResponse<UserDetail>>(`${this.base}/${id}/reset-password`, {})
       .pipe(map(r => r.data));
   }
 }

@@ -62,6 +62,7 @@ const ROLE_LABELS: Record<UserRole, string> = {
   ADMIN:    'Administrador',
   OPERADOR: 'Operador',
   AUDITOR:  'Auditor',
+  GUARDIAN: 'Resguardante'
 };
 @Component({
   selector: 'app-shell',
