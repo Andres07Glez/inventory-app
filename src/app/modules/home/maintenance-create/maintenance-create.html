@@ -1,0 +1,159 @@
+<p-toast />
+<p-confirmDialog />
+
+<p-dialog
+  header="Registrar mantenimiento"
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="maintenance-dialog"
+  [style]="{ width: '640px' }">
+
+  <div class="form-grid">
+
+    <!-- Bien ─────────────────────────────────────────────────────────────── -->
+    <div class="field field--full">
+      <label class="field__label">Bien <span class="required">*</span></label>
+      @if (fixedAssetId() !== null && selectedAsset) {
+        <div class="asset-fixed-badge">
+          <i class="pi pi-box"></i>
+          <span>{{ selectedAsset.inventoryNumber }} — {{ selectedAsset.description }}</span>
+        </div>
+      } @else {
+        <app-asset-search-input
+          [(value)]="selectedAsset"
+          (valueChange)="onAssetSelected($event)"
+          placeholder="Buscar por número de inventario o descripción…" />
+      }
+    </div>
+
+    <!-- Tipo ─────────────────────────────────────────────────────────────── -->
+    <div class="field">
+      <label class="field__label">Tipo <span class="required">*</span></label>
+      <p-select
+        [options]="typeOptions"
+        [ngModel]="selectedType()"
+        (ngModelChange)="selectedType.set($event)"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Seleccionar tipo"
+        styleClass="w-full" />
+    </div>
+
+    <!-- Fecha del servicio — Punto 6: solo lectura, siempre hoy ──────────── -->
+    <div class="field">
+      <label class="field__label">Fecha de registro</label>
+      <div class="date-readonly-badge">
+        <i class="pi pi-calendar"></i>
+        <span>{{ performedDate() | date:'dd/MM/yyyy' }}</span>
+        <span class="date-readonly-badge__hint">Fecha de hoy (no modificable)</span>
+      </div>
+    </div>
+
+    <!-- Descripción ─────────────────────────────────────────────────────── -->
+    <div class="field field--full">
+      <label class="field__label">Trabajo realizado <span class="required">*</span></label>
+      <textarea
+        pTextarea
+        [(ngModel)]="description"
+        rows="4"
+        placeholder="Describe el trabajo realizado durante el mantenimiento…"
+        class="w-full"
+        [autoResize]="true">
+      </textarea>
+    </div>
+
+    <!-- Técnico / Empresa ───────────────────────────────────────────────── -->
+    <div class="field field--full">
+      <label class="field__label">Técnico o empresa</label>
+      <input
+        type="text"
+        pInputText
+        [(ngModel)]="performedBy"
+        placeholder="Nombre del responsable"
+        class="w-full" />
+    </div>
+
+    <p-divider class="field--full" />
+
+    <!-- Condición antes — Punto 4: precargada con estado actual del bien ── -->
+    <div class="field">
+      <label class="field__label">
+        Condición antes
+        @if (selectedAsset?.conditionStatus) {
+          <span class="field__hint">(precargada del bien)</span>
+        }
+      </label>
+      <p-select
+        [options]="conditionOptions"
+        [ngModel]="selectedConditionBefore()"
+        (ngModelChange)="selectedConditionBefore.set($event)"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Sin especificar"
+        [showClear]="false"
+        [disabled]="true" 
+        styleClass="w-full" />
+    </div>
+
+    <!-- Condición después ───────────────────────────────────────────────── -->
+    <div class="field">
+      <label class="field__label">Condición después</label>
+      <p-select
+        appendTo="body"
+        [options]="conditionOptions"
+        [ngModel]="selectedConditionAfter()"
+        (ngModelChange)="selectedConditionAfter.set($event)"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Sin especificar"
+        [showClear]="true"
+        [disabled]="false" 
+        styleClass="w-full" />
+    </div>
+
+    <!-- Incidencia vinculada — Punto 8: buscador, no input numérico ─────── -->
+    <div class="field field--full">
+      <label class="field__label">
+        Incidencia vinculada
+        <span class="field__hint">(opcional)</span>
+      </label>
+      @if (!selectedAsset) {
+        <p class="field__hint field__hint--block">Selecciona un bien primero para ver sus incidencias.</p>
+      } @else if (loadingIncidents()) {
+        <p class="field__hint field__hint--block"><i class="pi pi-spin pi-spinner"></i> Cargando incidencias…</p>
+      } @else if (incidentOptions().length === 0) {
+        <p class="field__hint field__hint--block">Este bien no tiene incidencias registradas.</p>
+      } @else {
+        <p-select
+          [options]="incidentOptions()"
+          [(ngModel)]="selectedIncident"
+          optionLabel="label"
+          placeholder="Buscar y seleccionar incidencia…"
+          [filter]="true"
+          filterBy="label"
+          [showClear]="true"
+          styleClass="w-full" />
+      }
+    </div>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      [text]="true"
+      (onClick)="close()"
+      [disabled]="saving()" />
+    <p-button
+      label="Registrar mantenimiento"
+      icon="pi pi-check"
+      (onClick)="save()"
+      [loading]="saving()"
+      [disabled]="!selectedAsset || !selectedType() || !description" />
+  </ng-template>
+
+</p-dialog>

@@ -20,7 +20,7 @@ import { HasRoleDirective } from '../../../shared/directives/has-role.directive'
 import { DisableIfNoRoleDirective } from '../../../shared/directives/disable-if-no-role-directive';
 import { AssetImageUpload } from '../asset-image-upload/asset-image-upload';
 import { AuthService } from '../../../core/services/auth/auth.service';
-
+import { AssetMaintenanceTab } from "../asset-maintenance-tab/asset-maintenance-tab";
 
 
 type ConditionSeverity = 'success' | 'warn' | 'danger';
@@ -52,7 +52,7 @@ const LIFECYCLE_SEVERITY: Record<string, LifecycleSeverity> = {
   imports: [CommonModule, FormsModule, ReactiveFormsModule,
     TabsModule, TagModule, ButtonModule, SelectModule, ToastModule,
     SkeletonModule, TimelineModule, ConfirmDialogModule, TableModule,
-    TooltipModule, CardModule,HasRoleDirective,DisableIfNoRoleDirective,AssetImageUpload],
+    TooltipModule, CardModule, HasRoleDirective, DisableIfNoRoleDirective, AssetImageUpload, AssetMaintenanceTab],
   templateUrl: './asset-detail.html',
   styleUrl: './asset-detail.scss',
 })

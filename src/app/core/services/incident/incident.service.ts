@@ -71,4 +71,5 @@ export class IncidentService {
       .post<ApiResponse<IncidentDetail>>(`${this.api}/incidents/${id}/decommission`, form)
       .pipe(map(r => r.data));
   }
+  
 }

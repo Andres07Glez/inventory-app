@@ -64,7 +64,13 @@ export const routes: Routes = [
       },
       {
         path: 'mantenimiento',
-        loadComponent: () => import('./modules/home/dashboard/dashboard').then(m => m.Dashboard),
+        loadComponent: () => import('./modules/home/maintenance/maintenance').then(m => m.MaintenanceComponent),
+        canActivate: [roleGuard],
+        data: forRoles('ADMIN', 'OPERADOR'),
+      },
+      {
+        path: 'mantenimiento/:id',
+        loadComponent: () => import('./modules/home/asset-maintenance-tab/asset-maintenance-tab').then(m => m.AssetMaintenanceTab),
         canActivate: [roleGuard],
         data: forRoles('ADMIN', 'OPERADOR'),
       },
