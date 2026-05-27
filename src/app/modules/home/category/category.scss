@@ -7,7 +7,7 @@
   // Fondos
   --cat-bg:              #F7F7F7; 
   --cat-surface:         #FFFFFF;
-  --cat-surface-raised:  #F5FFFD; 
+  --cat-surface-raised:  #F5FFFD;  
 
   // Bordes
   --cat-border:          #CCCCCC; 
@@ -224,9 +224,27 @@
     &:hover:not(:disabled) { background: var(--cat-primary-hover); border-color: var(--cat-primary-hover); }
   }
   &--secondary.p-button {
-    background: transparent; border: 1px solid var(--cat-border); color: var(--cat-text-secondary);
+    background: var(--cat-primary); border-color: var(--cat-primary); color: var(--cat-primary-text);
+    //background: transparent; border: 1px solid var(--cat-border); color: var(--cat-text-secondary);
     &:hover:not(:disabled) { background: var(--cat-surface-raised); }
   }
+}
+
+.cat-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(0, 125, 104, .10);
+  color: var(--cat-primary);
+  border: 1px solid rgba(0, 125, 104, .2);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+
+  i { font-size: 0.72rem; }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

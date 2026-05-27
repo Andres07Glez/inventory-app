@@ -3,6 +3,12 @@
 
 <div class="cat-tab-content">
   <div class="cat-toolbar">
+    
+    <span class="cat-stat-chip">
+      <i class="pi pi-building"></i>
+      {{ supplierTotal() }} proveedor{{ supplierTotal() !== 1 ? 'es' : '' }}
+    </span>
+
     <p-iconfield styleClass="cat-search-field">
       <p-inputicon styleClass="pi pi-search" />
       <input
@@ -41,10 +47,10 @@
   >
     <ng-template pTemplate="header">
       <tr>
-        <th pSortableColumn="name">Nombre <p-sortIcon field="name" /></th>
-        <th>Contacto</th>
-        <th style="width:100px;text-align:center">Estado</th>
-        <th style="width:110px;text-align:center">Acciones</th>
+        <th pSortableColumn="name" style="width:40%">Nombre <p-sortIcon field="name" /></th>
+        <th style="width:35%">Contacto</th>
+        <th style="width:13%;text-align:center">Estado</th>
+        <th style="width:12%;text-align:center">Acciones</th>
       </tr>
     </ng-template>
 
@@ -77,7 +83,7 @@
             <button
               pButton
               type="button"
-              icon="pi pi-ban"
+              icon="pi pi-trash"
               class="cat-btn-icon cat-btn-icon--danger"
               pTooltip="Desactivar"
               tooltipPosition="top"

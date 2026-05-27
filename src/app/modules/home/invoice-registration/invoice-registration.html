@@ -5,6 +5,11 @@
 
   <!-- Toolbar -->
   <div class="inv-toolbar">
+    <span class="inv-stat-chip">
+      <i class=" pi pi-receipt"></i>
+      {{ invoiceTotal() }} factura{{ invoiceTotal() !== 1 ? 's' : '' }}
+    </span>
+
     <p-iconfield styleClass="inv-search-field">
       <p-inputicon styleClass="pi pi-search" />
       <input
@@ -126,8 +131,8 @@
   </p-table>
 </div>
 
-<!-- Input archivo oculto -->
-<input #fileInput type="file" accept=".pdf,.xml,.jpg,.jpeg,.png"
+<!-- Input archivo oculto — solo PDF -->
+<input #fileInput type="file" accept="application/pdf"
   style="display:none" (change)="onFileSelected($event)" />
 
 <!-- ═══ DIÁLOGO ═══ -->
@@ -187,29 +192,48 @@
         <label class="inv-label">Fecha de factura <span class="inv-req">*</span></label>
         <p-datepicker
           formControlName="invoiceDate"
+          [minDate]="minDate"
           [maxDate]="maxDate"
           dateFormat="dd/mm/yy"
           placeholder="DD/MM/AAAA"
           [showIcon]="true"
+          appendTo="body"
           styleClass="inv-datepicker"
         />
         @if (hasError('invoiceDate', 'required')) {
           <small class="inv-error"><i class="pi pi-exclamation-circle"></i> La fecha es requerida.</small>
+        }
+        @if (hasError('invoiceDate', 'minDate')) {
+          <small class="inv-error"><i class="pi pi-exclamation-circle"></i> La fecha de factura debe ser posterior a 1980.</small>
         }
       </div>
     </div>
 
     <!-- Documento -->
     <div class="inv-field inv-field--full">
-      <label class="inv-label">Documento <span class="inv-opt">(opcional)</span></label>
+      <label class="inv-label">Documento PDF <span class="inv-opt">(opcional)</span></label>
+
       <div class="inv-file-row">
-        <div class="inv-file-preview" [class.inv-file-preview--active]="selectedFileName()">
-          <i class="pi pi-paperclip"></i>
-          <span>{{ selectedFileName() || 'Ningún archivo seleccionado' }}</span>
+        <div class="inv-file-preview" [class.inv-file-preview--active]="selectedFileName() || (dialogMode() === 'edit' && existingDocumentUrl())">
+          <i class="pi"
+             [ngClass]="existingDocumentUrl() && !selectedFile ? 'pi-file-pdf' : 'pi-paperclip'"
+             [style.color]="existingDocumentUrl() && !selectedFile ? 'var(--red-500)' : null"></i>
+          <span>{{ selectedFileName() || (existingDocumentUrl() ? 'Ya tiene un PDF cargado' : 'Ningún archivo seleccionado') }}</span>
         </div>
-        <button pButton type="button" icon="pi pi-upload" label="Seleccionar"
-          class="inv-btn inv-btn--secondary inv-btn--sm"
-          (click)="triggerFileSelect()"></button>
+
+        <div class="inv-file-actions">
+          @if (dialogMode() === 'edit' && existingDocumentUrl() && !selectedFile) {
+            <button pButton type="button" icon="pi pi-eye" label="Ver"
+              class="inv-btn inv-btn--secondary inv-btn--sm"
+              (click)="viewExistingPdf()">
+            </button>
+          }
+          <button pButton type="button" icon="pi pi-upload"
+            [label]="existingDocumentUrl() ? 'Reemplazar' : 'Seleccionar'"
+            class="inv-btn inv-btn--secondary inv-btn--sm"
+            (click)="triggerFileSelect()">
+          </button>
+        </div>
       </div>
     </div>
 
@@ -235,7 +259,8 @@
         icon="pi pi-check"
         class="inv-btn inv-btn--primary"
         [loading]="dialogLoading()"
-        (click)="save()"></button>
+        (click)="save()">
+      </button>
     </div>
   </ng-template>
 </p-dialog>

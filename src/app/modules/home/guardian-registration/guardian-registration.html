@@ -5,6 +5,11 @@
 
   <!-- ── TOOLBAR ───────────────────────────────────────────────────── -->
   <div class="cat-toolbar">
+    <span class="stat-chip">
+      <i class="pi pi-id-card"></i>
+      {{ totalRecords() }} resguardante{{ totalRecords() !== 1 ? 's' : '' }}
+    </span>
+
     <p-iconfield styleClass="cat-search-field">
       <p-inputicon styleClass="pi pi-search" />
       <input
@@ -15,11 +20,6 @@
         (input)="onSearch($any($event.target).value)"
       />
     </p-iconfield>
-
-    <span class="cat-total-badge">
-      <i class="pi pi-id-card"></i>
-      {{ totalRecords() }} resguardante{{ totalRecords() !== 1 ? 's' : '' }}
-    </span>
 
     <button
       pButton
