@@ -22,8 +22,6 @@ import { AssetImageUpload } from '../asset-image-upload/asset-image-upload';
 import { AuthService } from '../../../core/services/auth/auth.service';
 import { Message } from 'primeng/message';
 
-
-
 type ConditionSeverity = 'success' | 'warn' | 'danger';
 type LifecycleSeverity = 'info' | 'success' | 'secondary' | 'warn' | 'contrast' | 'danger';
 // ── Helpers de UI ─────────────────────────────────────────────────────────────
@@ -53,7 +51,7 @@ const LIFECYCLE_SEVERITY: Record<string, LifecycleSeverity> = {
   imports: [CommonModule, FormsModule, ReactiveFormsModule,
     TabsModule, TagModule, ButtonModule, SelectModule, ToastModule,
     SkeletonModule, TimelineModule, ConfirmDialogModule, TableModule,
-    TooltipModule, CardModule,HasRoleDirective,DisableIfNoRoleDirective,AssetImageUpload,Message],
+    TooltipModule, CardModule, HasRoleDirective, DisableIfNoRoleDirective, AssetImageUpload,Message],
   templateUrl: './asset-detail.html',
   styleUrl: './asset-detail.scss',
 })

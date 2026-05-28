@@ -1,0 +1,305 @@
+<p-toast />
+<p-confirmDialog />
+
+<app-maintenance-create (created)="onCreated()" />
+
+<p-card>
+
+  <ng-template pTemplate="header">
+    <div class="page-header">
+      <div class="page-header__title">
+        <i class="pi pi-wrench"></i>
+        <h2>Mantenimiento de Bienes</h2>
+      </div>
+      <div class="page-header__actions">
+        <p-select
+          [options]="typeFilterOptions"
+          [ngModel]="selectedType()"
+          (ngModelChange)="onTypeFilterChange($event)"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="filter-select" />
+        <p-button
+          *hasRole="['ADMIN', 'OPERADOR']"
+          label="Registrar mantenimiento"
+          icon="pi pi-plus"
+          (onClick)="openCreateDialog()" />
+      </div>
+    </div>
+
+    <!-- Punto 3: barra de búsqueda + Punto 7: filtros de fecha ───────────── -->
+    <div class="filter-bar">
+      <div class="filter-bar__search">
+        <i class="pi pi-search filter-bar__search-icon"></i>
+        <input
+          pInputText
+          type="text"
+          [(ngModel)]="searchQuery"
+          placeholder="Buscar por inventario, técnico o registrado por…"
+          class="filter-bar__search-input" />
+        @if (searchQuery) {
+          <p-button
+            icon="pi pi-times"
+            [text]="true"
+            size="small"
+            severity="secondary"
+            (onClick)="searchQuery = ''"
+            pTooltip="Limpiar búsqueda" />
+        }
+      </div>
+
+      <div class="filter-bar__dates">
+        <!-- Toggle mes actual -->
+        <p-button
+          [label]="showCurrentMonthOnly ? 'Mes actual ✓' : 'Mes actual'"
+          [severity]="showCurrentMonthOnly ? 'primary' : 'secondary'"
+          [outlined]="!showCurrentMonthOnly"
+          size="small"
+          (onClick)="toggleCurrentMonth()"
+          pTooltip="Filtrar solo el mes en curso" />
+
+        <!-- Rango de fechas -->
+        <div class="date-range">
+          <input
+            type="date"
+            class="p-inputtext date-range__input"
+            [(ngModel)]="dateRangeStart"
+            [disabled]="showCurrentMonthOnly"
+            pTooltip="Desde" />
+          <span class="date-range__sep">—</span>
+          <input
+            type="date"
+            class="p-inputtext date-range__input"
+            [(ngModel)]="dateRangeEnd"
+            [disabled]="showCurrentMonthOnly"
+            pTooltip="Hasta" />
+        </div>
+
+        @if (dateRangeStart || dateRangeEnd || showCurrentMonthOnly) {
+          <p-button
+            icon="pi pi-filter-slash"
+            [text]="true"
+            severity="secondary"
+            size="small"
+            (onClick)="clearDateFilters()"
+            pTooltip="Limpiar filtros de fecha" />
+        }
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- Tabla principal ────────────────────────────────────────────────────── -->
+  @if (loading()) {
+    <div class="skeleton-grid">
+      @for (_ of [1,2,3,4,5]; track $index) {
+        <p-skeleton height="2.75rem" styleClass="mb-2" />
+      }
+    </div>
+  } @else if (filteredRecords.length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-wrench empty-state__icon"></i>
+      <p class="empty-state__title">Sin registros de mantenimiento</p>
+      <p class="empty-state__hint">
+        @if (selectedType() || searchQuery || dateRangeStart || dateRangeEnd || showCurrentMonthOnly) {
+          No hay resultados para los filtros aplicados.
+        } @else {
+          Registra el primer mantenimiento usando el botón superior.
+        }
+      </p>
+    </div>
+  } @else {
+    <p-table
+      [value]="filteredRecords"
+      [rowHover]="true"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      styleClass="p-datatable-sm maintenance-table">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Inventario</th>
+          <th>Tipo</th>
+          <th>Fecha</th>
+          <th>Técnico / Empresa</th>
+          <th>Condición</th>
+          <th>Registrado por</th>
+          <th class="col-actions">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td>
+            <a class="inv-link" [routerLink]="['/bienes', row.assetId]">
+              {{ row.inventoryNumber }}
+            </a>
+          </td>
+
+          <td>
+            <p-tag
+              [value]="getTypeLabel(row.maintenanceType)"
+              [severity]="getTypeSeverity(row.maintenanceType)" />
+          </td>
+
+          <td>{{ row.performedDate | date:'dd/MM/yyyy' }}</td>
+
+          <td>{{ row.performedBy ?? '—' }}</td>
+
+          <td>
+            <div class="condition-pair">
+              @if (row.conditionBefore) {
+                <p-tag
+                  [value]="getCondLabel(row.conditionBefore)"
+                  [severity]="getCondSeverity(row.conditionBefore)"
+                  pTooltip="Antes"
+                  tooltipPosition="top" />
+                <i class="pi pi-arrow-right cond-arrow"></i>
+              }
+              @if (row.conditionAfter) {
+                <p-tag
+                  [value]="getCondLabel(row.conditionAfter)"
+                  [severity]="getCondSeverity(row.conditionAfter)"
+                  pTooltip="Después"
+                  tooltipPosition="top" />
+              }
+              @if (!row.conditionBefore && !row.conditionAfter) {
+                <span class="text-muted">—</span>
+              }
+            </div>
+          </td>
+
+          <td>{{ row.createdByName }}</td>
+
+          <!-- Punto 1 y 5: botón acciones ──────────────────────────────── -->
+          <td class="col-actions">
+            <p-button
+              icon="pi pi-eye"
+              [text]="true"
+              severity="secondary"
+              size="small"
+              (onClick)="openDetail(row)"
+              pTooltip="Ver detalle"
+              tooltipPosition="left" />
+          </td>
+        </tr>
+      </ng-template>
+
+    </p-table>
+  }
+
+</p-card>
+
+<!-- Modal detalle + eliminación (Puntos 1 y 5) ────────────────────────────── -->
+<p-dialog
+  header="Detalle del mantenimiento"
+  [visible]="detailVisible()"
+  (visibleChange)="detailVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '520px' }">
+
+  @if (loadingDetail()) {
+    <div class="detail-skeleton">
+      @for (_ of [1,2,3,4]; track $index) {
+        <p-skeleton height="1.5rem" styleClass="mb-3" />
+      }
+    </div>
+  } @else if (detailRecord(); as rec) {
+    <div class="detail-grid">
+
+      <div class="detail-row">
+        <span class="detail-row__label">Bien</span>
+        <span class="detail-row__value">
+          <a class="inv-link" [routerLink]="['/bienes', rec.assetId]" (click)="detailVisible.set(false)">
+            {{ rec.inventoryNumber }}
+          </a>
+          — {{ rec.assetDescription }}
+        </span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-row__label">Tipo</span>
+        <span class="detail-row__value">
+          <p-tag [value]="getTypeLabel(rec.maintenanceType)" [severity]="getTypeSeverity(rec.maintenanceType)" />
+        </span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-row__label">Fecha</span>
+        <span class="detail-row__value">{{ rec.performedDate | date:'dd/MM/yyyy' }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-row__label">Técnico / Empresa</span>
+        <span class="detail-row__value">{{ rec.performedBy ?? '—' }}</span>
+      </div>
+
+      @if (rec.conditionBefore || rec.conditionAfter) {
+        <div class="detail-row">
+          <span class="detail-row__label">Condición</span>
+          <span class="detail-row__value">
+            <div class="condition-pair">
+              @if (rec.conditionBefore) {
+                <p-tag [value]="getCondLabel(rec.conditionBefore)" [severity]="getCondSeverity(rec.conditionBefore)" pTooltip="Antes" />
+                <i class="pi pi-arrow-right cond-arrow"></i>
+              }
+              @if (rec.conditionAfter) {
+                <p-tag [value]="getCondLabel(rec.conditionAfter)" [severity]="getCondSeverity(rec.conditionAfter)" pTooltip="Después" />
+              }
+            </div>
+          </span>
+        </div>
+      }
+
+      <!-- Punto 1: descripción completa -->
+      <div class="detail-row detail-row--full">
+        <span class="detail-row__label">Trabajo realizado</span>
+        <p class="detail-row__description">{{ rec.description }}</p>
+      </div>
+
+      <!-- Punto 1: ID de incidencia vinculada -->
+      @if (rec.incidentId) {
+        <div class="detail-row">
+          <span class="detail-row__label">Incidencia vinculada</span>
+          <span class="detail-row__value detail-row__value--incident">
+            <i class="pi pi-exclamation-circle"></i>
+            #{{ rec.incidentId }}
+          </span>
+        </div>
+      }
+
+      <div class="detail-row">
+        <span class="detail-row__label">Registrado por</span>
+        <span class="detail-row__value">{{ rec.createdByName }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-row__label">Fecha de registro</span>
+        <span class="detail-row__value text-muted">{{ rec.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+      </div>
+
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <!-- Punto 5: eliminar solo visible para ADMIN -->
+    @if (detailRecord(); as rec) {
+      <p-button
+        *hasRole="['ADMIN']"
+        label="Eliminar"
+        icon="pi pi-trash"
+        severity="danger"
+        [outlined]="true"
+        [loading]="deletingDetail()"
+        (onClick)="confirmDelete(rec)" />
+    }
+    <p-button
+      label="Cerrar"
+      severity="secondary"
+      [text]="true"
+      (onClick)="detailVisible.set(false)" />
+  </ng-template>
+
+</p-dialog>

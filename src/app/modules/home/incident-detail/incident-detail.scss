@@ -1,0 +1,352 @@
+// ── Variables locales ─────────────────────────────────────────────────────────
+$gap-sm:   0.75rem;
+$gap-md:   1.25rem;
+$gap-lg:   1.75rem;
+$radius:   0.625rem;
+$card-pad: 1.25rem;
+
+// ── Layout principal ──────────────────────────────────────────────────────────
+.inc-det {
+  padding: 1.25rem 2rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: $gap-lg;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  // ── Skeleton ───────────────────────────────────────────────────────────────
+  &__skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: $gap-sm;
+    padding: 1.25rem 2rem;
+
+    &-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: $gap-md;
+      margin-top: $gap-sm;
+    }
+  }
+
+  // ── Barra superior ─────────────────────────────────────────────────────────
+  &__topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $gap-md;
+    flex-wrap: wrap;
+    padding-bottom: $gap-sm;
+    border-bottom: 1px solid var(--p-surface-200);
+
+    &-center {
+      display: flex;
+      align-items: center;
+      gap: $gap-sm;
+      flex: 1;
+      justify-content: center;
+    }
+  }
+
+  &__folio {
+    font-family: 'Courier New', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--p-primary-700);
+    letter-spacing: 0.04em;
+  }
+
+  &__baja-tag {
+    font-size: 0.7rem !important;
+    font-weight: 700;
+  }
+
+  // ── Grid de dos columnas ───────────────────────────────────────────────────
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: $gap-md;
+    align-items: start;
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: $gap-md;
+  }
+
+  &__side {
+    display: flex;
+    flex-direction: column;
+    gap: $gap-md;
+    position: sticky;
+    top: 1rem;
+  }
+
+  // ── Tarjetas ───────────────────────────────────────────────────────────────
+  &__card {
+    background: var(--p-surface-0);
+    border: 1px solid var(--p-surface-200);
+    border-radius: $radius;
+    padding: $card-pad;
+
+    &--action {
+      border-left: 3px solid var(--p-primary-500);
+      background: var(--p-primary-50);
+    }
+
+    &--resolve {
+      border-left: 3px solid var(--p-warning-500, #D9B12D);
+      background: var(--p-surface-0);
+    }
+
+    &--baja {
+      border-left: 3px solid var(--p-red-600, #D92D2D);
+      background: #FFF8F8;
+    }
+  }
+
+  &__card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--p-text-muted-color);
+    margin: 0 0 $gap-sm;
+
+    i { color: var(--p-primary-600); }
+  }
+
+  &__img-count {
+    margin-left: auto;
+    font-size: 0.75rem;
+    font-weight: 400;
+    background: var(--p-surface-100);
+    padding: 0.1rem 0.45rem;
+    border-radius: 1rem;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--p-text-muted-color);
+  }
+
+  // ── Bien vinculado ─────────────────────────────────────────────────────────
+  &__asset-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  &__asset-inv {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--p-primary-700);
+  }
+
+  &__asset-desc {
+    font-size: 0.9rem;
+    color: var(--p-text-color);
+  }
+
+  // ── Grid de campos de detalle ──────────────────────────────────────────────
+  &__detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $gap-sm $gap-md;
+
+    @media (max-width: 600px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+
+    &--full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--p-text-muted-color);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--p-text-color);
+      line-height: 1.5;
+    }
+
+    textarea {
+      width: 100%;
+      resize: vertical;
+      min-height: 5rem;
+      margin-top: 0.25rem;
+    }
+  }
+
+  &__optional {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--p-text-muted-color);
+    font-size: 0.75rem;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  // ── Acción (OPEN / IN_PROGRESS) ────────────────────────────────────────────
+  &__action-hint {
+    font-size: 0.875rem;
+    color: var(--p-text-muted-color);
+    margin: 0 0 $gap-sm;
+    line-height: 1.5;
+  }
+
+  // ── Formulario de cierre (RESOLVED) ───────────────────────────────────────
+  &__resolve-form {
+    display: flex;
+    flex-direction: column;
+    gap: $gap-md;
+  }
+
+  &__resolve-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--p-surface-200);
+  }
+
+  // ── Panel de baja definitiva ───────────────────────────────────────────────
+  &__baja-panel {
+    border: 1px solid var(--p-red-300, #F07A7A) !important;
+    border-radius: $radius !important;
+    overflow: hidden;
+
+    // Sobreescribir header del p-panel para hacerlo rojo
+    :deep(.p-panel-header) {
+      background: var(--p-red-100, #FEE2E2) !important;
+      color: var(--p-red-800, #8E1010) !important;
+      font-weight: 700;
+      border-bottom: 1px solid var(--p-red-200, #F8A5A5);
+    }
+  }
+
+  &__baja-body {
+    display: flex;
+    flex-direction: column;
+    gap: $gap-md;
+    padding: 0.25rem 0;
+  }
+
+  &__baja-warn {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.625rem 0.875rem;
+    background: #FFF5F5;
+    border: 1px solid #FEE2E2;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    color: #8E1010;
+    margin: 0;
+    line-height: 1.5;
+
+    i {
+      color: #D92D2D;
+      font-size: 1rem;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+  }
+
+  &__role-msg {
+    width: 100%;
+  }
+
+  // ── Zona de carga PDF ──────────────────────────────────────────────────────
+  &__pdf-zone {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    border: 2px dashed var(--p-red-300, #F07A7A);
+    border-radius: 0.5rem;
+    padding: 0.875rem 1rem;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    color: var(--p-red-700, #B71A1A);
+    font-size: 0.875rem;
+
+    &:hover { background: #FFF5F5; border-color: var(--p-red-500, #E65151); }
+
+    i { font-size: 1.4rem; }
+
+    &--disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      &:hover { background: transparent; }
+    }
+  }
+
+  &__file-input { display: none; }
+
+  &__pdf-selected {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: #FFF5F5;
+    border: 1px solid var(--p-red-200, #F8A5A5);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--p-red-800, #8E1010);
+
+    i { color: #D92D2D; font-size: 1.2rem; }
+    span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  }
+
+  // ── Resolución (CLOSED) ───────────────────────────────────────────────────
+  &__doc-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--p-primary-600);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.15s;
+
+    &:hover { color: var(--p-primary-800); text-decoration: underline; }
+    i { font-size: 1rem; }
+  }
+
+  // ── Diálogo de cambio de estado ───────────────────────────────────────────
+  &__status-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: $gap-md;
+  }
+
+  &__status-dialog-hint {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--p-text-color);
+    line-height: 1.55;
+    padding: 0.625rem 0.875rem;
+    background: var(--p-primary-50);
+    border-radius: 0.5rem;
+    border-left: 3px solid var(--p-primary-400);
+  }
+}

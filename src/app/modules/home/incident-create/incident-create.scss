@@ -1,0 +1,89 @@
+.inc-create {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+
+  &__section { padding: 0.25rem 0 0.5rem; }
+
+  &__section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--p-text-muted-color);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 0 0 1rem;
+    i { color: var(--p-primary-600); }
+  }
+
+  // Label flotante manual (sin p-floatlabel para evitar solapamientos)
+  &__label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--p-text-muted-color);
+    margin-bottom: 0.35rem;
+  }
+
+  &__optional {
+    font-weight: 400;
+    font-style: italic;
+    color: var(--p-text-muted-color);
+    font-size: 0.78rem;
+  }
+
+  // Bien preseleccionado (solo lectura)
+  &__asset-fixed {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    padding: 0.625rem 0.875rem;
+    background: var(--p-primary-50);
+    border: 1px solid var(--p-primary-200);
+    border-radius: 0.5rem;
+  }
+
+  &__asset-inv {
+    font-weight: 700;
+    color: var(--p-primary-700);
+    font-size: 0.875rem;
+  }
+
+  &__asset-desc {
+    font-size: 0.875rem;
+    color: var(--p-text-color);
+  }
+
+  &__asset-loc {
+    font-size: 0.8rem;
+    color: var(--p-text-muted-color);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-left: auto;
+    i { font-size: 0.75rem; }
+  }
+
+  // Formulario
+  &__form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 1.25rem;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+
+    &--full { grid-column: 1 / -1; }
+  }
+
+  &__textarea {
+    width: 100%;
+    resize: vertical;
+    min-height: 4.5rem;
+  }
+}

@@ -67,6 +67,9 @@ export interface Brand {
 
 @Injectable({ providedIn: 'root' })
 export class AssetService {
+  getById(fixedId: number) {
+    throw new Error('Method not implemented.');
+  }
 
   private readonly base = environment.apiUrl;
 

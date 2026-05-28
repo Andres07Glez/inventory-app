@@ -1,0 +1,415 @@
+<p-toast />
+
+<!-- ── Skeleton ────────────────────────────────────────────────────────────── -->
+@if (loading()) {
+  <div class="inc-det__skeleton">
+    <p-skeleton height="2rem" width="14rem" />
+    <p-skeleton height="1rem" width="8rem" />
+    <div class="inc-det__skeleton-grid">
+      <p-skeleton height="12rem" />
+      <p-skeleton height="12rem" />
+    </div>
+  </div>
+}
+
+<!-- ── Contenido ───────────────────────────────────────────────────────────── -->
+@if (!loading() && incident()) {
+  @let inc = incident()!;
+
+  <div class="inc-det">
+
+    <!-- ── Barra superior ─────────────────────────────────────────────── -->
+    <div class="inc-det__topbar">
+      <p-button icon="pi pi-arrow-left" [text]="true" severity="secondary"
+        label="Incidencias" (onClick)="goBack()" />
+
+      <div class="inc-det__topbar-center">
+        <span class="inc-det__folio">{{ inc.folio }}</span>
+        <p-tag [value]="statusLabel(inc.status)" [severity]="statusSeverity(inc.status)" />
+        @if (inc.closureType === 'DECOMMISSION') {
+          <p-tag value="BAJA DEFINITIVA" severity="danger" styleClass="inc-det__baja-tag" />
+        }
+      </div>
+
+      <p-button icon="pi pi-box" [text]="true" severity="secondary"
+        label="Ver bien" (onClick)="goToAsset()" />
+    </div>
+
+    <!-- ── Grid principal ─────────────────────────────────────────────── -->
+    <div class="inc-det__grid">
+
+      <!-- ── Columna izquierda: info + acciones ──────────────────────── -->
+      <div class="inc-det__main">
+
+        <!-- Bien vinculado -->
+        <div class="inc-det__card">
+          <h4 class="inc-det__card-title">
+            <i class="pi pi-box"></i> Bien vinculado
+          </h4>
+          <div class="inc-det__asset-row">
+            <span class="inc-det__asset-inv">{{ inc.assetInventoryNumber }}</span>
+            <span class="inc-det__asset-desc">{{ inc.assetDescription }}</span>
+          </div>
+        </div>
+
+        <!-- Datos generales -->
+        <div class="inc-det__card">
+          <h4 class="inc-det__card-title">
+            <i class="pi pi-file-edit"></i> Detalle
+          </h4>
+          <div class="inc-det__detail-grid">
+            <div class="inc-det__field">
+              <label>Descripción</label>
+              <p>{{ inc.description }}</p>
+            </div>
+            <div class="inc-det__field">
+              <label>Condición al reportar</label>
+              <p-tag [value]="conditionLabel(inc.conditionAtIncident)"
+                     [severity]="conditionSeverity(inc.conditionAtIncident)" />
+            </div>
+            <div class="inc-det__field">
+              <label>Tipo de reparación</label>
+              <p>{{ repairLabel(inc.repairType) }}</p>
+            </div>
+            <div class="inc-det__field">
+              <label>Registrada por</label>
+              <p>{{ inc.createdByName }}</p>
+            </div>
+            <div class="inc-det__field">
+              <label>Fecha de registro</label>
+              <p>{{ formatDate(inc.createdAt) }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════════════
+          ACCIONES SEGÚN ESTADO
+          ════════════════════════════════════════════════════════════ -->
+
+        <!-- OPEN: Iniciar atención -->
+        @if (inc.status === 'OPEN') {
+          <div class="inc-det__card inc-det__card--action">
+            <h4 class="inc-det__card-title">
+              <i class="pi pi-play-circle"></i> Siguiente paso
+            </h4>
+            <p class="inc-det__action-hint">
+              Inicia la atención de esta incidencia para registrar quién se hace cargo.
+            </p>
+            <p-button
+              label="Iniciar atención"
+              icon="pi pi-play"
+              (onClick)="openStatusDialog()"
+              [loading]="saving()"
+            />
+          </div>
+        }
+
+        <!-- IN_PROGRESS: Marcar como resuelta -->
+        @if (inc.status === 'IN_PROGRESS') {
+          <div class="inc-det__card inc-det__card--action">
+            <h4 class="inc-det__card-title">
+              <i class="pi pi-check-circle"></i> Marcar como resuelta
+            </h4>
+            <p class="inc-det__action-hint">
+              Indica que la incidencia fue atendida. Podrás cerrarla formalmente en el siguiente paso.
+            </p>
+            <p-button
+              label="Marcar como resuelta"
+              icon="pi pi-check"
+              severity="success"
+              (onClick)="openStatusDialog()"
+              [loading]="saving()"
+            />
+          </div>
+        }
+
+        <!-- ─────────────────────────────────────────────────────────────
+             RESOLVED: Panel de cierre (STANDARD o DECOMMISSION)
+             ───────────────────────────────────────────────────────────── -->
+        @if (inc.status === 'RESOLVED') {
+          <div class="inc-det__card inc-det__card--resolve">
+            <h4 class="inc-det__card-title">
+              <i class="pi pi-lock"></i> Cerrar incidencia
+            </h4>
+
+            <div class="inc-det__resolve-form">
+
+              <!-- Tipo de cierre -->
+              <div class="inc-det__field">
+                <label for="closureType">Tipo de cierre *</label>
+                <p-select
+                  inputId="closureType"
+                  [options]="closureOptions"
+                  [ngModel]="selectedClosureType()"
+                  (ngModelChange)="selectedClosureType.set($event)"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Selecciona cómo se cierra esta incidencia"
+                  styleClass="w-full"
+                  [disabled]="saving()"
+                />
+              </div>
+
+              <!-- Notas de resolución -->
+              <div class="inc-det__field">
+                <label for="resNotes">Notas de resolución *</label>
+                <textarea
+                  pTextarea
+                  id="resNotes"
+                  [ngModel]="resolutionNotes()"
+                  (ngModelChange)="resolutionNotes.set($event)"
+                  rows="3"
+                  class="w-full"
+                  placeholder="Describe cómo se resolvió la incidencia…"
+                  [disabled]="saving()"
+                ></textarea>
+              </div>
+
+              <!-- Tipo de reparación -->
+              <div class="inc-det__field">
+                <label for="repairType">Tipo de reparación</label>
+                <p-select
+                  inputId="repairType"
+                  [options]="repairTypeOptions"
+                  [ngModel]="selectedRepairType()"
+                  (ngModelChange)="selectedRepairType.set($event)"
+                  optionLabel="label"
+                  optionValue="value"
+                  [showClear]="true"
+                  placeholder="(Opcional)"
+                  styleClass="w-full"
+                  [disabled]="saving()"
+                />
+              </div>
+
+              <!-- ─── Panel condicional: DECOMMISSION ─────────────────── -->
+              @if (selectedClosureType() === 'DECOMMISSION') {
+                <p-panel
+                  header="Baja Definitiva del Bien"
+                  styleClass="inc-det__baja-panel"
+                  [toggleable]="false"
+                >
+                  <div class="inc-det__baja-body">
+
+                    <p class="inc-det__baja-warn">
+                      <i class="pi pi-exclamation-triangle"></i>
+                      Esta acción es <strong>irreversible</strong>. El bien quedará marcado
+                      como <strong>Dado de Baja</strong> y no podrá reasignarse.
+                    </p>
+
+                    <!-- Dictamen técnico -->
+                    <div class="inc-det__field">
+                      <label for="justification">Dictamen técnico *</label>
+                      <textarea
+                        pTextarea
+                        id="justification"
+                        [ngModel]="justification()"
+                        (ngModelChange)="justification.set($event)"
+                        rows="4"
+                        class="w-full"
+                        placeholder="Describe el daño irreparable del bien y la razón técnica de la baja…"
+                        [disabled]="saving() || !isAdmin()"
+                      ></textarea>
+                    </div>
+
+                    <!-- Acta administrativa en PDF -->
+                    <div class="inc-det__field">
+                      <label>Acta administrativa (PDF) *</label>
+                      @if (!pdfFileName()) {
+                        <label class="inc-det__pdf-zone" [class.inc-det__pdf-zone--disabled]="!isAdmin()">
+                          <input type="file" accept=".pdf"
+                            class="inc-det__file-input"
+                            (change)="onPdfSelected($event)"
+                            [disabled]="saving() || !isAdmin()">
+                          <i class="pi pi-file-pdf"></i>
+                          <span>Haz clic para seleccionar el acta en PDF</span>
+                        </label>
+                      } @else {
+                        <div class="inc-det__pdf-selected">
+                          <i class="pi pi-file-pdf"></i>
+                          <span>{{ pdfFileName() }}</span>
+                          @if (!saving()) {
+                            <p-button icon="pi pi-times" [text]="true" severity="danger"
+                              size="small" (onClick)="removePdf()" />
+                          }
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Mensaje para OPERADOR -->
+                    @if (!isAdmin()) {
+                      <p-message
+                        severity="warn"
+                        text="Solo un administrador (ADMIN) puede confirmar la baja definitiva de un bien."
+                        styleClass="inc-det__role-msg"
+                      />
+                    }
+
+                  </div>
+                </p-panel>
+              }
+
+              <!-- ─── Botones de acción ────────────────────────────────── -->
+              <div class="inc-det__resolve-actions">
+                @if (selectedClosureType() === 'STANDARD') {
+                  <p-button
+                    label="Cerrar incidencia"
+                    icon="pi pi-lock"
+                    [loading]="saving()"
+                    [disabled]="!closureFormValid() || saving()"
+                    (onClick)="closeStandard()"
+                  />
+                }
+                @if (selectedClosureType() === 'DECOMMISSION') {
+                  @if (isAdmin()) {
+                    <p-button
+                      label="Confirmar Baja Definitiva"
+                      icon="pi pi-ban"
+                      severity="danger"
+                      [loading]="saving()"
+                      [disabled]="!closureFormValid() || saving()"
+                      (onClick)="confirmDecommission()"
+                    />
+                  }
+                }
+              </div>
+
+            </div>
+          </div>
+        }
+
+        <!-- Resolución (cuando ya está CLOSED) -->
+        @if (inc.status === 'CLOSED' && inc.resolutionNotes) {
+          <div class="inc-det__card">
+            <h4 class="inc-det__card-title">
+              <i class="pi pi-check-square"></i> Resolución
+            </h4>
+            <div class="inc-det__detail-grid">
+              <div class="inc-det__field">
+                <label>Notas</label>
+                <p>{{ inc.resolutionNotes }}</p>
+              </div>
+              <div class="inc-det__field">
+                <label>Cerrada por</label>
+                <p>{{ inc.resolvedByName ?? '—' }}</p>
+              </div>
+              <div class="inc-det__field">
+                <label>Fecha de cierre</label>
+                <p>{{ formatDate(inc.resolvedAt) }}</p>
+              </div>
+              @if (inc.closureType) {
+                <div class="inc-det__field">
+                  <label>Tipo de cierre</label>
+                  <p-tag
+                    [value]="inc.closureType === 'STANDARD' ? 'Resolución normal' : 'Baja definitiva'"
+                    [severity]="inc.closureType === 'STANDARD' ? 'secondary' : 'danger'"
+                  />
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Detalles de baja definitiva -->
+        @if (inc.closureType === 'DECOMMISSION') {
+          <div class="inc-det__card inc-det__card--baja">
+            <h4 class="inc-det__card-title">
+              <i class="pi pi-ban"></i> Detalle de Baja Definitiva
+            </h4>
+            <div class="inc-det__detail-grid">
+              <div class="inc-det__field inc-det__field--full">
+                <label>Dictamen técnico</label>
+                <p>{{ inc.decommissionJustification }}</p>
+              </div>
+              @if (inc.decommissionDocumentUrl) {
+                <div class="inc-det__field">
+                  <label>Acta administrativa</label>
+                  <a [href]="inc.decommissionDocumentUrl" target="_blank"
+                     class="inc-det__doc-link">
+                    <i class="pi pi-file-pdf"></i> Descargar acta PDF
+                  </a>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+      </div>
+
+      <!-- ── Columna derecha: imágenes de evidencia ──────────────────── -->
+      <div class="inc-det__side">
+        <div class="inc-det__card">
+          <h4 class="inc-det__card-title">
+            <i class="pi pi-images"></i> Evidencias fotográficas
+            <span class="inc-det__img-count">{{ inc.images.length }} / 8</span>
+          </h4>
+          <app-incident-image-upload
+            [incidentId]="inc.id"
+            [readOnly]="inc.status === 'CLOSED'"
+          />
+        </div>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- ── Diálogo de cambio de estado (OPEN→IN_PROGRESS / IN_PROGRESS→RESOLVED) ─ -->
+<p-dialog
+  [header]="incident()?.status === 'OPEN' ? 'Iniciar atención' : 'Marcar como resuelta'"
+  [visible]="showStatusDialog()"
+  (visibleChange)="showStatusDialog.set($event)"
+  [modal]="true" [draggable]="false" [resizable]="false"
+  [closable]="!saving()"
+  [style]="{ width: '34rem' }"
+  appendTo="body"
+>
+  <div class="inc-det__status-dialog">
+    <p class="inc-det__status-dialog-hint">
+      @if (incident()?.status === 'OPEN') {
+        La incidencia pasará a <strong>En Proceso</strong>.
+        Opcionalmente puedes agregar notas y definir el tipo de reparación.
+      } @else {
+        La incidencia pasará a <strong>Resuelta</strong>.
+        Describe el estado de la resolución antes de cerrarla formalmente.
+      }
+    </p>
+
+    <div class="inc-det__field">
+      <label for="dialogNotes">Notas
+        @if (incident()?.status === 'IN_PROGRESS') { <span class="inc-det__optional"> (recomendado)</span> }
+      </label>
+      <textarea
+        pTextarea id="dialogNotes"
+        [ngModel]="dialogNotes()" (ngModelChange)="dialogNotes.set($event)"
+        rows="3" class="w-full"
+        placeholder="Notas adicionales…"
+        [disabled]="saving()"
+      ></textarea>
+    </div>
+
+    <div class="inc-det__field">
+      <label for="dialogRepair">Tipo de reparación</label>
+      <p-select
+        appendTo="body"
+        inputId="dialogRepair"
+        [options]="repairTypeOptions"
+        [ngModel]="dialogRepairType()" (ngModelChange)="dialogRepairType.set($event)"
+        optionLabel="label" optionValue="value"
+        [showClear]="true" placeholder="(Opcional)"
+        styleClass="w-full" [disabled]="saving()"
+      />
+    </div>
+  </div>
+
+  <ng-template #footer>
+    <p-button label="Cancelar" [text]="true" severity="secondary"
+      (onClick)="showStatusDialog.set(false)" [disabled]="saving()" />
+    <p-button
+      [label]="incident()?.status === 'OPEN' ? 'Iniciar atención' : 'Marcar como resuelta'"
+      icon="pi pi-check"
+      [loading]="saving()"
+      (onClick)="confirmStatusUpdate()"
+    />
+  </ng-template>
+</p-dialog>

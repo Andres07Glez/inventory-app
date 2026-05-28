@@ -1,0 +1,129 @@
+<p-dialog
+  header="Registrar nueva incidencia"
+  [visible]="visible()"
+  (visibleChange)="visibleChange.emit($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="!saving()"
+  styleClass="inc-create-dialog"
+  [style]="{ width: '42rem' }"
+  appendTo="body"
+>
+  <div class="inc-create">
+
+    <!-- ── Paso 1: Selección del bien ──────────────────────────────────── -->
+    <div class="inc-create__section">
+      <h4 class="inc-create__section-title">
+        <i class="pi pi-box"></i> Bien afectado
+      </h4>
+
+      @if (preselectedAsset()) {
+        <!-- Bien fijo cuando se abre desde el tab del detalle -->
+        <div class="inc-create__asset-fixed">
+          <span class="inc-create__asset-inv">{{ preselectedAsset()!.inventoryNumber }}</span>
+          <span class="inc-create__asset-desc">{{ preselectedAsset()!.description }}</span>
+          <span class="inc-create__asset-loc">
+            <i class="pi pi-map-marker"></i> {{ preselectedAsset()!.locationName }}
+          </span>
+        </div>
+      } @else {
+        <!-- Búsqueda libre -->
+        <div class="inc-create__field">
+          <label class="inc-create__label" for="assetSearch">Buscar bien *</label>
+          <app-asset-search-input
+            [value]="selectedAsset()"
+            (assetSelected)="selectedAsset.set($event)"
+            (assetCleared)="selectedAsset.set(null)"
+          />
+        </div>
+      }
+    </div>
+
+    <p-divider />
+
+    <!-- ── Paso 2: Datos de la incidencia ──────────────────────────────── -->
+    <div class="inc-create__section">
+      <h4 class="inc-create__section-title">
+        <i class="pi pi-exclamation-triangle"></i> Detalle de la incidencia
+      </h4>
+
+      <div class="inc-create__form">
+
+        <!-- Descripción — ocupa todo el ancho -->
+        <div class="inc-create__field inc-create__field--full">
+          <label class="inc-create__label" for="description">
+            Descripción de la incidencia *
+          </label>
+          <textarea
+            pTextarea
+            id="description"
+            [(ngModel)]="description"
+            rows="3"
+            class="inc-create__textarea"
+            placeholder="Describe brevemente qué ocurrió…"
+            [disabled]="saving()"
+          ></textarea>
+        </div>
+
+        <!-- Condición al reportar -->
+        <div class="inc-create__field">
+          <label class="inc-create__label" for="condition">
+            Condición al reportar *
+          </label>
+          <p-select
+            appendTo="body"
+            inputId="condition"
+            [options]="conditionOptions"
+            [(ngModel)]="selectedCondition"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Selecciona condición"
+            [disabled]="saving()"
+            styleClass="w-full"
+          />
+        </div>
+
+        <!-- Tipo de reparación -->
+        <div class="inc-create__field">
+          <label class="inc-create__label" for="repairType">
+            Tipo de reparación <span class="inc-create__optional">(opcional)</span>
+          </label>
+          <p-select
+            appendTo="body"
+            inputId="repairType"
+            [options]="repairTypeOptions"
+            [(ngModel)]="selectedRepairType"
+            optionLabel="label"
+            optionValue="value"
+            [showClear]="true"
+            placeholder="Selecciona tipo"
+            [disabled]="saving()"
+            styleClass="w-full"
+          />
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Footer ─────────────────────────────────────────────────────────── -->
+  <ng-template #footer>
+    <p-button
+      label="Cancelar"
+      severity="secondary"
+      [text]="true"
+      (onClick)="close()"
+      [disabled]="saving()"
+    />
+    <p-button
+      label="Registrar incidencia"
+      icon="pi pi-check"
+      [loading]="saving()"
+      [disabled]="!isFormValid || saving()"
+      (onClick)="onSubmit()"
+    />
+  </ng-template>
+
+</p-dialog>
