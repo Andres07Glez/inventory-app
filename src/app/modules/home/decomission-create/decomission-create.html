@@ -1,0 +1,159 @@
+<p-toast />
+
+<div class="decomm-create">
+
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <div class="decomm-create__topbar">
+    <p-button icon="pi pi-arrow-left" [text]="true" severity="secondary"
+      label="Bajas" (onClick)="cancel()" />
+    <h2 class="decomm-create__title">
+      <i class="pi pi-ban"></i> Registrar baja de bien
+    </h2>
+  </div>
+
+  <div class="decomm-create__body">
+
+    <!-- ── Bien a dar de baja ─────────────────────────────────────────── -->
+    <div class="decomm-create__card">
+      <h4 class="decomm-create__section-title">
+        <i class="pi pi-box"></i> Bien a dar de baja
+      </h4>
+
+      <div class="decomm-create__field">
+        <label class="decomm-create__label">Buscar bien *</label>
+        <app-asset-search-input
+          [value]="selectedAsset()"
+          (assetSelected)="selectedAsset.set($event)"
+          (assetCleared)="selectedAsset.set(null)"
+        />
+        <small class="decomm-create__hint">
+          Solo se muestran bienes que no están dados de baja.
+        </small>
+      </div>
+
+      <!-- Incidencia vinculada (pre-rellenada si se llegó desde una incidencia) -->
+      @if (linkedIncidentId()) {
+        <p-message severity="info" styleClass="decomm-create__inc-msg">
+          <ng-template #messageicon><i class="pi pi-link"></i></ng-template>
+          Esta baja quedará vinculada a la incidencia ID {{ linkedIncidentId() }}.
+          <span class="decomm-create__inc-remove"
+            (click)="linkedIncidentId.set(null)">(Desvincular)</span>
+        </p-message>
+      }
+    </div>
+
+    <p-divider />
+
+    <!-- ── Datos de la baja ───────────────────────────────────────────── -->
+    <div class="decomm-create__card">
+      <h4 class="decomm-create__section-title">
+        <i class="pi pi-file-edit"></i> Datos de la baja
+      </h4>
+
+      <div class="decomm-create__form">
+
+        <!-- Justificación -->
+        <div class="decomm-create__field decomm-create__field--full">
+          <label class="decomm-create__label" for="justification">
+            Justificación / dictamen técnico *
+          </label>
+          <textarea
+            pTextarea
+            id="justification"
+            [ngModel]="justification()"
+            (ngModelChange)="justification.set($event)"
+            rows="4"
+            class="decomm-create__textarea"
+            placeholder="Describe el motivo técnico o administrativo de la baja…"
+            [disabled]="saving()"
+          ></textarea>
+        </div>
+
+        <!-- Fecha de baja -->
+        <div class="decomm-create__field">
+          <label class="decomm-create__label" for="decommDate">Fecha de baja *</label>
+          <p-datepicker
+            inputId="decommDate"
+            [ngModel]="decommissionDate()"
+            (ngModelChange)="decommissionDate.set($event)"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            [maxDate]="today" 
+            appendTo="body"
+            styleClass="w-full"
+            [disabled]="saving()"
+          />
+        </div>
+
+        <!-- Acta PDF (opcional) -->
+        <div class="decomm-create__field">
+          <label class="decomm-create__label">
+            Acta administrativa (PDF)
+            <span class="decomm-create__optional"> — opcional</span>
+          </label>
+
+          @if (!pdfFileName()) {
+            <label class="decomm-create__pdf-zone"
+              [class.decomm-create__pdf-zone--disabled]="saving()">
+              <input
+                type="file"
+                accept=".pdf"
+                class="decomm-create__file-input"
+                (change)="onPdfSelected($event)"
+                [disabled]="saving()"
+              />
+              <i class="pi pi-file-pdf"></i>
+              <span>Haz clic para adjuntar el acta en PDF</span>
+              <small>Máximo 20 MB</small>
+            </label>
+          } @else {
+            <div class="decomm-create__pdf-selected">
+              <i class="pi pi-file-pdf"></i>
+              <span>{{ pdfFileName() }}</span>
+              @if (!saving()) {
+                <p-button icon="pi pi-times" [text]="true" severity="danger"
+                  size="small" (onClick)="removePdf()" />
+              }
+            </div>
+          }
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Advertencia ────────────────────────────────────────────────── -->
+    <p-panel styleClass="decomm-create__warn-panel">
+      <ng-template #header>
+        <span class="decomm-create__warn-header">
+          <i class="pi pi-exclamation-triangle"></i>
+          Confirmación requerida
+        </span>
+      </ng-template>
+      <p class="decomm-create__warn-text">
+        Al registrar esta baja, el proceso quedará en estado
+        <strong>Pendiente de confirmación</strong>. Un administrador deberá
+        confirmarla para que el bien pase a <strong>DADO DE BAJA</strong>
+        de forma definitiva.
+      </p>
+    </p-panel>
+
+    <!-- ── Acciones ────────────────────────────────────────────────────── -->
+    <div class="decomm-create__actions">
+      <p-button
+        label="Cancelar"
+        severity="secondary"
+        [text]="true"
+        (onClick)="cancel()"
+        [disabled]="saving()"
+      />
+      <p-button
+        label="Registrar baja"
+        icon="pi pi-check"
+        [loading]="saving()"
+        [disabled]="!isFormValid || saving()"
+        (onClick)="onSubmit()"
+      />
+    </div>
+
+  </div>
+</div>

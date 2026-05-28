@@ -1,0 +1,166 @@
+<p-toast />
+
+<!-- ── Skeleton ─────────────────────────────────────────────────────────────── -->
+@if (loading()) {
+  <div class="decomm-det__skeleton">
+    <p-skeleton height="2rem" width="16rem" />
+    <p-skeleton height="1rem" width="8rem" />
+    <div class="decomm-det__skeleton-grid">
+      <p-skeleton height="14rem" />
+      <p-skeleton height="14rem" />
+    </div>
+  </div>
+}
+
+<!-- ── Contenido ────────────────────────────────────────────────────────────── -->
+@if (!loading() && decommission()) {
+  @let d = decommission()!;
+
+  <div class="decomm-det">
+
+    <!-- ── Barra superior ──────────────────────────────────────────────── -->
+    <div class="decomm-det__topbar">
+      <p-button icon="pi pi-arrow-left" [text]="true" severity="secondary"
+        label="Bajas" (onClick)="goBack()" />
+
+      <div class="decomm-det__topbar-center">
+        <span class="decomm-det__id">BAJA-{{ d.id }}</span>
+        <p-tag [value]="statusLabel(d.status)" [severity]="statusSeverity(d.status)" />
+      </div>
+
+      <p-button icon="pi pi-box" [text]="true" severity="secondary"
+        label="Ver bien" (onClick)="goToAsset()" />
+    </div>
+
+    <!-- ── Grid ────────────────────────────────────────────────────────── -->
+    <div class="decomm-det__grid">
+
+      <!-- ── Columna principal ─────────────────────────────────────────── -->
+      <div class="decomm-det__main">
+
+        <!-- Bien dado de baja -->
+        <div class="decomm-det__card">
+          <h4 class="decomm-det__card-title">
+            <i class="pi pi-box"></i> Bien dado de baja
+          </h4>
+          <div class="decomm-det__asset-row">
+            <span class="decomm-det__asset-inv">{{ d.assetInventoryNumber }}</span>
+            <span class="decomm-det__asset-desc">{{ d.assetDescription }}</span>
+          </div>
+        </div>
+
+        <!-- Datos de la baja -->
+        <div class="decomm-det__card">
+          <h4 class="decomm-det__card-title">
+            <i class="pi pi-file-edit"></i> Datos de la baja
+          </h4>
+          <div class="decomm-det__detail-grid">
+
+            <div class="decomm-det__field inc-det__field--full">
+              <label>Justificación / dictamen técnico</label>
+              <p>{{ d.justification }}</p>
+            </div>
+
+            <div class="decomm-det__field">
+              <label>Fecha de baja</label>
+              <p>{{ formatDateOnly(d.decommissionDate) }}</p>
+            </div>
+
+            <div class="decomm-det__field">
+              <label>Registrada por</label>
+              <p>{{ d.createdByName }}</p>
+            </div>
+
+            <div class="decomm-det__field">
+              <label>Fecha de registro</label>
+              <p>{{ formatDate(d.createdAt) }}</p>
+            </div>
+
+            @if (d.confirmedByName) {
+              <div class="decomm-det__field">
+                <label>Confirmada por</label>
+                <p>{{ d.confirmedByName }}</p>
+              </div>
+              <div class="decomm-det__field">
+                <label>Fecha de confirmación</label>
+                <p>{{ formatDate(d.confirmedAt) }}</p>
+              </div>
+            }
+
+            <!-- Documento acta PDF (si existe) -->
+            @if (d.decommissionDocumentUrl) {
+              <div class="decomm-det__field decomm-det__field--full">
+                <label>Acta administrativa</label>
+                <a [href]="d.decommissionDocumentUrl" target="_blank"
+                   class="decomm-det__doc-link">
+                  <i class="pi pi-file-pdf"></i> Descargar acta PDF
+                </a>
+              </div>
+            }
+
+          </div>
+        </div>
+
+        <!-- Incidencia vinculada (OPCIONAL) -->
+        @if (d.incidentId) {
+          <div class="decomm-det__card decomm-det__card--linked">
+            <h4 class="decomm-det__card-title">
+              <i class="pi pi-link"></i> Incidencia de origen
+            </h4>
+            <div class="decomm-det__linked-row">
+              <span class="decomm-det__linked-folio">{{ d.incidentFolio }}</span>
+              <p-button
+                label="Ver incidencia"
+                icon="pi pi-arrow-right"
+                [text]="true"
+                size="small"
+                (onClick)="goToIncident()"
+              />
+            </div>
+          </div>
+        }
+
+        <!-- Confirmar baja — solo ADMIN, solo si PENDING -->
+        @if (d.status === 'PENDING') {
+          @if (isAdmin()) {
+            <div class="decomm-det__card decomm-det__card--confirm">
+              <h4 class="decomm-det__card-title">
+                <i class="pi pi-shield"></i> Confirmar baja definitiva
+              </h4>
+              <p class="decomm-det__confirm-hint">
+                Al confirmar, el bien quedará marcado como <strong>DADO DE BAJA</strong>
+                de forma irreversible y no podrá reasignarse ni utilizarse.
+              </p>
+              <div class="decomm-det__confirm-actions">
+                <p-button
+                  label="Confirmar baja definitiva"
+                  icon="pi pi-ban"
+                  severity="danger"
+                  [loading]="confirming()"
+                  (onClick)="confirmDecommission()"
+                />
+              </div>
+            </div>
+          } @else {
+            <p-message
+              severity="warn"
+              text="Esta baja está pendiente de confirmación por un administrador (ADMIN)."
+              styleClass="decomm-det__role-msg"
+            />
+          }
+        }
+
+        <!-- Baja ya confirmada -->
+        @if (d.status === 'CONFIRMED') {
+          <p-message severity="error" styleClass="decomm-det__confirmed-msg">
+            <ng-template #messageicon><i class="pi pi-ban"></i></ng-template>
+            El bien ha sido dado de baja definitivamente.
+            Esta operación es irreversible.
+          </p-message>
+        }
+
+      </div>
+
+    </div>
+  </div>
+}

@@ -38,6 +38,7 @@ const ALL_NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Incidencias',   icon: 'pi pi-exclamation-triangle', route: '/incidencias' },
       { label: 'Mantenimiento', icon: 'pi pi-wrench',               route: '/mantenimiento' },
+      { label: 'Dar de baja',   icon: 'pi pi-trash',                route: '/bajas' },
     ],
   },
   {

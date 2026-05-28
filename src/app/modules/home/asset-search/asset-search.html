@@ -16,7 +16,6 @@
     styleClass="asset-search__input"
     panelStyleClass="asset-search__panel"
   >
-    <!-- Item seleccionado -->
     <ng-template #selectedItem let-asset>
       <div class="asset-search__selected">
         <span class="asset-search__inv">{{ asset.inventoryNumber }}</span>
@@ -24,14 +23,13 @@
       </div>
     </ng-template>
 
-    <!-- Opciones del dropdown -->
     <ng-template #item let-asset>
       <div class="asset-search__option">
         <div class="asset-search__option-top">
           <span class="asset-search__option-inv">{{ asset.inventoryNumber }}</span>
           <p-tag
             [value]="getConditionLabel(asset.conditionStatus)"
-            [severity]="getSeverity(asset.conditionStatus)"
+            [severity]="getConditionSeverity(asset.conditionStatus)"
             styleClass="asset-search__cond-tag"
           />
         </div>
@@ -42,7 +40,6 @@
       </div>
     </ng-template>
 
-    <!-- Sin resultados -->
     <ng-template #empty>
       <div class="asset-search__empty">
         <i class="pi pi-search"></i>

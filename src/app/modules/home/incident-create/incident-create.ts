@@ -12,89 +12,125 @@ import { AssetSearchResult } from '../../../core/models/asset-assignment.model';
 import { ConditionStatus, IncidentDetail, RepairType } from '../../../core/models/incident.model';
 import { IncidentService } from '../../../core/services/incident/incident.service';
 import { MessageService } from 'primeng/api';
+import { MessageModule } from 'primeng/message';
+import { DatePickerModule } from 'primeng/datepicker';
 
  
 interface SelectOption<T> { label: string; value: T; }
- 
+
+/** Mínimo permitido por el backend: 2002-01-01 */
+const MIN_INCIDENT_DATE = new Date(2002, 0, 1);
+
 @Component({
   selector: 'app-incident-create',
   standalone: true,
   imports: [
-    FormsModule, DialogModule, ButtonModule, SelectModule,
-    TextareaModule, DividerModule, TagModule, FloatLabelModule,
+    FormsModule,
+    ButtonModule, DatePickerModule, DialogModule, DividerModule,
+    MessageModule, SelectModule, TagModule, TextareaModule,
     AssetSearchInput,
   ],
   templateUrl: './incident-create.html',
   styleUrl:    './incident-create.scss',
 })
 export class IncidentCreate implements OnChanges {
- 
-  /** Controla la visibilidad del diálogo desde el padre con [(visible)] */
-  readonly visible = input<boolean>(false);
- 
-  /**
-   * Bien pre-seleccionado. Útil cuando se abre desde el tab de incidencias
-   * del detalle de un bien específico.
-   */
+
+  readonly visible          = input<boolean>(false);
   readonly preselectedAsset = input<AssetSearchResult | null>(null);
- 
+
   readonly visibleChange = output<boolean>();
   readonly created       = output<IncidentDetail>();
- 
+
   private readonly incidentService = inject(IncidentService);
   private readonly messageService  = inject(MessageService);
- 
+
   // ── Estado del formulario ─────────────────────────────────────────────────
- 
-  selectedAsset         = signal<AssetSearchResult | null>(null);
-  description           = '';
-  selectedCondition     = signal<ConditionStatus | null>(null);
-  selectedRepairType    = signal<RepairType | null>(null);
-  saving                = signal(false);
- 
-  readonly conditionOptions: SelectOption<ConditionStatus>[] = [
-    { label: 'Bueno',   value: 'GOOD' },
-    { label: 'Regular', value: 'REGULAR' },
-    { label: 'Malo',    value: 'BAD' },
-  ];
- 
+
+  selectedAsset      = signal<AssetSearchResult | null>(null);
+  description        = '';
+  selectedRepairType = signal<RepairType | null>(null);
+
+  /**
+   * SP-16 v2: conditionAtIncident se carga automáticamente del bien seleccionado.
+   * Se muestra como campo de solo lectura, no como selector.
+   */
+  assetCondition = signal<ConditionStatus | null>(null);
+
+  /**
+   * SP-16 v2: fecha del evento. Inicia con hoy; el operador puede retroceder
+   * hasta el 2002-01-01.
+   */
+  incidentDate = signal<Date>(new Date());
+
+  saving = signal(false);
+
+  /** Límites del calendario */
+  readonly minDate = MIN_INCIDENT_DATE;
+  readonly maxDate = new Date();
+
   readonly repairTypeOptions: SelectOption<RepairType>[] = [
     { label: 'Reparación interna', value: 'INTERNAL' },
     { label: 'Reparación externa', value: 'EXTERNAL' },
   ];
- 
-  // Si se pre-selecciona un bien desde el padre, pre-cargarlo
+
+  readonly conditionLabel: Record<ConditionStatus, string> = {
+    GOOD:    'Bueno',
+    REGULAR: 'Regular',
+    BAD:     'Malo',
+  };
+
+  readonly conditionSeverity: Record<ConditionStatus, 'success' | 'warn' | 'danger'> = {
+    GOOD:    'success',
+    REGULAR: 'warn',
+    BAD:     'danger',
+  };
+
   ngOnChanges(): void {
     const pre = this.preselectedAsset();
-    if (pre) this.selectedAsset.set(pre);
+    if (pre) this.onAssetSelected(pre);
   }
- 
-  // ── Lógica ────────────────────────────────────────────────────────────────
- 
+
+  onAssetSelected(asset: AssetSearchResult): void {
+    this.selectedAsset.set(asset);
+    // Carga automática de la condición desde los datos del bien
+    this.assetCondition.set(asset.conditionStatus as ConditionStatus);
+  }
+
+  onAssetCleared(): void {
+    this.selectedAsset.set(null);
+    this.assetCondition.set(null);
+  }
+
   get isFormValid(): boolean {
     return (
       this.selectedAsset() !== null &&
       this.description.trim().length > 0 &&
-      this.selectedCondition() !== null
+      this.incidentDate() !== null
     );
   }
- 
+
   onSubmit(): void {
     if (!this.isFormValid) return;
- 
+
+    const date = this.incidentDate();
+    const isoDate = date
+      ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+      : null;
+
     this.saving.set(true);
     this.incidentService.create({
-      assetId:             this.selectedAsset()!.id,
-      description:         this.description.trim(),
-      conditionAtIncident: this.selectedCondition()!,
-      repairType:          this.selectedRepairType(),
+      assetId:      this.selectedAsset()!.id,
+      description:  this.description.trim(),
+      repairType:   this.selectedRepairType(),
+      incidentDate: isoDate,
+      conditionAtIncident: this.assetCondition() as ConditionStatus
     }).subscribe({
       next: incident => {
         this.saving.set(false);
         this.messageService.add({
           severity: 'success',
-          summary: 'Incidencia registrada',
-          detail: `Folio ${incident.folio} creado correctamente.`,
+          summary:  'Incidencia registrada',
+          detail:   `Folio ${incident.folio} creado correctamente.`,
           life: 4000,
         });
         this.created.emit(incident);
@@ -104,24 +140,26 @@ export class IncidentCreate implements OnChanges {
         this.saving.set(false);
         this.messageService.add({
           severity: 'error',
-          summary: 'Error al registrar',
-          detail: err.error?.message ?? 'No se pudo crear la incidencia.',
+          summary:  'Error al registrar',
+          detail:   err.error?.message ?? 'No se pudo crear la incidencia.',
           life: 5000,
         });
       },
     });
   }
- 
+
   close(): void {
     this.resetForm();
     this.visibleChange.emit(false);
   }
- 
+
   private resetForm(): void {
-    // Si había preselección, mantenerla; si no, limpiar todo
-    if (!this.preselectedAsset()) this.selectedAsset.set(null);
-    this.description        = '';
-    this.selectedCondition.set(null);
+    if (!this.preselectedAsset()) {
+      this.selectedAsset.set(null);
+      this.assetCondition.set(null);
+    }
+    this.description = '';
     this.selectedRepairType.set(null);
+    this.incidentDate.set(new Date());
   }
 }

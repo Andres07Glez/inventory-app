@@ -1,10 +1,9 @@
-.inc-list {
+.decomm-list {
   padding: 1.5rem 2rem;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
 
-  // ── Header ────────────────────────────────────────────────────────────
   &__header {
     display: flex;
     align-items: center;
@@ -27,7 +26,7 @@
     font-weight: 700;
     color: var(--p-primary-900);
     margin: 0;
-    i { color: var(--p-orange-500, #F97316); }
+    i { color: var(--p-red-600, #D92D2D); }
   }
 
   &__count {
@@ -38,37 +37,24 @@
     border-radius: 1rem;
   }
 
-  // ── Buscador ──────────────────────────────────────────────────────────
-  &__folio-search {
-    width: 16rem;
-  }
-
-  &__folio-input {
-    width: 100%;
-    padding-right: 2rem;
-  }
-
-  &__folio-clear {
-    cursor: pointer;
-    color: var(--p-text-muted-color);
-    transition: color 0.15s;
-    &:hover { color: var(--p-text-color); }
-  }
-
   &__filter { min-width: 12rem; }
 
-  // ── Tabla ─────────────────────────────────────────────────────────────
   &__row {
     cursor: pointer;
     &:hover td { background: var(--p-primary-50) !important; }
   }
 
-  &__folio {
-    font-family: 'Courier New', monospace;
-    font-size: 0.82rem;
+  &__id {
+    font-family: monospace;
+    font-size: 0.8rem;
     font-weight: 700;
+    color: var(--p-red-700, #B71A1A);
+  }
+
+  &__inv {
+    font-weight: 600;
     color: var(--p-primary-700);
-    letter-spacing: 0.02em;
+    font-size: 0.85rem;
   }
 
   &__desc {
@@ -80,9 +66,14 @@
     max-width: 22rem;
   }
 
-  &__repair, &__date, &__user {
+  &__date, &__user {
     font-size: 0.8rem;
     color: var(--p-text-muted-color);
+  }
+
+  &__link-icon {
+    color: var(--p-primary-600);
+    font-size: 0.9rem;
   }
 
   &__empty {

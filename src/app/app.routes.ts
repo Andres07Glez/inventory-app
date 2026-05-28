@@ -75,6 +75,24 @@ export const routes: Routes = [
         data: forRoles('ADMIN', 'OPERADOR'),
       },
       {
+        path: 'bajas',
+        loadComponent: () => import('./modules/home/decomission-list/decomission-list').then(m => m.DecommissionListComponent),
+        canActivate: [roleGuard],
+        data: forRoles('ADMIN', 'OPERADOR'),
+      },
+      {
+        path: 'bajas/nueva',
+        loadComponent: () => import('./modules/home/decomission-create/decomission-create').then(m => m.DecomissionCreateComponent),
+        canActivate: [roleGuard],
+        data: forRoles('ADMIN', 'OPERADOR'),
+      },
+      {
+        path: 'bajas/:id',
+        loadComponent: () => import('./modules/home/decomission-detail/decomission-detail').then(m => m.DecommissionDetailComponent),
+        canActivate: [roleGuard],
+        data: forRoles('ADMIN', 'OPERADOR'),
+      },
+      {
         path: 'catalogos',
         canActivate: [roleGuard],
         data: forRoles('ADMIN', 'OPERADOR'),

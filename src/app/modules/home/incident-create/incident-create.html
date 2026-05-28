@@ -12,14 +12,13 @@
 >
   <div class="inc-create">
 
-    <!-- ── Paso 1: Selección del bien ──────────────────────────────────── -->
+    <!-- ── Bien afectado ──────────────────────────────────────────────── -->
     <div class="inc-create__section">
       <h4 class="inc-create__section-title">
         <i class="pi pi-box"></i> Bien afectado
       </h4>
 
       @if (preselectedAsset()) {
-        <!-- Bien fijo cuando se abre desde el tab del detalle -->
         <div class="inc-create__asset-fixed">
           <span class="inc-create__asset-inv">{{ preselectedAsset()!.inventoryNumber }}</span>
           <span class="inc-create__asset-desc">{{ preselectedAsset()!.description }}</span>
@@ -28,13 +27,25 @@
           </span>
         </div>
       } @else {
-        <!-- Búsqueda libre -->
-        <div class="inc-create__field">
-          <label class="inc-create__label" for="assetSearch">Buscar bien *</label>
+        <div class="inc-create__field inc-create__field--full">
+          <label class="inc-create__label">Buscar bien *</label>
           <app-asset-search-input
             [value]="selectedAsset()"
-            (assetSelected)="selectedAsset.set($event)"
-            (assetCleared)="selectedAsset.set(null)"
+            (assetSelected)="onAssetSelected($event)"
+            (assetCleared)="onAssetCleared()"
+          />
+        </div>
+      }
+
+      <!-- Condición al reportar: solo lectura, cargada del bien -->
+      @if (assetCondition()) {
+        <div class="inc-create__condition-row">
+          <span class="inc-create__condition-label">
+            <i class="pi pi-info-circle"></i> Condición actual del bien:
+          </span>
+          <p-tag
+            [value]="conditionLabel[assetCondition()!]"
+            [severity]="conditionSeverity[assetCondition()!]"
           />
         </div>
       }
@@ -42,7 +53,7 @@
 
     <p-divider />
 
-    <!-- ── Paso 2: Datos de la incidencia ──────────────────────────────── -->
+    <!-- ── Detalle de la incidencia ───────────────────────────────────── -->
     <div class="inc-create__section">
       <h4 class="inc-create__section-title">
         <i class="pi pi-exclamation-triangle"></i> Detalle de la incidencia
@@ -50,7 +61,7 @@
 
       <div class="inc-create__form">
 
-        <!-- Descripción — ocupa todo el ancho -->
+        <!-- Descripción -->
         <div class="inc-create__field inc-create__field--full">
           <label class="inc-create__label" for="description">
             Descripción de la incidencia *
@@ -66,28 +77,33 @@
           ></textarea>
         </div>
 
-        <!-- Condición al reportar -->
+        <!-- Fecha del evento -->
         <div class="inc-create__field">
-          <label class="inc-create__label" for="condition">
-            Condición al reportar *
+          <label class="inc-create__label" for="incidentDate">
+            Fecha de la incidencia *
           </label>
-          <p-select
+          <p-datepicker
+            inputId="incidentDate"
+            [ngModel]="incidentDate()"
+            (ngModelChange)="incidentDate.set($event)"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            [minDate]="minDate"
+            [maxDate]="maxDate"
             appendTo="body"
-            inputId="condition"
-            [options]="conditionOptions"
-            [(ngModel)]="selectedCondition"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Selecciona condición"
-            [disabled]="saving()"
             styleClass="w-full"
+            [disabled]="saving()"
           />
+          <small class="inc-create__hint">
+            Puedes seleccionar fechas a partir del año 2002.
+          </small>
         </div>
 
         <!-- Tipo de reparación -->
         <div class="inc-create__field">
           <label class="inc-create__label" for="repairType">
-            Tipo de reparación <span class="inc-create__optional">(opcional)</span>
+            Tipo de reparación
+            <span class="inc-create__optional">(opcional)</span>
           </label>
           <p-select
             appendTo="body"
@@ -108,7 +124,6 @@
 
   </div>
 
-  <!-- ── Footer ─────────────────────────────────────────────────────────── -->
   <ng-template #footer>
     <p-button
       label="Cancelar"
