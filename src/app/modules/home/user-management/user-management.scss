@@ -333,3 +333,54 @@
     background-color: var(--color-primary-light) !important;
   }
 }
+// ── Rol editable (dentro del detail modal) ────────────────────────────────────
+.um-detail {
+  &__role-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__role-select {
+    width: 100% !important;
+  }
+
+  &__role-confirm {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px;
+    background: var(--surface-ground);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--border-radius-sm);
+    animation: fadeIn 0.15s ease;
+  }
+
+  &__role-confirm-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  &__role-confirm-text {
+    font-size: 0.8125rem;
+    color: var(--text-color-secondary);
+    flex: 1;
+  }
+
+  &__role-warn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--color-warning-dark);
+
+    i { font-size: 0.85rem; }
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}

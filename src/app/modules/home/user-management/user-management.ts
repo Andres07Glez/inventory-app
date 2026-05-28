@@ -55,7 +55,7 @@ const ROLE_FILTER_OPTIONS = [
 ];
 
 const STATUS_FILTER_OPTIONS = [
-  { label: 'Todos',    value: null  as boolean | null },
+  { label: 'Todos los estados',    value: null  as boolean | null },
   { label: 'Activos',  value: true  as boolean | null },
   { label: 'Inactivos',value: false as boolean | null },
 ];
@@ -97,13 +97,14 @@ export class UserManagement implements OnInit {
   // ── Diálogos ──────────────────────────────────────────────────────────────
   readonly showDetailDialog = signal(false);
   readonly showCreateDialog = signal(false);
-  readonly showRoleDialog   = signal(false);
   readonly saving           = signal(false);
   readonly selectedUser     = signal<UserSummary | null>(null);
 
   // ── Formularios ───────────────────────────────────────────────────────────
   readonly createForm = signal<CreateUserRequest>({ ...EMPTY_FORM });
-  readonly newRole    = signal<UserRole>('OPERADOR');
+  // ── Edición de rol inline (dentro del detail modal) ──────────────────────
+  readonly detailRole  = signal<UserRole>('OPERADOR');
+  readonly pendingRole = signal<UserRole | null>(null);
 
   readonly createFormValid = computed(() => {
     const f = this.createForm();
@@ -190,7 +191,43 @@ export class UserManagement implements OnInit {
   // ── Detalle ───────────────────────────────────────────────────────────────
   openDetailDialog(user: UserSummary): void {
     this.selectedUser.set(user);
+    this.detailRole.set(user.role);
+    this.pendingRole.set(null);
     this.showDetailDialog.set(true);
+  }
+  onDetailRoleChange(newRole: UserRole): void {
+    const current = this.selectedUser()?.role;
+    // Si vuelve al valor original, limpia la confirmación sin guardar
+    this.pendingRole.set(newRole !== current ? newRole : null);
+  }
+  confirmRoleChange(): void {
+    const user    = this.selectedUser();
+    const newRole = this.pendingRole();
+    if (!user || !newRole) return;
+
+    this.saving.set(true);
+    this.service.updateRole(user.id, { role: newRole }).subscribe({
+      next: updated => {
+        this.saving.set(false);
+        this.pendingRole.set(null);
+        this.detailRole.set(updated.role);
+        this.syncUser(updated);
+        this.messages.add({ severity: 'success', summary: 'Rol actualizado',
+          detail: `${user.fullName} ahora es ${ROLE_LABELS[updated.role]}.` });
+      },
+      error: err => {
+        this.saving.set(false);
+        this.pendingRole.set(null);
+        this.detailRole.set(user.role);          // Revert visual
+        this.messages.add({ severity: 'error', summary: 'Error',
+          detail: err.error?.message ?? 'No se pudo cambiar el rol.' });
+      },
+    });
+  }
+
+  cancelRoleChange(): void {
+    this.detailRole.set(this.selectedUser()!.role); // Revert select
+    this.pendingRole.set(null);
   }
 
   // Actualiza tanto la lista como el usuario seleccionado (evita datos stale en el modal)
@@ -233,31 +270,6 @@ export class UserManagement implements OnInit {
   }
 
   // ── Cambiar rol ───────────────────────────────────────────────────────────
-  openRoleDialog(user: UserSummary): void {
-    this.selectedUser.set(user);
-    this.newRole.set(user.role);
-    this.showRoleDialog.set(true);
-  }
-
-  saveRole(): void {
-    const user = this.selectedUser();
-    if (!user) return;
-    this.saving.set(true);
-    this.service.updateRole(user.id, { role: this.newRole() }).subscribe({
-      next: updated => {
-        this.saving.set(false);
-        this.showRoleDialog.set(false);
-        this.syncUser(updated);
-        this.messages.add({ severity: 'success', summary: 'Rol actualizado',
-          detail: `${user.fullName} ahora es ${ROLE_LABELS[updated.role]}.` });
-      },
-      error: err => {
-        this.saving.set(false);
-        this.messages.add({ severity: 'error', summary: 'Error',
-          detail: err.error?.message ?? 'No se pudo cambiar el rol.' });
-      },
-    });
-  }
 
   // ── Toggle estado ─────────────────────────────────────────────────────────
   confirmToggleStatus(user: UserSummary, event: Event): void {

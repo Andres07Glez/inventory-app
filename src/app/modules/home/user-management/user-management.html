@@ -132,6 +132,7 @@
   @if (selectedUser(); as user) {
     <div class="um-detail">
 
+      <!-- Header: avatar + nombre + tags reactivos al select -->
       <div class="um-detail__header">
         <div class="um-avatar um-avatar--xl" [class.um-avatar--inactive]="!user.isActive">
           {{ getInitial(user.fullName) }}
@@ -140,7 +141,8 @@
           <h3 class="um-detail__name">{{ user.fullName }}</h3>
           <span class="um-detail__username">&#64;{{ user.username }}</span>
           <div class="um-detail__tags">
-            <p-tag [value]="getRoleLabel(user.role)" [severity]="getRoleSeverity(user.role)" />
+            <!-- Usa detailRole() para que el tag cambie en tiempo real -->
+            <p-tag [value]="getRoleLabel(detailRole())" [severity]="getRoleSeverity(detailRole())" />
             <p-tag
               [value]="user.isActive ? 'Activo' : 'Inactivo'"
               [severity]="user.isActive ? 'success' : 'danger'"
@@ -149,6 +151,7 @@
         </div>
       </div>
 
+      <!-- Meta: campos de solo lectura -->
       <div class="um-detail__meta">
         <div class="um-detail__meta-item">
           <span class="um-detail__meta-label">Correo</span>
@@ -174,18 +177,53 @@
         </div>
       </div>
 
+      <!-- Rol editable inline -->
+      <div class="um-detail__role-field">
+        <span class="um-detail__meta-label">Rol</span>
+        <p-select
+          [options]="roleOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="detailRole()"
+          (onChange)="onDetailRoleChange($event.value)"
+          [disabled]="saving()"
+          appendTo="body"
+          styleClass="um-detail__role-select"
+        />
+
+        @if (pendingRole()) {
+          <div class="um-detail__role-confirm">
+            @if (pendingRole() === 'ADMIN') {
+              <span class="um-detail__role-warn">
+                <i class="pi pi-exclamation-triangle"></i>
+                ADMIN tiene acceso total, incluyendo gestión de usuarios.
+              </span>
+            }
+            <div class="um-detail__role-confirm-actions">
+              <span class="um-detail__role-confirm-text">¿Confirmar cambio de rol?</span>
+              <p-button
+                label="Sí, cambiar"
+                size="small"
+                [loading]="saving()"
+                (onClick)="confirmRoleChange()"
+              />
+              <p-button
+                label="Cancelar"
+                size="small"
+                severity="secondary"
+                [text]="true"
+                (onClick)="cancelRoleChange()"
+              />
+            </div>
+          </div>
+        }
+      </div>
+
     </div>
   }
 
   <ng-template pTemplate="footer">
     <div class="um-detail__actions">
-      <p-button
-        icon="pi pi-shield"
-        label="Cambiar rol"
-        [text]="true"
-        severity="secondary"
-        (onClick)="openRoleDialog(selectedUser()!)"
-      />
       <p-button
         icon="pi pi-refresh"
         label="Restablecer contraseña"
@@ -199,6 +237,12 @@
         [text]="true"
         [severity]="selectedUser()?.isActive ? 'danger' : 'success'"
         (onClick)="confirmToggleStatus(selectedUser()!, $event)"
+      />
+      <p-button
+        label="Cerrar"
+        severity="secondary"
+        [text]="true"
+        (onClick)="showDetailDialog.set(false)"
       />
     </div>
   </ng-template>
@@ -263,40 +307,3 @@
   </ng-template>
 </p-dialog>
 
-<!-- ── Modal: Cambiar rol ─────────────────────────────────────────────────── -->
-<p-dialog
-  header="Cambiar rol"
-  [visible]="showRoleDialog()"
-  (visibleChange)="showRoleDialog.set($event)"
-  [modal]="true" [draggable]="false"
-  [style]="{ width: '360px' }"
-  styleClass="um-dialog"
->
-  @if (selectedUser(); as user) {
-    <div class="um-role-form">
-      <div class="um-role-form__user">
-        <div class="um-avatar um-avatar--lg">{{ getInitial(user.fullName) }}</div>
-        <div>
-          <p class="um-role-form__name">{{ user.fullName }}</p>
-          <p class="um-role-form__sub">{{ user.employeeNumber }}</p>
-        </div>
-      </div>
-      <div class="um-form__field">
-        <label class="um-form__label">Nuevo rol</label>
-        <p-select [options]="roleOptions" optionLabel="label" optionValue="value"
-          [ngModel]="newRole()" (onChange)="newRole.set($event.value)"
-          appendTo="body" styleClass="um-form__select" />
-      </div>
-      @if (newRole() === 'ADMIN') {
-        <div class="um-form__warn">
-          <i class="pi pi-exclamation-triangle"></i>
-          <span>El rol ADMIN tiene acceso total al sistema, incluyendo la gestión de otros usuarios.</span>
-        </div>
-      }
-    </div>
-  }
-  <ng-template pTemplate="footer">
-    <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="showRoleDialog.set(false)" />
-    <p-button label="Guardar rol" icon="pi pi-check" [loading]="saving()" (onClick)="saveRole()" />
-  </ng-template>
-</p-dialog>
