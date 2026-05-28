@@ -1,0 +1,194 @@
+$gap-sm:   0.75rem;
+$gap-md:   1.25rem;
+$gap-lg:   1.75rem;
+$radius:   0.625rem;
+$card-pad: 1.25rem;
+
+.decomm-create {
+  padding: 1.25rem 2rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: $gap-lg;
+  max-width: 860px;
+  margin: 0 auto;
+
+  &__topbar {
+    display: flex;
+    align-items: center;
+    gap: $gap-md;
+    padding-bottom: $gap-sm;
+    border-bottom: 1px solid var(--p-surface-200);
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--p-primary-900);
+    margin: 0;
+    i { color: var(--p-red-600, #D92D2D); }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: $gap-lg;
+  }
+
+  &__card {
+    background: var(--p-surface-0);
+    border: 1px solid var(--p-surface-200);
+    border-radius: $radius;
+    padding: $card-pad;
+  }
+
+  &__section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--p-text-muted-color);
+    margin: 0 0 $gap-md;
+    i { color: var(--p-primary-600); }
+  }
+
+  &__form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $gap-md;
+
+    @media (max-width: 680px) { grid-template-columns: 1fr; }
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+
+    &--full { grid-column: 1 / -1; }
+  }
+
+  &__label {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--p-text-muted-color);
+  }
+
+  &__optional {
+    font-weight: 400;
+    font-style: italic;
+    font-size: 0.78rem;
+  }
+
+  &__hint {
+    font-size: 0.78rem;
+    color: var(--p-text-muted-color);
+    margin-top: 0.2rem;
+  }
+
+  &__textarea {
+    width: 100%;
+    resize: vertical;
+    min-height: 5.5rem;
+  }
+
+  // Mensaje de incidencia vinculada
+  &__inc-msg {
+    margin-top: $gap-sm;
+    width: 100%;
+  }
+
+  &__inc-remove {
+    margin-left: 0.5rem;
+    cursor: pointer;
+    color: var(--p-primary-600);
+    font-size: 0.82rem;
+    text-decoration: underline;
+
+    &:hover { color: var(--p-primary-800); }
+  }
+
+  // Zona de carga PDF
+  &__pdf-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    border: 2px dashed var(--p-surface-300);
+    border-radius: 0.5rem;
+    padding: 1.25rem 1rem;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.2s, background 0.2s;
+    color: var(--p-text-muted-color);
+    font-size: 0.875rem;
+
+    i { font-size: 1.5rem; color: var(--p-red-500, #E65151); }
+    small { font-size: 0.75rem; }
+
+    &:hover {
+      border-color: var(--p-red-400, #F07A7A);
+      background: #FFF8F8;
+    }
+
+    &--disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      &:hover { background: transparent; border-color: var(--p-surface-300); }
+    }
+  }
+
+  &__file-input { display: none; }
+
+  &__pdf-selected {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: #FFF5F5;
+    border: 1px solid var(--p-red-200, #F8A5A5);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--p-red-800, #8E1010);
+
+    i { color: #D92D2D; font-size: 1.2rem; }
+    span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  }
+
+  // Panel de advertencia
+  &__warn-panel {
+    border: 1px solid var(--p-orange-200, #FED7AA) !important;
+    border-radius: $radius !important;
+    overflow: hidden;
+  }
+
+  &__warn-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    color: var(--p-orange-700, #C2410C);
+    font-size: 0.875rem;
+
+    i { color: var(--p-orange-500, #F97316); }
+  }
+
+  &__warn-text {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--p-text-color);
+    line-height: 1.55;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+  }
+}

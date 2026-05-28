@@ -2,11 +2,10 @@
 
 <div class="inc-list">
 
-  <!-- ── Header ─────────────────────────────────────────────────────────── -->
   <div class="inc-list__header">
     <div class="inc-list__header-left">
       <h2 class="inc-list__title">
-        <i class="pi pi-exclamation-circle"></i> Incidencias
+        <i class="pi pi-exclamation-triangle"></i> Incidencias
       </h2>
       @if (pageData()) {
         <span class="inc-list__count">
@@ -14,7 +13,27 @@
         </span>
       }
     </div>
+    
     <div class="inc-list__header-right">
+      
+      <p-iconfield styleClass="inc-list__folio-search">
+        <p-inputicon styleClass="pi pi-search" />
+        <input
+          pInputText
+          type="text"
+          placeholder="Buscar folio..."
+          [ngModel]="folioSearch()"
+          (ngModelChange)="onFolioInput($event)"
+          class="inc-list__folio-input"
+        />
+        @if (folioSearch()) {
+          <p-inputicon
+            styleClass="pi pi-times inc-list__folio-clear"
+            (click)="clearFolioSearch()"
+          />
+        }
+      </p-iconfield>
+
       <p-select
         [options]="statusOptions"
         [(ngModel)]="selectedStatus"
@@ -32,7 +51,6 @@
     </div>
   </div>
 
-  <!-- ── Tabla ──────────────────────────────────────────────────────────── -->
   <p-table
     [value]="pageData()?.content ?? []"
     [loading]="loading()"
@@ -48,12 +66,12 @@
   >
     <ng-template #header>
       <tr>
-        <th style="width: 9rem">Folio</th>
+        <th style="width: 10rem">Folio</th>
         <th>Descripción</th>
         <th style="width: 8rem">Estado</th>
-        <th style="width: 8rem">Condición</th>
-        <th style="width: 8rem">Tipo reparación</th>
-        <th style="width: 9rem">Fecha</th>
+        <th style="width: 7rem">Condición</th>
+        <th style="width: 8rem">Fecha evento</th>
+        <th style="width: 10rem">Registrada por</th>
         <th style="width: 3rem"></th>
       </tr>
     </ng-template>
@@ -76,14 +94,12 @@
         </td>
         <td>
           <p-tag
-            [value]="inc.conditionAtIncident === 'GOOD' ? 'Bueno' :
-                      inc.conditionAtIncident === 'REGULAR' ? 'Regular' : 'Malo'"
-            [severity]="inc.conditionAtIncident === 'GOOD' ? 'success' :
-                        inc.conditionAtIncident === 'REGULAR' ? 'warn' : 'danger'"
+            [value]="conditionLabel(inc.conditionAtIncident)"
+            [severity]="conditionSeverity(inc.conditionAtIncident)"
           />
         </td>
-        <td class="inc-list__repair">{{ repairLabel(inc.repairType) }}</td>
-        <td class="inc-list__date">{{ formatDate(inc.createdAt) }}</td>
+        <td class="inc-list__date">{{ formatDateOnly(inc.incidentDate) }}</td>
+        <td class="inc-list__user">{{ inc.createdByName }}</td>
         <td>
           <p-button
             icon="pi pi-chevron-right"
@@ -101,12 +117,15 @@
       <tr>
         <td colspan="7" class="inc-list__empty">
           <i class="pi pi-inbox"></i>
-          <span>No hay incidencias registradas.</span>
+          @if (folioSearch()) {
+            <span>No se encontró ninguna incidencia con el folio "{{ folioSearch() }}".</span>
+          } @else {
+            <span>No hay incidencias registradas.</span>
+          }
         </td>
       </tr>
     </ng-template>
 
-    <!-- Skeleton -->
     <ng-template #loadingbody>
       @for (_ of [1,2,3,4,5]; track $index) {
         <tr>
@@ -120,7 +139,6 @@
 
 </div>
 
-<!-- ── Diálogo de creación ─────────────────────────────────────────────── -->
 <app-incident-create
   [visible]="showCreate()"
   (visibleChange)="showCreate.set($event)"

@@ -1,0 +1,122 @@
+<p-toast />
+
+<div class="decomm-list">
+
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <div class="decomm-list__header">
+    <div class="decomm-list__header-left">
+      <h2 class="decomm-list__title">
+        <i class="pi pi-ban"></i> Bajas de Bienes
+      </h2>
+      @if (pageData()) {
+        <span class="decomm-list__count">
+          {{ pageData()!.totalElements }} registros
+        </span>
+      }
+    </div>
+    <div class="decomm-list__header-right">
+      <p-select
+        [options]="statusOptions"
+        [(ngModel)]="selectedStatus"
+        (ngModelChange)="onStatusChange()"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="decomm-list__filter"
+        placeholder="Filtrar por estado"
+      />
+      <p-button
+        label="Registrar baja"
+        icon="pi pi-plus"
+        (onClick)="goToCreate()"
+      />
+    </div>
+  </div>
+
+  <!-- ── Tabla ────────────────────────────────────────────────────────────── -->
+  <p-table
+    [value]="pageData()?.content ?? []"
+    [loading]="loading()"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="pageSize()"
+    [totalRecords]="pageData()?.totalElements ?? 0"
+    [rowsPerPageOptions]="[10, 20, 50]"
+    (onPage)="onPageChange($event)"
+    [rowHover]="true"
+    styleClass="p-datatable-sm"
+    dataKey="id"
+  >
+    <ng-template #header>
+      <tr>
+        <th style="width: 7rem">ID</th>
+        <th style="width: 10rem">Inventario</th>
+        <th>Bien</th>
+        <th style="width: 8rem">Estado</th>
+        <th style="width: 9rem">Fecha baja</th>
+        <th style="width: 10rem">Registrada por</th>
+        <th style="width: 4rem">Vinc.</th>
+        <th style="width: 3rem"></th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-row>
+      <tr class="decomm-list__row" (click)="goToDetail(row)">
+        <td>
+          <span class="decomm-list__id">BAJA-{{ row.id }}</span>
+        </td>
+        <td>
+          <span class="decomm-list__inv">{{ row.assetInventoryNumber }}</span>
+        </td>
+        <td>
+          <span class="decomm-list__desc" [title]="row.assetDescription">
+            {{ row.assetDescription }}
+          </span>
+        </td>
+        <td>
+          <p-tag
+            [value]="statusLabel(row.status)"
+            [severity]="statusSeverity(row.status)"
+          />
+        </td>
+        <td class="decomm-list__date">{{ formatDate(row.decommissionDate) }}</td>
+        <td class="decomm-list__user">{{ row.createdByName }}</td>
+        <td>
+          @if (row.hasLinkedIncident) {
+            <i class="pi pi-link decomm-list__link-icon"
+               pTooltip="Vinculada a incidencia" tooltipPosition="top"></i>
+          }
+        </td>
+        <td>
+          <p-button
+            icon="pi pi-chevron-right"
+            [text]="true"
+            severity="secondary"
+            size="small"
+            pTooltip="Ver detalle"
+            (click)="$event.stopPropagation(); goToDetail(row)"
+          />
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="8" class="decomm-list__empty">
+          <i class="pi pi-inbox"></i>
+          <span>No hay bajas registradas.</span>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #loadingbody>
+      @for (_ of [1,2,3,4,5]; track $index) {
+        <tr>
+          @for (_ of [1,2,3,4,5,6,7,8]; track $index) {
+            <td><p-skeleton height="1.5rem" /></td>
+          }
+        </tr>
+      }
+    </ng-template>
+  </p-table>
+
+</div>

@@ -52,7 +52,7 @@ const LIFECYCLE_SEVERITY: Record<string, LifecycleSeverity> = {
   imports: [CommonModule, FormsModule, ReactiveFormsModule,
     TabsModule, TagModule, ButtonModule, SelectModule, ToastModule,
     SkeletonModule, TimelineModule, ConfirmDialogModule, TableModule,
-    TooltipModule, CardModule, HasRoleDirective, DisableIfNoRoleDirective, AssetImageUpload, AssetMaintenanceTab],
+    TooltipModule, CardModule, HasRoleDirective, DisableIfNoRoleDirective, AssetImageUpload],
   templateUrl: './asset-detail.html',
   styleUrl: './asset-detail.scss',
 })
