@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
-import { AssetDetailResponseDTO, AssetQueryParams, AssetResponseDTO, AssignmentHistoryDTO, PageResponse, UpdateConditionRequest, UpdateConditionResponse } from '../../models/asset.model';
+import { AssetDetailResponseDTO, AssetQueryParams, AssetResponseDTO, AssetSearchItemDTO, AssignmentHistoryDTO, PageResponse, UpdateConditionRequest, UpdateConditionResponse } from '../../models/asset.model';
 import { environment } from '../../../config/environment';
 
 
@@ -54,5 +54,15 @@ export class AssetService {
         `${this.endpoint}/inventory-number/${encodeURIComponent(inventoryNumber)}`
       )
       .pipe(map(r => r.data));
+  }
+  searchAssets(keyword: string, size = 8): Observable<PageResponse<AssetSearchItemDTO>> {
+    const params = new HttpParams()
+      .set('keyword', keyword)
+      .set('page', '0')
+      .set('size', size.toString());
+
+    return this.http.get<PageResponse<AssetSearchItemDTO>>(
+      `${this.endpoint}/search`, { params }
+    );
   }
 }

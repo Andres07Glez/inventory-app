@@ -322,3 +322,176 @@ $transition:              0.2s ease;
   padding: 24px;
   font-family: var(--font-primary);
 }
+// ── Search dropdown ───────────────────────────────────────────────────────────
+
+// El contenedor padre necesita ser el punto de anclaje del absolute
+.topbar__search {
+  position: relative; // ← nuevo, necesario para el dropdown
+
+  // Cuando el dropdown está abierto: borde activo sin esperar :focus-within
+  &--open {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(0, 125, 104, 0.12);
+  }
+}
+
+// Separar la fila del input para facilitar el layout
+.topbar__search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);   // 10px debajo del borde del search
+  left: 50%;
+  transform: translateX(-50%);
+  width: 520px;              // más ancho que el input para mostrar info
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.08);
+  z-index: 200;
+  overflow: hidden;
+  animation: dropdown-enter 0.12s ease;
+
+  // Estado: cargando / vacío
+  &__state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 20px 16px;
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+
+    i { font-size: 1.1rem; color: var(--text-color-muted); }
+
+    &--empty i { color: var(--text-color-muted); }
+  }
+
+  // Cada resultado
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    border-bottom: 1px solid var(--surface-border);
+    transition: background 0.12s ease;
+    font-family: var(--font-primary);
+
+    &:last-of-type { border-bottom: none; }
+
+    &:hover,
+    &--focused {
+      background: var(--surface-hover);
+    }
+
+    &--focused .search-dropdown__inv-tag {
+      background: var(--color-primary);
+      color: #fff;
+    }
+  }
+
+  // Fila 1 del item: número + badge lifecycle
+  &__item-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__inv-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+    padding: 2px 8px;
+    border-radius: 4px;
+    transition: background 0.12s, color 0.12s;
+
+    i { font-size: 0.65rem; }
+  }
+
+  // Badge de estado del ciclo de vida
+  &__lifecycle {
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+
+    &[data-status='AVAILABLE']    { background: #B4FDBD; color: #0F8A1E; }
+    &[data-status='ASSIGNED']     { background: #E2EBFE; color: #1A4CB7; }
+    &[data-status='MAINTENANCE']  { background: #FDF7E2; color: #B68D1B; }
+    &[data-status='DECOMMISSIONED'] { background: #FEE2E2; color: #B71A1A; }
+  }
+
+  // Fila 2: descripción
+  &__desc {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // Fila 3: chips de metadatos
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 1px;
+  }
+
+  &__meta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.72rem;
+    color: var(--text-color-secondary);
+
+    i { font-size: 0.65rem; color: var(--text-color-muted); }
+  }
+
+  // Pie con shortcuts de teclado
+  &__footer {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 7px 14px;
+    background: var(--surface-ground);
+    border-top: 1px solid var(--surface-border);
+    font-size: 0.68rem;
+    color: var(--text-color-muted);
+
+    kbd {
+      display: inline-block;
+      padding: 1px 5px;
+      background: var(--surface-card);
+      border: 1px solid var(--surface-border);
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 0.65rem;
+      color: var(--text-color-secondary);
+      box-shadow: 0 1px 0 var(--surface-border);
+    }
+  }
+}
+
+@keyframes dropdown-enter {
+  from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}

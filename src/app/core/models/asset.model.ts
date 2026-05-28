@@ -172,3 +172,15 @@ export interface UpdateConditionResponse {
   newCondition: ConditionStatus;
   updatedAt: string;
 }
+export interface AssetSearchItemDTO {
+  id: number;
+  inventoryNumber: string;
+  description: string;
+  brand: string | null;
+  model: string | null;
+  categoryName: string;
+  conditionStatus: ConditionStatus; // tu enum existente
+  lifecycleStatus: LifecycleStatus; // tu enum existente
+  locationName: string | null;
+  currentGuardianName: string | null;
+}

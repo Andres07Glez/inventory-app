@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, signal, ViewChild } from '@angular/core';
+import { Component, computed, DestroyRef, ElementRef, HostListener, inject, signal, ViewChild } from '@angular/core';
 import { RouterModule, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
@@ -9,11 +9,14 @@ import { AuthService } from '../../core/services/auth/auth.service';
 import { AssetService } from '../../core/services/asset/asset.service';
 import { ToastModule } from 'primeng/toast';
 import { UserRole } from '../../core/models/auth.model';
+import { toObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { map, debounceTime, distinctUntilChanged, tap, filter, switchMap, catchError, of } from 'rxjs';
+import { AssetSearchItemDTO } from '../../core/models/asset.model';
 
 
 interface NavItem  { label: string; icon: string; route: string; roles?: UserRole[]; }
 interface NavGroup { section: string; items: NavItem[]; roles?: UserRole[]; }
-/** Definición completa del menú. roles=undefined → visible para todos. */
+
 const ALL_NAV_GROUPS: NavGroup[] = [
   {
     section: 'Principal',
@@ -64,6 +67,12 @@ const ROLE_LABELS: Record<UserRole, string> = {
   AUDITOR:  'Auditor',
   GUARDIAN: 'Resguardante'
 };
+const LIFECYCLE_LABELS: Record<string, string> = {
+  AVAILABLE:    'Disponible',
+  ASSIGNED:     'Asignado',
+  MAINTENANCE:  'Mantenimiento',
+  DECOMMISSIONED: 'Baja',
+};
 @Component({
   selector: 'app-shell',
   standalone:true,
@@ -78,40 +87,96 @@ export class Shell {
   private readonly assetService   = inject(AssetService);
   private readonly messageService = inject(MessageService);
   private readonly router         = inject(Router);
+  private readonly destroyRef     = inject(DestroyRef);
+  private readonly elementRef     = inject(ElementRef);
 
-  // ── Estado ────────────────────────────────────────────────────────────────
-
+  // ── Layout ────────────────────────────────────────────────────────────────
   readonly sidebarCollapsed = signal(false);
-  readonly searchQuery      = signal('');
-  readonly isSearching      = signal(false);
 
-  // ── Datos del usuario desde el token ─────────────────────────────────────
+  // ── Búsqueda ──────────────────────────────────────────────────────────────
+  readonly searchQuery    = signal('');
+  readonly isSearching    = signal(false);
+  readonly searchResults  = signal<AssetSearchItemDTO[]>([]);
+  readonly showDropdown   = signal(false);
+  readonly selectedIndex  = signal(-1);
 
-// ── Datos del usuario (computed → reactivos al signal de AuthService) ─────
-  readonly fullName       = computed(() => this.authService.currentUser()?.fullName       ?? 'Usuario');
-  readonly employeeNumber = computed(() => this.authService.currentUser()?.username       ?? '');
-  readonly role           = computed(() => this.authService.currentUser()?.role           ?? 'OPERADOR');
+  /** Cierra el dropdown al hacer clic fuera del componente shell */
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.elementRef.nativeElement.contains(event.target)) {
+      this.showDropdown.set(false);
+    }
+  }
+
+  constructor() {
+    this.initSearchPipeline();
+  }
+
+  /**
+   * Pipeline reactivo: signal → debounce → API → resultados.
+   * Separado en su propio método para mantener el constructor limpio.
+   */
+  private initSearchPipeline(): void {
+    toObservable(this.searchQuery)
+      .pipe(
+        map(q => q.trim()),
+        debounceTime(300),
+        distinctUntilChanged(),
+        tap(q => {
+          if (q.length < 2) {
+            // Limpiar estado sin hacer petición
+            this.isSearching.set(false);
+            this.searchResults.set([]);
+            this.showDropdown.set(false);
+          } else {
+            this.isSearching.set(true);
+            this.showDropdown.set(true);
+          }
+        }),
+        filter(q => q.length >= 2),
+        switchMap(q =>
+          this.assetService.searchAssets(q, 8).pipe(
+            catchError(() => {
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'No se pudo conectar al servidor.',
+                life: 3000,
+              });
+              return of(null);
+            })
+          )
+        ),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(result => {
+        this.isSearching.set(false);
+        if (result !== null) {
+          this.searchResults.set(result.content);
+          this.selectedIndex.set(-1);
+        }
+      });
+  }
+
+  // ── Datos del usuario ─────────────────────────────────────────────────────
+  readonly fullName       = computed(() => this.authService.currentUser()?.fullName ?? 'Usuario');
+  readonly employeeNumber = computed(() => this.authService.currentUser()?.username ?? '');
+  readonly role           = computed(() => this.authService.currentUser()?.role     ?? 'OPERADOR');
   readonly userInitial    = computed(() => this.fullName().charAt(0).toUpperCase());
   readonly roleLabel      = computed(() => ROLE_LABELS[this.role()] ?? 'Usuario');
 
-  // ── Navegación filtrada por rol ────────────────────────────────────────────
+  // ── Navegación filtrada ───────────────────────────────────────────────────
   readonly navGroups = computed(() => {
     const role = this.role();
     return ALL_NAV_GROUPS
       .filter(g => !g.roles || g.roles.includes(role))
-      .map(g => ({
-        ...g,
-        items: g.items.filter(i => !i.roles || i.roles.includes(role)),
-      }))
+      .map(g => ({ ...g, items: g.items.filter(i => !i.roles || i.roles.includes(role)) }))
       .filter(g => g.items.length > 0);
   });
 
-  toggleSidebar(): void {
-    this.sidebarCollapsed.update(v => !v);
-  }
-  toggleUserMenu(event: MouseEvent): void {
-    this.userMenuRef.toggle(event);
-  }
+  // ── Acciones del usuario ──────────────────────────────────────────────────
+  toggleSidebar():              void { this.sidebarCollapsed.update(v => !v); }
+  toggleUserMenu(e: MouseEvent): void { this.userMenuRef.toggle(e); }
 
   goToChangePassword(): void {
     this.userMenuRef.hide();
@@ -123,37 +188,45 @@ export class Shell {
     this.authService.logout();
   }
 
-  // ── Búsqueda ──────────────────────────────────────────────────────────────
-
+  // ── Búsqueda: interacción ─────────────────────────────────────────────────
   onSearchKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Enter') this.executeSearch();
-    if (event.key === 'Escape') this.clearSearch();
+    const results = this.searchResults();
+
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        this.selectedIndex.update(i => Math.min(i + 1, results.length - 1));
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.selectedIndex.update(i => Math.max(i - 1, -1));
+        break;
+      case 'Enter': {
+        const idx    = this.selectedIndex();
+        const target = idx >= 0 ? results[idx] : results[0];
+        if (target) this.selectResult(target);
+        break;
+      }
+      case 'Escape':
+        this.clearSearch();
+        break;
+    }
   }
 
-  executeSearch(): void {
-    const query = this.searchQuery().trim().toUpperCase();
-    if (!query || this.isSearching()) return;
-
-    this.isSearching.set(true);
-
-    this.assetService.findByInventoryNumber(query).subscribe({
-      next: (asset) => {
-        this.isSearching.set(false);
-        this.searchQuery.set('');
-        this.router.navigate(['/inventario/bienes', asset.id]);
-      },
-      error: (err) => {
-        this.isSearching.set(false);
-        const detail = err.status === 404
-          ? `No se encontró el número "${query}".`
-          : 'Error al realizar la búsqueda.';
-        this.messageService.add({ severity: 'warn', summary: 'Sin resultados', detail, life: 4000 });
-      },
-    });
+  selectResult(asset: AssetSearchItemDTO): void {
+    this.clearSearch();
+    this.router.navigate(['/inventario/bienes', asset.id]);
   }
 
   clearSearch(): void {
     this.searchQuery.set('');
+    this.searchResults.set([]);
+    this.showDropdown.set(false);
+    this.selectedIndex.set(-1);
   }
 
+  // ── Helpers para la vista ─────────────────────────────────────────────────
+  lifecycleLabel(status: string): string {
+    return LIFECYCLE_LABELS[status] ?? status;
+  }
 }

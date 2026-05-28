@@ -23,24 +23,116 @@
     <div class="topbar__spacer"></div>
 
     <!-- Buscador por número de inventario -->
-    <div class="topbar__search">
-      @if (isSearching()) {
-        <i class="pi pi-spin pi-spinner topbar__search-icon"></i>
-      } @else {
-        <i class="pi pi-search topbar__search-icon" (click)="executeSearch()" style="cursor:pointer"></i>
-      }
-      <input
-        class="topbar__search-input"
-        type="text"
-        placeholder="Buscar por núm. de inventario…"
-        [value]="searchQuery()"
-        (input)="searchQuery.set($any($event.target).value)"
-        (keydown)="onSearchKeydown($event)"
-      />
-      @if (searchQuery()) {
-        <button class="topbar__search-clear" (click)="clearSearch()" title="Limpiar">
-          <i class="pi pi-times"></i>
-        </button>
+    <div class="topbar__search" [class.topbar__search--open]="showDropdown()">
+
+      <!-- Input row -->
+      <div class="topbar__search-row">
+        @if (isSearching()) {
+          <i class="pi pi-spin pi-spinner topbar__search-icon"></i>
+        } @else {
+          <i class="pi pi-search topbar__search-icon"></i>
+        }
+        <input
+          class="topbar__search-input"
+          type="text"
+          placeholder="Buscar bien por inventario, descripción…"
+          autocomplete="off"
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
+          (keydown)="onSearchKeydown($event)"
+          (focus)="searchResults().length > 0 && showDropdown.set(true)"
+          aria-label="Buscar bien"
+          aria-autocomplete="list"
+          aria-controls="search-results-list"
+        />
+        @if (searchQuery()) {
+          <button class="topbar__search-clear" (click)="clearSearch()" title="Limpiar">
+            <i class="pi pi-times"></i>
+          </button>
+        }
+      </div>
+
+      <!-- Dropdown de resultados -->
+      @if (showDropdown()) {
+        <div class="search-dropdown" id="search-results-list" role="listbox">
+
+          <!-- Estado: cargando -->
+          @if (isSearching()) {
+            <div class="search-dropdown__state">
+              <i class="pi pi-spin pi-spinner"></i>
+              <span>Buscando…</span>
+            </div>
+          }
+
+          <!-- Estado: sin resultados -->
+          @else if (searchResults().length === 0) {
+            <div class="search-dropdown__state search-dropdown__state--empty">
+              <i class="pi pi-inbox"></i>
+              <span>Sin resultados para <strong>"{{ searchQuery() }}"</strong></span>
+            </div>
+          }
+
+          <!-- Resultados -->
+          @else {
+            @for (item of searchResults(); track item.id; let i = $index) {
+              <button
+                class="search-dropdown__item"
+                [class.search-dropdown__item--focused]="selectedIndex() === i"
+                role="option"
+                [attr.aria-selected]="selectedIndex() === i"
+                (click)="selectResult(item)"
+                (mouseenter)="selectedIndex.set(i)"
+              >
+                <!-- Fila 1: número de inventario + estado de ciclo de vida -->
+                <div class="search-dropdown__item-header">
+                  <span class="search-dropdown__inv-tag">
+                    <i class="pi pi-hashtag"></i>
+                    {{ item.inventoryNumber }}
+                  </span>
+                  <span
+                    class="search-dropdown__lifecycle"
+                    [attr.data-status]="item.lifecycleStatus"
+                  >
+                    {{ lifecycleLabel(item.lifecycleStatus) }}
+                  </span>
+                </div>
+
+                <!-- Fila 2: descripción principal -->
+                <p class="search-dropdown__desc">{{ item.description }}</p>
+
+                <!-- Fila 3: metadatos secundarios -->
+                <div class="search-dropdown__meta">
+                  @if (item.brand || item.model) {
+                    <span class="search-dropdown__meta-chip">
+                      <i class="pi pi-tag"></i>
+                      {{ item.brand }}@if(item.brand && item.model){ · }{{ item.model }}
+                    </span>
+                  }
+                  @if (item.locationName) {
+                    <span class="search-dropdown__meta-chip">
+                      <i class="pi pi-map-marker"></i>
+                      {{ item.locationName }}
+                    </span>
+                  }
+                  @if (item.currentGuardianName) {
+                    <span class="search-dropdown__meta-chip">
+                      <i class="pi pi-user"></i>
+                      {{ item.currentGuardianName }}
+                    </span>
+                  }
+                </div>
+              </button>
+            }
+
+            <!-- Pie: hint de navegación -->
+            <div class="search-dropdown__footer">
+              <span><kbd>↑</kbd><kbd>↓</kbd> navegar</span>
+              <span><kbd>↵</kbd> seleccionar</span>
+              <span><kbd>Esc</kbd> cerrar</span>
+            </div>
+          }
+
+        </div>
       }
     </div>
 
