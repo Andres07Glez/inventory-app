@@ -5,6 +5,11 @@
 
   <!-- ── Toolbar ── -->
   <div class="loc-toolbar">
+    <span class="loc-stat-chip">
+      <i class="pi pi-map-marker"></i>
+      {{ locationTotal() }} ubicacion{{ locationTotal() !== 1 ? 'es' : '' }}
+    </span>
+
     <p-iconfield styleClass="loc-search-field">
       <p-inputicon styleClass="pi pi-search" />
       <input
@@ -194,7 +199,7 @@
           pInputText
           formControlName="campus"
           class="loc-input"
-          placeholder="Ej. Campus Norte"
+          placeholder="Ej. Campus Loma Bonita"
           maxlength="100"
           autocomplete="off"
         />

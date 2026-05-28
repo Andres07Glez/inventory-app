@@ -43,6 +43,7 @@ export interface InvoiceResponse {
   invoiceDate:    string | number[];
   totalAmount?:   number | null;
   documentPath?:  string;
+  documentUrl?:   string;         // ← URL pública del PDF (agregada en backend)
   notes?:         string;
   createdAt:      string;
   createdByName?: string;
@@ -100,5 +101,33 @@ export class InvoiceService {
     return this.http
       .get<SpringPage<SupplierResponse>>(`${this.base}/suppliers`, { params })
       .pipe(map(res => res));
+  }
+
+  // ── PDF de factura ────────────────────────────────────────────────────────
+
+  /**
+   * Sube (o reemplaza) el PDF de una factura.
+   * Retorna la URL pública del documento guardado.
+   * Ruta en disco: uploads/invoices/{invoiceId}/{uuid}.pdf
+   */
+  uploadPdf(invoiceId: number, file: File): Observable<string> {
+    const form = new FormData();
+    form.append('file', file, file.name);
+    return this.http
+      .post<{ success: boolean; data: string }>(
+        `${this.base}/invoices/${invoiceId}/pdf`, form
+      )
+      .pipe(map(res => res.data));
+  }
+
+  /**
+   * Elimina el PDF asociado a la factura (físico + limpia documentPath en BD).
+   */
+  deletePdf(invoiceId: number): Observable<void> {
+    return this.http
+      .delete<{ success: boolean; data: string }>(
+        `${this.base}/invoices/${invoiceId}/pdf`
+      )
+      .pipe(map(() => void 0));
   }
 }

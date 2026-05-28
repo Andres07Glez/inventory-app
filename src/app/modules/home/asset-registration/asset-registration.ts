@@ -16,6 +16,7 @@ import { CardModule } from 'primeng/card';
 import { DividerModule } from 'primeng/divider';
 import { StepperModule } from 'primeng/stepper';
 import { TagModule } from 'primeng/tag';
+import { ToastModule } from 'primeng/toast';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { TooltipModule } from 'primeng/tooltip';
 import { ProgressBarModule } from 'primeng/progressbar';
@@ -86,6 +87,7 @@ interface Brand {
     DividerModule,
     StepperModule,
     TagModule,
+    ToastModule,
     TooltipModule,
     ProgressBarModule,
     FloatLabelModule,

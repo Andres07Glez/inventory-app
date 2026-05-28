@@ -131,7 +131,7 @@
   }
 }
 
-.cat-cell-primary { font-weight: 500; font-size: 1rem; color: var(--cat-primary); }
+.cat-cell-primary { font-weight: 500; font-size: 1rem; color: #333333; }
 .cat-link { color: var(--cat-primary); text-decoration: none; &:hover { text-decoration: underline; } }
 .cat-muted { color: var(--cat-text-muted); font-size: 1rem; }
 
@@ -207,9 +207,29 @@
     &:hover:not(:disabled) { background: var(--cat-primary-hover); border-color: var(--cat-primary-hover); }
   }
   &--secondary.p-button {
-    background: transparent; border: 1px solid var(--cat-border); color: var(--cat-text-secondary);
+    background: var(--cat-primary); border-color: var(--cat-primary); color: var(--cat-primary-text);
     &:hover:not(:disabled) { background: var(--cat-surface-raised); }
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STAT CHIP
+// ─────────────────────────────────────────────────────────────────────────────
+.cat-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(0, 125, 104, .10);
+  color: var(--cat-primary);
+  border: 1px solid rgba(0, 125, 104, .2);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+
+  i { font-size: 0.72rem; }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -300,3 +320,6 @@
     border-color: var(--color-danger-dark) !important;
   }
 }
+// ─────────────────────────────────────────────────────────────────────────────
+// OVERRIDE FINAL — botón Cancelar blanco (pisa el gris de PrimeNG)
+// ─────────────────────────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@ import {
   ChangeDetectionStrategy, ChangeDetectorRef, Component,
   DestroyRef, ElementRef, inject, OnInit, signal, ViewChild
 } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { debounceTime, distinctUntilChanged, Subject, switchMap } from 'rxjs';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -26,6 +26,16 @@ import {
 } from '../../../core/service/invoice.service';
 
 const PAGE_SIZE = 10;
+
+const MIN_INVOICE_YEAR = 2000;
+
+function minDateValidator(control: AbstractControl): ValidationErrors | null {
+  const value = control.value;
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  if (isNaN(date.getTime())) return null;
+  return date.getFullYear() > MIN_INVOICE_YEAR ? null : { minDate: { min: MIN_INVOICE_YEAR } };
+}
 
 @Component({
   selector: 'app-invoice-registration',
@@ -69,17 +79,24 @@ export class InvoiceRegistration implements OnInit {
   editingId       = signal<number | null>(null);
   selectedFileName = signal('');
 
+  // ── PDF ──────────────────────────────────────────────────────────────────
+  /** Archivo PDF seleccionado por el usuario, listo para subir */
+  public selectedFile: File | null = null;
+  /** URL pública del PDF ya almacenado (viene del backend en modo edición) */
+  existingDocumentUrl = signal<string | null>(null);
+
   // ── Proveedores ──────────────────────────────────────────────────────────
   suppliers        = signal<SupplierResponse[]>([]);
   loadingSuppliers = signal(false);
 
   readonly today   = new Date();
   readonly maxDate = new Date();
+  readonly minDate = new Date(MIN_INVOICE_YEAR + 1, 0, 1); // 1 Jan 2001
 
   form: FormGroup = this.fb.group({
     invoiceNumber: ['', [Validators.required, Validators.maxLength(100)]],
     supplierId:    [null, Validators.required],
-    invoiceDate:   [this.today, Validators.required],
+    invoiceDate:   [this.today, [Validators.required, minDateValidator]],
     documentPath:  ['', Validators.maxLength(500)],
     notes:         ['', Validators.maxLength(1000)],
   });
@@ -150,6 +167,8 @@ export class InvoiceRegistration implements OnInit {
   openCreate(): void {
     this.form.reset({ invoiceNumber: '', supplierId: null, invoiceDate: this.today, documentPath: '', notes: '' });
     this.selectedFileName.set('');
+    this.selectedFile = null;                   // limpiar archivo pendiente
+    this.existingDocumentUrl.set(null);         // sin PDF previo
     this.editingId.set(null);
     this.dialogMode.set('create');
     this.dialogVisible.set(true);
@@ -164,6 +183,8 @@ export class InvoiceRegistration implements OnInit {
       notes:         inv.notes ?? '',
     });
     this.selectedFileName.set(inv.documentPath ?? '');
+    this.selectedFile = null;                          // ningún archivo nuevo todavía
+    this.existingDocumentUrl.set(inv.documentUrl ?? null); // URL del PDF actual
     this.editingId.set(inv.id);
     this.dialogMode.set('edit');
     this.dialogVisible.set(true);
@@ -191,14 +212,12 @@ export class InvoiceRegistration implements OnInit {
 
     obs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: saved => {
-        this.dialogLoading.set(false);
-        this.dialogVisible.set(false);
-        this.messageService.add({
-          severity: 'success',
-          summary: isEdit ? 'Factura actualizada' : 'Factura registrada',
-          detail: `"${saved.invoiceNumber}" guardada correctamente.`, life: 4000,
-        });
-        this.loadInvoices();
+        // Si el usuario seleccionó un PDF, subirlo ahora que ya tenemos el ID
+        if (this.selectedFile) {
+          this.uploadPdfAfterSave(saved);
+        } else {
+          this.onSaveSuccess(saved, isEdit);
+        }
       },
       error: err => {
         this.dialogLoading.set(false);
@@ -206,6 +225,45 @@ export class InvoiceRegistration implements OnInit {
         this.cdr.markForCheck();
       },
     });
+  }
+
+  /**
+   * Sube el PDF inmediatamente después de crear/actualizar la factura.
+   * Se llama solo cuando el usuario seleccionó un archivo nuevo.
+   */
+  private uploadPdfAfterSave(saved: InvoiceResponse): void {
+    this.invoiceService.uploadPdf(saved.id, this.selectedFile!)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.selectedFile = null;
+          this.onSaveSuccess(saved, this.dialogMode() === 'edit');
+        },
+        error: () => {
+          // La factura se guardó correctamente; el PDF falló — avisar sin revertir
+          this.dialogLoading.set(false);
+          this.dialogVisible.set(false);
+          this.messageService.add({
+            severity: 'warn',
+            summary: 'Factura guardada',
+            detail: `"${saved.invoiceNumber}" se guardó, pero el PDF no pudo cargarse. Intenta subirlo de nuevo editando la factura.`,
+            life: 6000,
+          });
+          this.loadInvoices();
+        },
+      });
+  }
+
+  /** Cierra el diálogo y notifica éxito completo. */
+  private onSaveSuccess(saved: InvoiceResponse, isEdit: boolean): void {
+    this.dialogLoading.set(false);
+    this.dialogVisible.set(false);
+    this.messageService.add({
+      severity: 'success',
+      summary: isEdit ? 'Factura actualizada' : 'Factura registrada',
+      detail: `"${saved.invoiceNumber}" guardada correctamente.`, life: 4000,
+    });
+    this.loadInvoices();
   }
 
   confirmDelete(inv: InvoiceResponse): void {
@@ -236,8 +294,27 @@ export class InvoiceRegistration implements OnInit {
   onFileSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
+
+    // Validar que sea PDF antes de aceptarlo
+    if (file.type !== 'application/pdf') {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Formato incorrecto',
+        detail: 'Solo se permiten archivos PDF.',
+      });
+      this.fileInput.nativeElement.value = '';
+      return;
+    }
+
+    this.selectedFile = file;                    // guardar referencia al File real
     this.selectedFileName.set(file.name);
     this.form.patchValue({ documentPath: file.name });
+  }
+
+  /** Abre el PDF actual en una pestaña nueva (solo en modo edición). */
+  viewExistingPdf(): void {
+    const url = this.existingDocumentUrl();
+    if (url) window.open(url, '_blank');
   }
 
   // ── Utils ─────────────────────────────────────────────────────────────────

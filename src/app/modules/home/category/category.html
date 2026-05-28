@@ -3,6 +3,12 @@
 
 <div class="cat-tab-content">
   <div class="cat-toolbar">
+
+    <span class="cat-stat-chip">
+      <i class="pi pi-warehouse"></i>
+      {{ categoryTotal() }} CATEGORÍA{{ categoryTotal() !== 1 ? 'S' : '' }}
+    </span>
+
     <p-iconfield styleClass="cat-search-field">
       <p-inputicon styleClass="pi pi-search" />
       <input
@@ -111,7 +117,7 @@
             <button
               pButton
               type="button"
-              icon="pi pi-ban"
+              icon="pi pi-trash"
               class="cat-btn-icon cat-btn-icon--danger"
               pTooltip="Desactivar"
               tooltipPosition="top"

@@ -499,3 +499,37 @@
   .cat-tab-content { padding: 1rem; }
   .cat-form-row { grid-template-columns: 1fr; }
 }
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OVERRIDE FINAL — pisa el color primario del tema de PrimeNG
+// ─────────────────────────────────────────────────────────────────────────────
+.cat-btn-icon--edit {
+  background-color: #2D63D9 !important;
+  border-color: #2D63D9 !important;
+  color: #FFFFFF !important;
+
+  &:hover {
+    background-color: #10388E !important;
+    border-color: #10388E !important;
+  }
+}
+
+.cat-btn-icon--danger {
+  background-color: #D92D2D !important;
+  border-color: #D92D2D !important;
+  color: #FFFFFF !important;
+
+  &:hover {
+    background-color: #8E1010 !important;
+    border-color: #8E1010 !important;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OVERRIDE FINAL — botón Cancelar blanco (pisa el gris de PrimeNG)
+// ─────────────────────────────────────────────────────────────────────────────
+:host ::ng-deep .cat-btn--secondary.p-button {
+  border: 1px solid var(--cat-border) !important;
+  color: var(--cat-bg) !important;
+}

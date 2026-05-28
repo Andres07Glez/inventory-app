@@ -113,6 +113,23 @@
   }
 }
 
+.inv-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(0, 125, 104, .10);
+  color: var(--inv-primary);
+  border: 1px solid rgba(0, 125, 104, .2);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+
+  i { font-size: 0.72rem; }
+}
+
 :host ::ng-deep .inv-search-field {
   flex: 1;
   min-width: 220px;
@@ -202,7 +219,7 @@
 // Celdas especiales
 .inv-id {
   font-size: 0.875rem;
-  color: var(--inv-text-muted);
+  color: #333333;
   font-weight: 500;
 }
 
@@ -211,7 +228,7 @@
   align-items: center;
   gap: 0.5rem;
   font-weight: 500;
-  color: var(--inv-primary);
+  color: #333333;
 }
 
 .inv-cell-icon {
@@ -264,15 +281,23 @@
   }
 
   &--edit.p-button {
-    background: var(--inv-edit-bg);
-    color: var(--inv-edit-color);
-    &:hover:not(:disabled) { filter: brightness(0.92); }
+    background-color: #2D63D9 !important;
+    border-color: #2D63D9 !important;
+    color: #FFFFFF !important;
+    &:hover:not(:disabled) {
+      background-color: #10388E !important;
+      border-color: #10388E !important;
+    }
   }
 
   &--danger.p-button {
-    background: var(--inv-danger-bg);
-    color: var(--inv-danger);
-    &:hover:not(:disabled) { filter: brightness(0.92); }
+    background-color: var(--color-danger) !important;
+    border-color: var(--color-danger) !important;
+    color: #FFFFFF !important;
+    &:hover:not(:disabled) {
+      background-color: var(--color-danger-dark) !important;
+      border-color: var(--color-danger-dark) !important;
+    }
   }
 }
 
@@ -297,7 +322,7 @@
   }
 
   &--secondary.p-button {
-    background: transparent;
+    background: #FFFFFF;
     border: 1px solid var(--inv-border);
     color: var(--inv-text-secondary);
     &:hover:not(:disabled) { background: var(--inv-surface-raised); }
@@ -467,6 +492,13 @@
   }
 }
 
+.inv-file-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
 .inv-dialog-footer { display: flex; justify-content: flex-end; gap: 0.75rem; }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -508,4 +540,35 @@
 @media (max-width: 560px) {
   .inv-form-row { grid-template-columns: 1fr; }
   .inv-file-row { flex-direction: column; align-items: stretch; }
+  .inv-file-actions { justify-content: flex-end; }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OVERRIDE FINAL — pisa el color primario del tema de PrimeNG
+// Mismo patrón que supplier.scss: selector plano sin anidar para máxima especificidad
+// ─────────────────────────────────────────────────────────────────────────────
+.inv-btn-icon--edit {
+  background-color: #2D63D9 !important;
+  border-color: #2D63D9 !important;
+  color: #FFFFFF !important;
+
+  &:hover {
+    background-color: #10388E !important;
+    border-color: #10388E !important;
+  }
+}
+
+.inv-btn-icon--danger {
+  background-color: #D92D2D !important;
+  border-color: #D92D2D !important;
+  color: #FFFFFF !important;
+
+  &:hover {
+    background-color: #8E1010 !important;
+    border-color: #8E1010 !important;
+  }
+}
+
+:host ::ng-deep .inv-btn--secondary.p-button {
+  color: #FFFFFF !important;
 }
