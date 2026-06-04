@@ -1,4 +1,3 @@
-<!-- Ruta: src/app/modules/home/dashboard/dashboard.html -->
 <div class="dash-page">
 
   <header class="dash-header">
@@ -8,7 +7,6 @@
     </div>
   </header>
 
-  <!-- ── Estado: error de carga ──────────────────────────────────────────────── -->
   @if (error()) {
     <div class="dash-error">
       <i class="pi pi-wifi dash-error__icon"></i>
@@ -19,7 +17,6 @@
     </div>
   }
 
-  <!-- ── Estado: cargando ──────────────────────────────────────────────────────── -->
   @if (loading()) {
     <div class="dash-kpis">
       @for (_ of [1,2,3,4]; track $index) {
@@ -38,12 +35,11 @@
     </div>
   }
 
-  <!-- ── Estado: datos cargados ────────────────────────────────────────────────── -->
-  @if (!loading() && !error() && stats(); as s) {
+  @if (!loading() && !error() && stats()) {
 
     <!-- KPIs -->
     <div class="dash-kpis">
-      @for (kpi of getKpis(s); track kpi.label) {
+      @for (kpi of kpis(); track kpi.label) {    <!-- ← computed, no método -->
         <div class="kpi-card kpi-card--{{ kpi.color }}">
           <div class="kpi-card__icon">
             <i class="{{ kpi.icon }}"></i>
@@ -60,12 +56,12 @@
     <!-- Gráficas -->
     <div class="dash-charts">
 
-      <!-- Donut: condición de bienes -->
       <div class="dash-chart-card">
         <div class="dash-chart-card__header">
           <h3 class="dash-chart-card__title">Condición de bienes</h3>
           <span class="dash-chart-card__total">
-            {{ (s.goodCondition + s.regularCondition + s.badCondition).toLocaleString('es-MX') }} activos
+            {{ (stats()!.goodCondition + stats()!.regularCondition + stats()!.badCondition)
+               .toLocaleString('es-MX') }} activos
           </span>
         </div>
         <div class="dash-chart-card__body" style="height: 240px">
@@ -78,7 +74,6 @@
         </div>
       </div>
 
-      <!-- Barras horizontales: top 5 ubicaciones -->
       <div class="dash-chart-card">
         <div class="dash-chart-card__header">
           <h3 class="dash-chart-card__title">Top 5 áreas por bienes asignados</h3>
@@ -104,17 +99,7 @@
       </div>
 
     </div>
-
-    <!-- Aviso módulos pendientes (incidencias y mantenimiento) -->
-    @if (s.openIncidents === 0 && s.maintenanceThisMonth === 0) {
-      <div class="dash-notice">
-        <i class="pi pi-info-circle"></i>
-        <span>
-          Los módulos de <strong>Incidencias</strong> y <strong>Mantenimiento</strong>
-          están en desarrollo. Sus métricas aparecerán aquí cuando sean implementados.
-        </span>
-      </div>
-    }
+    <!-- El bloque dash-notice se elimina: los módulos ya están implementados -->
 
   }
 
