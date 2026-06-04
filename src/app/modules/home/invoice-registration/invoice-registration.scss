@@ -55,38 +55,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // MODO OSCURO
 // ─────────────────────────────────────────────────────────────────────────────
-@media (prefers-color-scheme: dark) {
-  :host {
-    --inv-bg:              #1A1A1A;
-    --inv-surface:         #333333;
-    --inv-surface-raised:  #4D4D4D;
-    --inv-border:          #666666;
-    --inv-border-focus:    #5EC9B5;
 
-    --inv-primary:         #00CCAA;
-    --inv-primary-hover:   #5EC9B5;
-    --inv-primary-light:   #00332A;
-    --inv-primary-text:    #1A1A1A;
-
-    --inv-text-primary:    #F7F7F7;
-    --inv-text-secondary:  #CCCCCC;
-    --inv-text-muted:      #999999;
-
-    --inv-input-bg:          #333333;
-    --inv-input-text:        #F7F7F7;
-    --inv-input-border:      #666666;
-    --inv-input-placeholder: #999999;
-
-    --inv-danger:     #F07A7A;
-    --inv-danger-bg:  #350303;
-    --inv-warn:       #EFD47B;
-    --inv-edit-color: #7A9FF0;
-    --inv-edit-bg:    #031335;
-
-    --inv-shadow:    0 2px 8px rgba(0,0,0,.4);
-    --inv-shadow-lg: 0 8px 28px rgba(0,0,0,.5);
-  }
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONTENIDO & TOOLBAR

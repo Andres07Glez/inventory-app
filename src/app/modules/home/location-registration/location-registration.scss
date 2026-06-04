@@ -57,41 +57,7 @@
   font-family: var(--loc-font);
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   ✦ MODO OSCURO
-───────────────────────────────────────────────────────────────────────────── */
-@media (prefers-color-scheme: dark) {
-  :host {
-    --loc-bg:             #1A1A1A;
-    --loc-surface:        #333333;
-    --loc-surface-raised: #4D4D4D;
-    --loc-border:         #666666;
-    --loc-border-focus:   #5EC9B5;
 
-    --loc-primary:        #00CCAA;
-    --loc-primary-hover:  #5EC9B5;
-    --loc-primary-light:  #00332A;
-    --loc-primary-text:   #1A1A1A;
-
-    --loc-text-primary:   #F7F7F7;
-    --loc-text-secondary: #CCCCCC;
-    --loc-text-muted:     #999999;
-
-    --loc-input-bg:          #333333;
-    --loc-input-text:        #F7F7F7;
-    --loc-input-border:      #666666;
-    --loc-input-placeholder: #999999;
-
-    --loc-danger:     #F07A7A;
-    --loc-danger-bg:  #350303;
-    --loc-warn:       #EFD47B;
-    --loc-edit-color: #7A9FF0;
-    --loc-edit-bg:    #031335;
-
-    --loc-shadow:    0 2px 8px rgba(0,0,0,.4);
-    --loc-shadow-lg: 0 8px 28px rgba(0,0,0,.5);
-  }
-}
 
 /* ─────────────────────────────────────────────────────────────────────────────
    CONTENIDO DEL TAB & TOOLBAR
