@@ -42,26 +42,33 @@
     </div>
 
     <!-- ── Tabs PrimeNG 21 ────────────────────────────────────────────────── -->
-    <!-- Nueva API: p-tabs > p-tablist > p-tab (headers) + p-tabpanels > p-tabpanel (contenido) -->
-    <!-- El [value] en p-tab y p-tabpanel es el identificador que los vincula  -->
-    <p-tabs styleClass="detail-tabs"  [(value)]="activeTab">
+    <p-tabs
+      styleClass="detail-tabs"
+      [value]="activeTab()"
+      (valueChange)="onTabChange($event)"
+    >
 
       <p-tablist>
+        <!-- Resumen: visible para TODOS los roles -->
         <p-tab value="resumen">
           <i class="pi pi-info-circle"></i> Resumen
         </p-tab>
-        <p-tab value="asignaciones">
-          <i class="pi pi-users"></i> Asignaciones
-        </p-tab>
-        <p-tab value="incidencias">
-          <i class="pi pi-exclamation-triangle"></i> Incidencias
-        </p-tab>
-        <p-tab value="mantenimiento">
-          <i class="pi pi-wrench"></i> Mantenimiento
-        </p-tab>
-        <p-tab value="ciclovida">
-          <i class="pi pi-history"></i> Ciclo de vida
-        </p-tab>
+
+        <!-- Los tabs siguientes son exclusivos para ADMIN y OPERADOR -->
+        @if (canAccessAllTabs()) {
+          <p-tab value="asignaciones">
+            <i class="pi pi-users"></i> Asignaciones
+          </p-tab>
+          <p-tab value="incidencias">
+            <i class="pi pi-exclamation-triangle"></i> Incidencias
+          </p-tab>
+          <p-tab value="mantenimiento">
+            <i class="pi pi-wrench"></i> Mantenimiento
+          </p-tab>
+          <p-tab value="ciclovida">
+            <i class="pi pi-history"></i> Ciclo de vida
+          </p-tab>
+        }
       </p-tablist>
 
       <p-tabpanels>
@@ -267,40 +274,216 @@
         <!-- ════════════════════ TAB 3 — INCIDENCIAS ════════════════════ -->
         <p-tabpanel value="incidencias">
           <div class="tab-content">
-            <div class="detail-placeholder">
-              <i class="pi pi-exclamation-triangle detail-placeholder__icon"></i>
-              <p class="detail-placeholder__title">Módulo en desarrollo</p>
-              <p class="detail-placeholder__sub">
-                El historial de incidencias estará disponible en el siguiente sprint.
-              </p>
+            <div class="tab-toolbar">
+              <h3 class="tab-toolbar__title">Incidencias reportadas</h3>
+              <button
+                pButton
+                *hasRole="['ADMIN', 'OPERADOR']"
+                icon="pi pi-plus"
+                label="Nueva incidencia"
+                [disabled]="bien.lifecycleStatus === 'DECOMMISSIONED'"
+                (click)="goToNewIncident(bien.id)"
+              ></button>
             </div>
+
+            @if (loadingIncidents()) {
+              <p-skeleton height="200px" />
+            } @else if (incidents().length === 0) {
+              <div class="detail-empty">
+                <i class="pi pi-exclamation-triangle detail-empty__icon"></i>
+                <p>Sin incidencias registradas para este bien.</p>
+                <button
+                  pButton
+                  *hasRole="['ADMIN', 'OPERADOR']"
+                  icon="pi pi-plus"
+                  label="Reportar primera incidencia"
+                  (click)="goToNewIncident(bien.id)"
+                ></button>
+              </div>
+            } @else {
+              <p-table
+                [value]="incidents()"
+                styleClass="p-datatable-sm"
+                [rowHover]="true"
+                sortField="incidentDate"
+                [sortOrder]="-1"
+              >
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th pSortableColumn="folio">Folio <p-sortIcon field="folio" /></th>
+                    <th pSortableColumn="incidentDate">Fecha <p-sortIcon field="incidentDate" /></th>
+                    <th>Descripción</th>
+                    <th>Tipo reparación</th>
+                    <th pSortableColumn="status">Estado <p-sortIcon field="status" /></th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-inc>
+                  <tr>
+                    <td><code class="folio-code">{{ inc.folio }}</code></td>
+                    <td class="cell-nowrap">{{ inc.incidentDate | date:'dd/MM/yyyy' }}</td>
+                    <td class="cell-desc">{{ inc.description }}</td>
+                    <td>{{ getRepairTypeLabel(inc.repairType) }}</td>
+                    <td>
+                      <p-tag
+                        [value]="getIncidentStatusLabel(inc.status)"
+                        [severity]="getIncidentStatusSeverity(inc.status)"
+                      />
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            }
           </div>
         </p-tabpanel>
 
         <!-- ════════════════════ TAB 4 — MANTENIMIENTO ════════════════════ -->
         <p-tabpanel value="mantenimiento">
           <div class="tab-content">
-            <div class="detail-placeholder">
-              <i class="pi pi-wrench detail-placeholder__icon"></i>
-              <p class="detail-placeholder__title">Módulo en desarrollo</p>
-              <p class="detail-placeholder__sub">
-                La bitácora de mantenimiento estará disponible en el siguiente sprint.
-              </p>
+            <div class="tab-toolbar">
+              <h3 class="tab-toolbar__title">Bitácora de mantenimiento</h3>
+              <button
+                pButton
+                *hasRole="['ADMIN', 'OPERADOR']"
+                icon="pi pi-plus"
+                label="Registrar mantenimiento"
+                [disabled]="bien.lifecycleStatus === 'DECOMMISSIONED'"
+                (click)="goToNewMaintenance(bien.id)"
+              ></button>
             </div>
+
+            @if (loadingMaintenances()) {
+              <p-skeleton height="200px" />
+            } @else if (maintenances().length === 0) {
+              <div class="detail-empty">
+                <i class="pi pi-wrench detail-empty__icon"></i>
+                <p>Sin registros de mantenimiento para este bien.</p>
+                <button
+                  pButton
+                  *hasRole="['ADMIN', 'OPERADOR']"
+                  icon="pi pi-plus"
+                  label="Registrar primer mantenimiento"
+                  (click)="goToNewMaintenance(bien.id)"
+                ></button>
+              </div>
+            } @else {
+              <p-table
+                [value]="maintenances()"
+                styleClass="p-datatable-sm"
+                [rowHover]="true"
+                sortField="performedDate"
+                [sortOrder]="-1"
+              >
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th pSortableColumn="maintenanceType">Tipo <p-sortIcon field="maintenanceType" /></th>
+                    <th pSortableColumn="performedDate">Fecha <p-sortIcon field="performedDate" /></th>
+                    <th>Técnico / Empresa</th>
+                    <th>Costo</th>
+                    <th>Condición</th>
+                    <th>Registrado por</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-m>
+                  <tr>
+                    <td>
+                      <p-tag
+                        [value]="getMaintenanceTypeLabel(m.maintenanceType)"
+                        [severity]="getMaintenanceTypeSeverity(m.maintenanceType)"
+                      />
+                    </td>
+                    <td class="cell-nowrap">{{ m.performedDate | date:'dd/MM/yyyy' }}</td>
+                    <td>{{ m.performedBy ?? '—' }}</td>
+                    <td class="cell-nowrap">
+                      {{ m.cost != null ? (m.cost | currency:'MXN':'symbol':'1.2-2') : '—' }}
+                    </td>
+                    <!-- Muestra condición antes → después si existe -->
+                    <td>
+                      <div class="condition-change">
+                        @if (m.conditionBefore) {
+                          <p-tag
+                            [value]="getConditionLabel(m.conditionBefore)"
+                            [severity]="getConditionSeverity(m.conditionBefore)"
+                          />
+                        }
+                        @if (m.conditionBefore && m.conditionAfter) {
+                          <i class="pi pi-arrow-right condition-change__arrow"></i>
+                        }
+                        @if (m.conditionAfter) {
+                          <p-tag
+                            [value]="getConditionLabel(m.conditionAfter)"
+                            [severity]="getConditionSeverity(m.conditionAfter)"
+                          />
+                        }
+                        @if (!m.conditionBefore && !m.conditionAfter) {
+                          <span class="cell-muted">—</span>
+                        }
+                      </div>
+                    </td>
+                    <td>{{ m.createdByName }}</td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            }
           </div>
         </p-tabpanel>
 
         <!-- ════════════════════ TAB 5 — CICLO DE VIDA ════════════════════ -->
+        <!--
+          El timeline se construye de forma sintética en el computed `timelineEvents`:
+          combina la fecha de alta del bien, asignaciones, incidencias y mantenimientos.
+          No requiere ningún endpoint nuevo ni tabla asset_movement_history.
+        -->
         <p-tabpanel value="ciclovida">
           <div class="tab-content">
-            <div class="detail-placeholder">
-              <i class="pi pi-history detail-placeholder__icon"></i>
-              <p class="detail-placeholder__title">Historial de movimientos no disponible</p>
-              <p class="detail-placeholder__sub">
-                Se habilitará cuando se implemente
-                <code>asset_movement_history</code> en la base de datos.
-              </p>
-            </div>
+
+            @if (loadingTimeline()) {
+              <div class="timeline-skeleton">
+                @for (_ of [1, 2, 3]; track $index) {
+                  <div class="timeline-skeleton__row">
+                    <p-skeleton shape="circle" size="36px" />
+                    <div class="timeline-skeleton__card">
+                      <p-skeleton height="1rem" width="60%" styleClass="mb-2" />
+                      <p-skeleton height="0.8rem" width="40%" />
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p-timeline [value]="timelineEvents()" align="left" styleClass="asset-timeline">
+
+                <!-- Marcador circular con icono y color semántico -->
+                <ng-template pTemplate="marker" let-event>
+                  <span class="timeline-marker" [style.background]="event.color">
+                    <i [class]="event.icon"></i>
+                  </span>
+                </ng-template>
+
+                <!-- Tarjeta de contenido del evento -->
+                <ng-template pTemplate="content" let-event>
+                  <div class="timeline-card">
+                    <div class="timeline-card__header">
+                      <span class="timeline-card__title">{{ event.title }}</span>
+                      @if (event.badge) {
+                        <p-tag
+                          [value]="event.badge"
+                          [severity]="event.badgeSeverity"
+                          styleClass="timeline-card__badge"
+                        />
+                      }
+                    </div>
+                    @if (event.subtitle) {
+                      <p class="timeline-card__sub">{{ event.subtitle }}</p>
+                    }
+                    <span class="timeline-card__date">
+                      <i class="pi pi-calendar"></i>
+                      {{ event.dateObj | date:'dd MMM yyyy' }}
+                    </span>
+                  </div>
+                </ng-template>
+
+              </p-timeline>
+            }
+
           </div>
         </p-tabpanel>
 
