@@ -16,14 +16,23 @@ export interface UserSummary {
 
 export interface UserDetail extends UserSummary {
   updatedAt: string;
+  guardian?: GuardianSummary | null;
+}
+
+export interface GuardianSummary {
+  id: number;
+  fullName: string;
+  employeeNumber: string;
+  department: string;
 }
 
 export interface CreateUserRequest {
   username: string;
-  fullName: string;
-  email: string;
-  employeeNumber: string;
+  /*fullName?: string;
+  email?: string;
+  employeeNumber?: string;*/
   role: UserRole;
+  guardianId: number; 
 }
 
 export interface UpdateUserRoleRequest {

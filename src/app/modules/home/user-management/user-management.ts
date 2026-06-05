@@ -16,6 +16,7 @@ import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { UserRole } from '../../../core/models/auth.model';
 import { CreateUserRequest, UserDetail, UserSummary } from '../../../core/models/user.model';
 import { UserManagementService } from '../../../core/services/user-management/user-management.service';
+import { GuardianService, GuardianResponse  } from '../../../core/services/guardian/guardian.service';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 
@@ -45,7 +46,7 @@ const ROLE_SEVERITY: Record<UserRole, TagSeverity> = {
 };
 
 const EMPTY_FORM: CreateUserRequest = {
-  username: '', fullName: '', email: '', employeeNumber: '', role: 'OPERADOR',
+  username: '', role: 'OPERADOR', guardianId: 0,
 };
 
 // Derivados de ROLE_OPTIONS para no duplicar la lista
@@ -78,6 +79,7 @@ export class UserManagement implements OnInit {
   private readonly messages   = inject(MessageService);
   private readonly confirmSvc = inject(ConfirmationService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly guardianService = inject(GuardianService);
 
   private readonly searchSubject = new Subject<string>();
 
@@ -106,16 +108,32 @@ export class UserManagement implements OnInit {
   readonly detailRole  = signal<UserRole>('OPERADOR');
   readonly pendingRole = signal<UserRole | null>(null);
 
+  /*readonly createFormValid = computed(() => {
+    const f = this.createForm();
+    const usernameOk = f.username.trim().length >= 3;
+    const roleOk     = !!f.role;
+
+    if (f.guardianId) {
+      return usernameOk && roleOk;  // Modo vinculado: solo username y rol son obligatorios
+    }
+    return (      // Modo manual: todos los campos siguen siendo obligatorios
+      usernameOk &&
+      (f.fullName ?? '').trim().length > 0 &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email ?? '') &&
+      /^EMP-\d{3,6}$/.test(f.employeeNumber ?? '') &&
+      roleOk
+    );
+  });*/
   readonly createFormValid = computed(() => {
     const f = this.createForm();
     return (
-      f.username.trim().length >= 3                     &&
-      f.fullName.trim().length  >  0                    &&
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)       &&
-      /^EMP-\d{3,6}$/.test(f.employeeNumber)            &&
-      !!f.role
+      f.username.trim().length >= 3 &&
+      !!f.role                      &&
+      f.guardianId > 0
     );
   });
+
+  
 
   // ── Constantes expuestas al template ──────────────────────────────────────
   readonly roleOptions       = ROLE_OPTIONS;
@@ -241,9 +259,39 @@ export class UserManagement implements OnInit {
   }
 
   // ── Crear ─────────────────────────────────────────────────────────────────
-  openCreateDialog(): void {
+  /*openCreateDialog(): void {
     this.createForm.set({ ...EMPTY_FORM });
     this.showCreateDialog.set(true);
+  }*/
+
+    // Agregar en user-management.ts
+  readonly guardianOptions = signal<{ label: string; value: number }[]>([]);
+  readonly loadingGuardians = signal(false);
+
+  openCreateDialog(): void {
+    this.createForm.set({ ...EMPTY_FORM });
+    this.loadGuardianOptions();
+    this.showCreateDialog.set(true);
+  }
+
+  private loadGuardianOptions(): void {
+    this.loadingGuardians.set(true);
+    this.guardianService.getGuardians(0, 200).subscribe({
+      next: page => {
+        this.guardianOptions.set(
+          page.content.map(g => ({
+            label: `${g.fullName}  •  ${g.employeeNumber}`,
+            value: g.id,
+          }))
+        );
+        this.loadingGuardians.set(false);
+      },
+      error: () => {
+        this.loadingGuardians.set(false);
+        this.messages.add({ severity: 'error', summary: 'Error',
+          detail: 'No se pudo cargar la lista de resguardantes.' });
+      },
+    });
   }
 
   updateField<K extends keyof CreateUserRequest>(key: K, value: CreateUserRequest[K]): void {
