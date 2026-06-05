@@ -65,12 +65,28 @@
         />
       </div>
 
+      <div class="inv-filter-item">
+        <label class="inv-filter-item__label" for="filter-date">Fecha de registro</label>
+        <p-datepicker
+          id="filter-date"
+          [(ngModel)]="selectedDateRange"
+          selectionMode="range"
+          [readonlyInput]="true"
+          placeholder="Seleccionar rango"
+          [showClear]="true"
+          (onSelect)="onFilterChange()"
+          (onClear)="onFilterChange()"
+          styleClass="w-full">
+        </p-datepicker>
+      </div>
+
     </div>
 
     @if (hasActiveFilters) {
       <button
         pButton
         pRipple
+        
         icon="pi pi-filter-slash"
         label="Limpiar filtros"
         class="inv-btn-clear"

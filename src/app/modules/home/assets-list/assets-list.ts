@@ -15,6 +15,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { Router } from '@angular/router';
+import { DatePickerModule } from 'primeng/datepicker';
 
 // ── Helpers de UI ─────────────────────────────────────────────────────────────
 
@@ -57,6 +58,7 @@ const LIFECYCLE_SEVERITY: Record<LifecycleStatus, 'info' | 'success' | 'secondar
     TagModule,
     ButtonModule,
     InputTextModule,
+    DatePickerModule,
     TooltipModule,
     SkeletonModule,
     ToastModule,            // RippleModule ya está incluido en ButtonModule en v17+
@@ -71,6 +73,8 @@ export class AssetsList implements OnInit {
   private readonly messageService = inject(MessageService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly router = inject(Router);
+
+  selectedDateRange: Date[] | null = null;
 
 
   // ── Estado ────────────────────────────────────────────────────────────────
@@ -153,6 +157,7 @@ export class AssetsList implements OnInit {
   clearFilters(): void {
     this.selectedCondition = null;
     this.selectedLifecycle = null;
+    this.selectedDateRange = null;
     this.onFilterChange();
   }
 
@@ -162,7 +167,7 @@ export class AssetsList implements OnInit {
   }
 
   get hasActiveFilters(): boolean {
-    return !!this.selectedCondition || !!this.selectedLifecycle;
+    return !!this.selectedCondition || !!this.selectedLifecycle || !!this.selectedDateRange;
   }
 
   private fetchAssets(): void {
@@ -173,6 +178,14 @@ export class AssetsList implements OnInit {
       ...(this.selectedCondition && { conditionStatus: this.selectedCondition }),
       ...(this.selectedLifecycle && { lifecycleStatus: this.selectedLifecycle }),
     };
+
+    // 6. Extraer y formatear el rango de fechas antes de consultar
+    // PrimeNG devuelve un arreglo [Date, Date] cuando seleccionas el rango completo
+    if (this.selectedDateRange && this.selectedDateRange.length === 2 && this.selectedDateRange[1]) {
+      // Formateamos las fechas a 'YYYY-MM-DD' (puedes ajustarlo si tu backend espera otro formato)
+      params.startDate = this.selectedDateRange[0].toISOString().split('T')[0];
+      params.endDate = this.selectedDateRange[1].toISOString().split('T')[0];
+    }
 
     this.assetService.getAssets(params).subscribe({
       next: (page) => {

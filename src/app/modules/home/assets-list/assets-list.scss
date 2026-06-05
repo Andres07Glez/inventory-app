@@ -156,9 +156,11 @@
 
 .inv-btn-clear {
   &.p-button {
-    background: transparent;
-    border: 1px solid var(--inv-border);
-    color: var(--inv-text-secondary);
+    // ── CAMBIO: Fondo verde institucional (PrimeNG Primary) y texto blanco ──
+    background: var(--p-primary-color);
+    border: 1px solid var(--p-primary-color);
+    color: #ffffff !important; // Fuerza el texto a blanco
+    
     font-size: 0.8125rem;
     font-family: var(--font-primary);
     border-radius: var(--inv-radius-sm);
@@ -166,10 +168,20 @@
     padding: 0.5rem 1rem;
     align-self: flex-end;
 
+    // ── CAMBIO: Asegura que el icono de PrimeNG herede el color blanco ──
+    :host ::ng-deep .p-button-icon {
+      color: #ffffff !important;
+    }
+
+    // ── CAMBIO: Estado Hover con un verde un poco más oscuro o variante del tema ──
     &:hover {
-      background: var(--inv-surface-alt);
-      border-color: var(--inv-text-muted);
-      color: var(--inv-text-primary);
+      background: var(--p-primary-hover-color);
+      border-color: var(--p-primary-hover-color);
+      color: #ffffff !important;
+      
+      :host ::ng-deep .p-button-icon {
+        color: #ffffff !important;
+      }
     }
   }
 }

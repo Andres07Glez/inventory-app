@@ -28,8 +28,11 @@ export class AssetService {
     if (params.page !== undefined) httpParams = httpParams.set('page', params.page.toString());
     if (params.size !== undefined) httpParams = httpParams.set('size', params.size.toString());
     if (params.sort) httpParams = httpParams.set('sort', params.sort);
+    if (params.startDate) httpParams = httpParams.set('startDate', params.startDate);
+    if (params.endDate) httpParams = httpParams.set('endDate', params.endDate);
 
-    return this.http.get<PageResponse<AssetResponseDTO>>(this.endpoint, { params: httpParams });
+    return this.http.get<ApiResponse<PageResponse<AssetResponseDTO>>>(this.endpoint, { params: httpParams })
+      .pipe(map(r => r.data));
   }
   getAssetById(id: number): Observable<AssetDetailResponseDTO> {
     return this.http

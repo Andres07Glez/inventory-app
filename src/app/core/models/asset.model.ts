@@ -79,6 +79,8 @@ export interface AssetQueryParams {
   page?: number;
   size?: number;
   sort?: string;
+  startDate?: string; // Formato esperado: YYYY-MM-DD
+  endDate?: string;
 }
 
 // ── Opciones para los dropdowns de filtro ────────────────────────────────────

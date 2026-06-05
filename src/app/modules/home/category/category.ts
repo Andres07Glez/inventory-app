@@ -21,7 +21,15 @@ import { CategoryService } from '../../../core/services/category/category.servic
 import { debounceTime, distinctUntilChanged, Subject, switchMap } from 'rxjs';
 import { RippleModule } from 'primeng/ripple';
 
-const PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 10;
+
+/** Estado de paginación cohesionado. Inmutable: siempre se reemplaza completo. */
+interface PaginationState {
+  readonly page:     number;
+  readonly pageSize: number;
+  readonly sort:     string;
+  readonly keyword:  string;
+}
  
 @Component({
   selector: 'app-category',
@@ -43,15 +51,27 @@ export class CategoryComponent implements OnInit {
   private readonly confirmationService   = inject(ConfirmationService);
   private readonly cdr                   = inject(ChangeDetectorRef);
   private readonly destroyRef            = inject(DestroyRef);
- 
-  readonly pageSize = PAGE_SIZE;
- 
+
+  // ── Estado de paginación cohesionado ──────────────────────────────────────
+  /** Fuente única de verdad para paginación, orden y búsqueda.
+   *  Al ser un signal se puede leer en computed() y markForCheck() reacciona. */
+  private readonly pagination = signal<PaginationState>({
+    page:     0,
+    pageSize: DEFAULT_PAGE_SIZE,
+    sort:     'id,asc',
+    keyword:  '',
+  });
+
+  /** Expuesto al template solo para [rows] inicial del p-table */
+  readonly pageSize = DEFAULT_PAGE_SIZE;
+
+  /** Keyword expuesto al template para el [value] del input de búsqueda */
+  get categoryKeyword(): string { return this.pagination().keyword; }
+  // ─────────────────────────────────────────────────────────────────────────
+
   categories      = signal<CategoryResponseDTO[]>([]);
   categoryTotal   = signal(0);
   categoryLoading = signal(true);
-  categoryPage    = 0;
-  categorySort    = 'id,asc';
-  categoryKeyword = '';
   private readonly categorySearch$ = new Subject<string>();
  
   // ── Tree expand/collapse ──────────────────────────────────────────────────
@@ -134,10 +154,14 @@ export class CategoryComponent implements OnInit {
         debounceTime(350),
         distinctUntilChanged(),
         switchMap((kw) => {
+          // Resetear a página 0 al buscar; conservar pageSize y sort del usuario
+          const { pageSize, sort } = this.pagination();
+          this.pagination.set({ page: 0, pageSize, sort, keyword: kw });
           this.categoryLoading.set(true);
-          this.categoryPage = 0;
-          if (!kw.trim()) return this.categoryService.getCategories(0, PAGE_SIZE, this.categorySort);
-          return this.categoryService.searchCategories(kw.trim(), 0, PAGE_SIZE);
+
+          const trimmed = kw.trim();
+          if (!trimmed) return this.categoryService.getCategories(0, pageSize, sort);
+          return this.categoryService.searchCategories(trimmed, 0, pageSize);
         }),
         takeUntilDestroyed(this.destroyRef)
       )
@@ -146,7 +170,7 @@ export class CategoryComponent implements OnInit {
           this.categories.set(page.content);
           this.categoryTotal.set(page.totalElements);
           this.updateParentOptions(page.content);
-          // Al buscar mostramos todo expandido para no ocultar resultados
+          // Al buscar expandimos todo para no ocultar resultados hijos
           this.expandedCategories.set(
             new Set(page.content.map((c: CategoryResponseDTO) => c.id))
           );
@@ -156,32 +180,41 @@ export class CategoryComponent implements OnInit {
         error: () => { this.categoryLoading.set(false); this.cdr.markForCheck(); },
       });
   }
- 
+
   onCategorySearch(value: string): void {
-    this.categoryKeyword = value;
     this.categorySearch$.next(value);
   }
- 
+
   onCategoryLazyLoad(event: TableLazyLoadEvent): void {
-    this.categoryPage = Math.floor((event.first ?? 0) / PAGE_SIZE);
-    if (event.sortField) {
-      this.categorySort = `${event.sortField},${(event.sortOrder ?? 1) === 1 ? 'asc' : 'desc'}`;
-    }
+    // FIX: usar event.rows (tamaño de página REAL elegido por el usuario)
+    // en vez de la constante DEFAULT_PAGE_SIZE. Sin esto, al cambiar a 25 o
+    // 50 filas la división produce un número de página incorrecto para el backend.
+    const currentSize = this.pagination().pageSize;
+    const incomingSize = event.rows ?? currentSize;
+    const page = Math.floor((event.first ?? 0) / incomingSize);
+
+    const sort = event.sortField
+      ? `${event.sortField},${(event.sortOrder ?? 1) === 1 ? 'asc' : 'desc'}`
+      : this.pagination().sort;
+
+    this.pagination.update(prev => ({ ...prev, page, pageSize: incomingSize, sort }));
     this.loadCategories();
   }
- 
+
   private loadCategories(): void {
     this.categoryLoading.set(true);
-    const obs = this.categoryKeyword.trim()
-      ? this.categoryService.searchCategories(this.categoryKeyword, this.categoryPage, PAGE_SIZE)
-      : this.categoryService.getCategories(this.categoryPage, PAGE_SIZE, this.categorySort);
- 
+    const { page, pageSize, sort, keyword } = this.pagination();
+    const trimmed = keyword.trim();
+
+    const obs = trimmed
+      ? this.categoryService.searchCategories(trimmed, page, pageSize)
+      : this.categoryService.getCategories(page, pageSize, sort);
+
     obs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (page) => {
-        this.categories.set(page.content);
-        this.categoryTotal.set(page.totalElements);
-        this.updateParentOptions(page.content);
-        // Reiniciar estado de expansión al cargar nueva página
+      next: (res) => {
+        this.categories.set(res.content);
+        this.categoryTotal.set(res.totalElements);
+        this.updateParentOptions(res.content);
         this.expandedCategories.set(new Set());
         this.categoryLoading.set(false);
         this.cdr.markForCheck();
