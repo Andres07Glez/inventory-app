@@ -15,11 +15,11 @@
   --inv-border:          #CCCCCC;
   --inv-border-focus:    #007D68;
 
-  // Primario
-  --inv-primary:         #007D68;
-  --inv-primary-hover:   #006655;
-  --inv-primary-light:   #CCFFF6;
-  --inv-primary-text:    #FFFFFF;
+// Primario
+--cat-primary:         var(--color-primary); 
+--cat-primary-hover:   var(--color-primary-dark); 
+--cat-primary-light:   var(--color-primary-light); 
+--cat-primary-text:    #FFFFFF;
 
   // Texto
   --inv-text-primary:    #333333;

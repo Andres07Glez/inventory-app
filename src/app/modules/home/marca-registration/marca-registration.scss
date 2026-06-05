@@ -21,11 +21,11 @@
   --cat-border:          #CCCCCC;
   --cat-border-focus:    #007D68;
 
-  /* Primario */
-  --cat-primary:         #007D68;
-  --cat-primary-hover:   #006655;
-  --cat-primary-light:   #CCFFF6;
-  --cat-primary-text:    #FFFFFF;
+// Primario
+--cat-primary:         var(--color-primary); 
+--cat-primary-hover:   var(--color-primary-dark); 
+--cat-primary-light:   var(--color-primary-light); 
+--cat-primary-text:    #FFFFFF;
 
   /* Texto */
   --cat-text-primary:    #333333;
