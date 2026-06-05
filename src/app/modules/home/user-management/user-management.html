@@ -258,6 +258,59 @@
   styleClass="um-dialog"
 >
   <div class="um-form">
+
+    <!-- Selector de resguardante -->
+    <div class="um-form__field">
+      <label class="um-form__label">Resguardante *</label>
+      <p-select
+        [options]="guardianOptions()"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Seleccionar resguardante…"
+        [filter]="true"
+        filterPlaceholder="Buscar nombre o número…"
+        [loading]="loadingGuardians()"
+        [ngModel]="createForm().guardianId || null"
+        (onChange)="updateField('guardianId', $event.value)"
+        appendTo="body"
+        styleClass="um-form__select"
+      />
+      <span class="um-form__hint">
+        El nombre, correo y número de empleado se tomarán de este registro.
+      </span>
+    </div>
+
+    <!-- Nombre de usuario -->
+    <div class="um-form__field">
+      <label class="um-form__label">Nombre de usuario *</label>
+      <input pInputText class="um-form__input" placeholder="Ej. mgarcia"
+        [value]="createForm().username"
+        (input)="updateField('username', $any($event.target).value)" />
+      <span class="um-form__hint">Mín. 3 caracteres, sin espacios</span>
+    </div>
+
+    <!-- Contraseña -->
+    <!-- Contraseña: ya no se muestra, solo el aviso -->
+    <div class="um-form__info">
+      <i class="pi pi-info-circle"></i>
+      <span>La contraseña inicial será el número de empleado del resguardante seleccionado.</span>
+    </div>
+
+    <!-- Rol -->
+    <div class="um-form__field">
+      <label class="um-form__label">Rol *</label>
+      <p-select
+        [options]="roleOptions"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Seleccionar rol"
+        [ngModel]="createForm().role"
+        (onChange)="updateField('role', $event.value)"
+        appendTo="body"
+        styleClass="um-form__select"
+      />
+    </div>
+      <!--div class="um-form">
     <div class="um-form__field">
       <label class="um-form__label">Nombre completo *</label>
       <input pInputText class="um-form__input" placeholder="Ej. María García López"
@@ -298,10 +351,12 @@
       <i class="pi pi-info-circle"></i>
       <span>La contraseña inicial será el número de empleado. El usuario deberá cambiarla en su primer acceso.</span>
     </div>
-  </div>
+  </div-->
 
+  </div>
   <ng-template pTemplate="footer">
-    <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="showCreateDialog.set(false)" />
+    <p-button label="Cancelar" severity="secondary" [text]="true"
+      (onClick)="showCreateDialog.set(false)" />
     <p-button label="Crear usuario" icon="pi pi-check"
       [loading]="saving()" [disabled]="!createFormValid()" (onClick)="create()" />
   </ng-template>

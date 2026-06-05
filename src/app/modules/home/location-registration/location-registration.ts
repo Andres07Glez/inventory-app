@@ -10,6 +10,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
+import { SelectModule } from 'primeng/select'; 
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
@@ -35,7 +36,7 @@ const PAGE_SIZE = 10;
   imports: [
     CommonModule, ReactiveFormsModule, TableModule, DialogModule, ConfirmDialogModule,
     ButtonModule, InputTextModule, TextareaModule, TagModule, ToastModule,
-    TooltipModule, SkeletonModule, IconFieldModule, InputIconModule,
+    TooltipModule, SkeletonModule, IconFieldModule, InputIconModule, SelectModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './location-registration.html',
@@ -52,6 +53,11 @@ export class LocationRegistration implements OnInit {
   private readonly destroyRef          = inject(DestroyRef);
 
   readonly pageSize = PAGE_SIZE;
+
+  campuses = signal([
+    { name: 'Loma Bonita' },
+    { name: 'Tuxtepec' }
+  ]);
 
   // ── Estado de tabla ──────────────────────────────────────────────────────
   locations       = signal<LocationResponse[]>([]);
