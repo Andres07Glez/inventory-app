@@ -1,3 +1,5 @@
+import { Campus } from './location.model';
+
 export class Asset {
     public id!: number; // BIGINT UNSIGNED
 
@@ -57,6 +59,7 @@ export interface AssetResponseDTO {
   model: string;
   categoryName: string;
   locationName: string;
+  campus: Campus | null;
   conditionStatus: ConditionStatus;
   lifecycleStatus: LifecycleStatus;
 }
@@ -135,7 +138,7 @@ export interface AssetDetailResponseDTO {
   categoryName: string;
   locationName?: string;
   building?: string;
-  campus?: string;
+  campus?: Campus;
   conditionStatus: ConditionStatus;
   lifecycleStatus: LifecycleStatus;
   invoiceDate?: string;

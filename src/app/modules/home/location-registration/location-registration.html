@@ -70,7 +70,7 @@
         </td>
 
         <td>{{ loc.building || '—' }}</td>
-        <td>{{ loc.campus   || '—' }}</td>
+        <td>{{ getCampusLabel(loc.campus) }}</td>
 
         <td>
           <span class="loc-desc" [title]="loc.description ?? ''">
@@ -194,16 +194,18 @@
       </div>
 
       <div class="loc-field">
-        <label class="loc-label">Campus <span class="loc-opt">(opcional)</span></label>
+        <label class="loc-label">Campus <span class="loc-req">*</span></label>
         <p-select
           formControlName="campus"
-          [options]="campuses()"
-          optionLabel="name"
-          optionValue="name"
+          [options]="campuses"
+          optionLabel="label"
+          optionValue="value"
           placeholder="Selecciona un campus"
-          [showClear]="true"
           styleClass="loc-dropdown-w-100"
         ></p-select>
+        @if (hasError('campus', 'required')) {
+          <small class="loc-error"><i class="pi pi-exclamation-circle"></i> El campus es obligatorio.</small>
+        }
       </div>
     </div>
 

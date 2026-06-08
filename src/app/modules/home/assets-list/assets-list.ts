@@ -4,6 +4,7 @@ import { AssetService } from '../../../core/services/asset/asset.service';
 import { MessageService } from 'primeng/api';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { Toast, ToastModule } from "primeng/toast";
+import { CAMPUS_LABELS } from '../../../core/models/location.model';
 import { Select, SelectModule } from "primeng/select";
 import { Tag, TagModule } from "primeng/tag";
 import { Skeleton, SkeletonModule } from "primeng/skeleton";
@@ -68,6 +69,8 @@ const LIFECYCLE_SEVERITY: Record<LifecycleStatus, 'info' | 'success' | 'secondar
   styleUrl: './assets-list.scss',
 })
 export class AssetsList implements OnInit {
+  readonly campusLabels = CAMPUS_LABELS;
+
   // ── DI ────────────────────────────────────────────────────────────────────
   private readonly assetService = inject(AssetService);
   private readonly messageService = inject(MessageService);
@@ -206,5 +209,10 @@ export class AssetsList implements OnInit {
     });
   }
 
+  /** Convierte el valor del enum al texto legible para mostrar en la tabla. */
+  getCampusLabel(campus: string | null): string {
+    if (!campus) return '—';
+    return this.campusLabels[campus as keyof typeof this.campusLabels] ?? campus;
+  }
 
 }

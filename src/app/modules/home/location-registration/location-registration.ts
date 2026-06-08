@@ -10,7 +10,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
-import { SelectModule } from 'primeng/select'; 
+import { SelectModule } from 'primeng/select';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
@@ -27,6 +27,7 @@ import {
   LocationResponse,
   SpringPage
 } from '../../../core/services/location/location.service';
+import { Campus, CAMPUS_OPTIONS, CAMPUS_LABELS } from '../../../core/models/location.model';
 
 const PAGE_SIZE = 10;
 
@@ -52,12 +53,9 @@ export class LocationRegistration implements OnInit {
   private readonly cdr                 = inject(ChangeDetectorRef);
   private readonly destroyRef          = inject(DestroyRef);
 
-  readonly pageSize = PAGE_SIZE;
-
-  campuses = signal([
-    { name: 'Loma Bonita' },
-    { name: 'Tuxtepec' }
-  ]);
+  readonly pageSize    = PAGE_SIZE;
+  readonly campuses    = CAMPUS_OPTIONS;   // [{ label: 'Loma Bonita', value: 'LOMA_BONITA' }, ...]
+  readonly campusLabel = CAMPUS_LABELS;    // { LOMA_BONITA: 'Loma Bonita', TUXTEPEC: 'Tuxtepec' }
 
   // ── Estado de tabla ──────────────────────────────────────────────────────
   locations       = signal<LocationResponse[]>([]);
@@ -77,7 +75,7 @@ export class LocationRegistration implements OnInit {
   form: FormGroup = this.fb.group({
     name:        ['', [Validators.required, Validators.maxLength(150)]],
     building:    ['', Validators.maxLength(100)],
-    campus:      ['', Validators.maxLength(100)],
+    campus:      [null as Campus | null, Validators.required],
     description: ['', Validators.maxLength(255)],
   });
 
@@ -149,8 +147,8 @@ export class LocationRegistration implements OnInit {
   openEdit(loc: LocationResponse): void {
     this.form.patchValue({
       name:        loc.name,
-      building:    loc.building ?? '',
-      campus:      loc.campus   ?? '',
+      building:    loc.building    ?? '',
+      campus:      loc.campus      ?? null,
       description: loc.description ?? '',
     });
     this.editingId.set(loc.id);
@@ -173,7 +171,7 @@ export class LocationRegistration implements OnInit {
     const payload: LocationRequest = {
       name:        raw.name.trim(),
       building:    raw.building?.trim()    || null,
-      campus:      raw.campus?.trim()      || null,
+      campus:      raw.campus,             // ya es Campus | null — el backend lo valida
       description: raw.description?.trim() || null,
     };
 
@@ -252,5 +250,11 @@ export class LocationRegistration implements OnInit {
   hasError(field: string, error: string): boolean {
     const c = this.form.get(field);
     return !!(c?.hasError(error) && c.touched);
+  }
+
+  /** Convierte el valor del enum al texto legible para mostrar en la tabla. */
+  getCampusLabel(campus: string | null): string {
+    if (!campus) return '—';
+    return this.campusLabel[campus as keyof typeof this.campusLabel] ?? campus;
   }
 }

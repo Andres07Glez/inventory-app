@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { SkeletonModule } from 'primeng/skeleton';
 import { DashboardStats } from '../../../core/models/dashboard-stats.model';
 import { DashboardService } from '../../../core/services/dashboard/dashboard.service';
+import { CAMPUS_LABELS } from '../../../core/models/location.model';
 import { ChartModule } from 'primeng/chart';
 import type { ChartData, ChartOptions } from 'chart.js';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -150,7 +151,8 @@ export class Dashboard implements OnInit{
     }
 
     const labels = s.topLocations.map(l => {
-      const label = l.campus ? `${l.locationName} · ${l.campus}` : l.locationName;
+      const campusStr = l.campus ? CAMPUS_LABELS[l.campus] : null;
+      const label = campusStr ? `${l.locationName} · ${campusStr}` : l.locationName;
       return label.length > 28 ? label.substring(0, 26) + '…' : label;
     });
 

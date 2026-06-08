@@ -1,3 +1,5 @@
+import { Campus } from './location.model';
+
 export interface Guardian {
   id: number;
   employeeNumber: string;
@@ -20,12 +22,12 @@ export interface GuardianRequest {
 }
 
 export interface Location {
-  id: number;
-  name: string;
-  building: string;
-  campus: string;
+  id:          number;
+  name:        string;
+  building:    string;
+  campus:      Campus;
   description: string;
-  isActive: boolean;
+  isActive:    boolean;
 }
 
 export interface Page<T> {

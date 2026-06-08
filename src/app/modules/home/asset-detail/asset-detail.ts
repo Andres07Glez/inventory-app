@@ -6,6 +6,7 @@ import { AssetService } from '../../../core/services/asset/asset.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
+import { CAMPUS_LABELS } from '../../../core/models/location.model';
 import { CardModule } from 'primeng/card';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { SelectModule } from 'primeng/select';
@@ -84,6 +85,8 @@ const TIMELINE_META: Record<TimelineEventType, { icon: string; color: string }> 
   styleUrl: './asset-detail.scss',
 })
 export class AssetDetail implements OnInit{
+
+  readonly campusLabels = CAMPUS_LABELS;
 
   // ── Servicios ─────────────────────────────────────────────────────────────
   private readonly route               = inject(ActivatedRoute);

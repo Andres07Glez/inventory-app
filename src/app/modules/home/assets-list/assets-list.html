@@ -192,7 +192,7 @@
               <span class="inv-location__name">{{ asset.locationName }}</span>
               @if (asset.campus) {
                 <span class="inv-location__campus">
-                  <i class="pi pi-map-marker"></i> {{ asset.campus }}
+                  <i class="pi pi-map-marker"></i> {{ getCampusLabel(asset.campus) }}
                 </span>
               }
             </div>
