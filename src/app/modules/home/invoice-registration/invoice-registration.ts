@@ -26,9 +26,9 @@ import {
 } from '../../../core/service/invoice.service';
 
 const PAGE_SIZE = 10;
-
+ 
 const MIN_INVOICE_YEAR = 2000;
-
+ 
 function minDateValidator(control: AbstractControl): ValidationErrors | null {
   const value = control.value;
   if (!value) return null;
@@ -36,7 +36,7 @@ function minDateValidator(control: AbstractControl): ValidationErrors | null {
   if (isNaN(date.getTime())) return null;
   return date.getFullYear() > MIN_INVOICE_YEAR ? null : { minDate: { min: MIN_INVOICE_YEAR } };
 }
-
+ 
 @Component({
   selector: 'app-invoice-registration',
   standalone: true,
@@ -51,18 +51,18 @@ function minDateValidator(control: AbstractControl): ValidationErrors | null {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InvoiceRegistration implements OnInit {
-
+ 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
-
+ 
   private readonly invoiceService      = inject(InvoiceService);
   private readonly fb                  = inject(FormBuilder);
   private readonly messageService      = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly cdr                 = inject(ChangeDetectorRef);
   private readonly destroyRef          = inject(DestroyRef);
-
+ 
   readonly pageSize = PAGE_SIZE;
-
+ 
   // ── Tabla ────────────────────────────────────────────────────────────────
   invoices      = signal<InvoiceResponse[]>([]);
   invoiceTotal  = signal(0);
@@ -71,42 +71,41 @@ export class InvoiceRegistration implements OnInit {
   invoiceSort   = 'invoiceDate,desc';
   invoiceKeyword = '';
   private readonly invoiceSearch$ = new Subject<string>();
-
+ 
   // ── Diálogo ──────────────────────────────────────────────────────────────
   dialogVisible   = signal(false);
   dialogMode      = signal<'create' | 'edit'>('create');
   dialogLoading   = signal(false);
   editingId       = signal<number | null>(null);
   selectedFileName = signal('');
-
+ 
   // ── PDF ──────────────────────────────────────────────────────────────────
   /** Archivo PDF seleccionado por el usuario, listo para subir */
   public selectedFile: File | null = null;
   /** URL pública del PDF ya almacenado (viene del backend en modo edición) */
   existingDocumentUrl = signal<string | null>(null);
-
+ 
   // ── Proveedores ──────────────────────────────────────────────────────────
   suppliers        = signal<SupplierResponse[]>([]);
   loadingSuppliers = signal(false);
-
+ 
   readonly today   = new Date();
   readonly maxDate = new Date();
   readonly minDate = new Date(MIN_INVOICE_YEAR + 1, 0, 1); // 1 Jan 2001
-
+ 
   form: FormGroup = this.fb.group({
     invoiceNumber: ['', [Validators.required, Validators.maxLength(100)]],
     supplierId:    [null, Validators.required],
     invoiceDate:   [this.today, [Validators.required, minDateValidator]],
-    documentPath:  ['', Validators.maxLength(500)],
     notes:         ['', Validators.maxLength(1000)],
   });
-
+ 
   ngOnInit(): void {
     this.loadInvoices();
     this.loadSuppliers();
     this.setupSearch();
   }
-
+ 
   private setupSearch(): void {
     this.invoiceSearch$.pipe(
       debounceTime(350),
@@ -122,7 +121,7 @@ export class InvoiceRegistration implements OnInit {
       error: () => { this.invoiceLoading.set(false); this.cdr.markForCheck(); },
     });
   }
-
+ 
   private loadInvoices(): void {
     this.invoiceLoading.set(true);
     this.invoiceService.getAll(this.invoicePage, PAGE_SIZE, this.invoiceKeyword)
@@ -132,14 +131,14 @@ export class InvoiceRegistration implements OnInit {
         error: () => { this.invoiceLoading.set(false); this.cdr.markForCheck(); },
       });
   }
-
+ 
   private applyPage(page: SpringPage<InvoiceResponse>): void {
     this.invoices.set(page.content);
     this.invoiceTotal.set(page.totalElements);
     this.invoiceLoading.set(false);
     this.cdr.markForCheck();
   }
-
+ 
   private loadSuppliers(): void {
     this.loadingSuppliers.set(true);
     this.invoiceService.getSuppliers()
@@ -149,12 +148,12 @@ export class InvoiceRegistration implements OnInit {
         error: () => { this.loadingSuppliers.set(false); },
       });
   }
-
+ 
   onSearch(value: string): void {
     this.invoiceKeyword = value;
     this.invoiceSearch$.next(value);
   }
-
+ 
   onLazyLoad(event: TableLazyLoadEvent): void {
     this.invoicePage = Math.floor((event.first ?? 0) / PAGE_SIZE);
     if (event.sortField) {
@@ -162,10 +161,10 @@ export class InvoiceRegistration implements OnInit {
     }
     this.loadInvoices();
   }
-
+ 
   // ── Diálogo ───────────────────────────────────────────────────────────────
   openCreate(): void {
-    this.form.reset({ invoiceNumber: '', supplierId: null, invoiceDate: this.today, documentPath: '', notes: '' });
+    this.form.reset({ invoiceNumber: '', supplierId: null, invoiceDate: this.today, notes: '' });
     this.selectedFileName.set('');
     this.selectedFile = null;                   // limpiar archivo pendiente
     this.existingDocumentUrl.set(null);         // sin PDF previo
@@ -173,27 +172,26 @@ export class InvoiceRegistration implements OnInit {
     this.dialogMode.set('create');
     this.dialogVisible.set(true);
   }
-
+ 
   openEdit(inv: InvoiceResponse): void {
     this.form.patchValue({
       invoiceNumber: inv.invoiceNumber,
       supplierId:    inv.supplierId ?? null,
       invoiceDate:   inv.invoiceDate ? this.toDate(inv.invoiceDate) : this.today,
-      documentPath:  inv.documentPath ?? '',
       notes:         inv.notes ?? '',
     });
-    this.selectedFileName.set(inv.documentPath ?? '');
+    this.selectedFileName.set('');
     this.selectedFile = null;                          // ningún archivo nuevo todavía
     this.existingDocumentUrl.set(inv.documentUrl ?? null); // URL del PDF actual
     this.editingId.set(inv.id);
     this.dialogMode.set('edit');
     this.dialogVisible.set(true);
   }
-
+ 
   save(): void {
     this.form.markAllAsTouched();
     if (this.form.invalid) return;
-
+ 
     this.dialogLoading.set(true);
     const raw = this.form.value;
     const payload: InvoiceRequest = {
@@ -201,15 +199,14 @@ export class InvoiceRegistration implements OnInit {
       supplierId:    raw.supplierId,
       invoiceDate:   this.toIsoDate(raw.invoiceDate),
       totalAmount:   1,
-      documentPath:  raw.documentPath?.trim() || undefined,
       notes:         raw.notes?.trim() || undefined,
     };
-
+ 
     const isEdit = this.dialogMode() === 'edit';
     const obs = isEdit
       ? this.invoiceService.update(this.editingId()!, payload)
       : this.invoiceService.create(payload);
-
+ 
     obs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: saved => {
         // Si el usuario seleccionó un PDF, subirlo ahora que ya tenemos el ID
@@ -226,7 +223,7 @@ export class InvoiceRegistration implements OnInit {
       },
     });
   }
-
+ 
   /**
    * Sube el PDF inmediatamente después de crear/actualizar la factura.
    * Se llama solo cuando el usuario seleccionó un archivo nuevo.
@@ -253,7 +250,7 @@ export class InvoiceRegistration implements OnInit {
         },
       });
   }
-
+ 
   /** Cierra el diálogo y notifica éxito completo. */
   private onSaveSuccess(saved: InvoiceResponse, isEdit: boolean): void {
     this.dialogLoading.set(false);
@@ -265,7 +262,7 @@ export class InvoiceRegistration implements OnInit {
     });
     this.loadInvoices();
   }
-
+ 
   confirmDelete(inv: InvoiceResponse): void {
     this.confirmationService.confirm({
       header: 'Eliminar factura',
@@ -287,14 +284,14 @@ export class InvoiceRegistration implements OnInit {
       },
     });
   }
-
+ 
   // ── Archivo ───────────────────────────────────────────────────────────────
   triggerFileSelect(): void { this.fileInput.nativeElement.click(); }
-
+ 
   onFileSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
-
+ 
     // Validar que sea PDF antes de aceptarlo
     if (file.type !== 'application/pdf') {
       this.messageService.add({
@@ -305,37 +302,36 @@ export class InvoiceRegistration implements OnInit {
       this.fileInput.nativeElement.value = '';
       return;
     }
-
-    this.selectedFile = file;                    // guardar referencia al File real
+ 
+    this.selectedFile = file;       // guardar referencia al File real
     this.selectedFileName.set(file.name);
-    this.form.patchValue({ documentPath: file.name });
   }
-
+ 
   /** Abre el PDF actual en una pestaña nueva (solo en modo edición). */
   viewExistingPdf(): void {
     const url = this.existingDocumentUrl();
     if (url) window.open(url, '_blank');
   }
-
+ 
   // ── Utils ─────────────────────────────────────────────────────────────────
   formatDate(d: string | number[]): string {
     if (!d) return '—';
     const [y, m, day] = Array.isArray(d) ? d : (d as string).split('-').map(Number);
     return `${String(day).padStart(2,'0')}/${String(m).padStart(2,'0')}/${y}`;
   }
-
+ 
   private toDate(d: string | number[]): Date {
     if (Array.isArray(d)) return new Date(d[0], d[1] - 1, d[2]);
     const [y, m, day] = (d as string).split('-').map(Number);
     return new Date(y, m - 1, day);
   }
-
+ 
   private toIsoDate(d: Date | string): string {
     if (!d) return '';
     if (typeof d === 'string') return d;
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   }
-
+ 
   hasError(field: string, error: string): boolean {
     const c = this.form.get(field);
     return !!(c?.hasError(error) && c.touched);
