@@ -1,0 +1,102 @@
+// Conserva todos los estilos existentes del componente.
+// Solo se añade .inc-create__condition-row para mostrar la condición del bien.
+
+.inc-create {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  &__section { display: flex; flex-direction: column; gap: 0.75rem; }
+
+  &__section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--p-text-muted-color);
+    margin: 0;
+    i { color: var(--p-primary-600); }
+  }
+
+  &__asset-fixed {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding: 0.5rem 0.75rem;
+    background: var(--p-surface-50);
+    border: 1px solid var(--p-surface-200);
+    border-radius: 0.5rem;
+  }
+
+  &__asset-inv { font-weight: 700; color: var(--p-primary-700); }
+  &__asset-desc { font-size: 0.875rem; }
+  &__asset-loc {
+    font-size: 0.78rem;
+    color: var(--p-text-muted-color);
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  // Condición cargada del bien (solo lectura)
+  &__condition-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 0.25rem;
+    padding: 0.4rem 0.75rem;
+    background: var(--p-surface-50);
+    border: 1px solid var(--p-surface-200);
+    border-radius: 0.5rem;
+  }
+
+  &__condition-label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.8rem;
+    color: var(--p-text-muted-color);
+    i { font-size: 0.85rem; }
+  }
+
+  &__form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.875rem 1.25rem;
+    @media (max-width: 560px) { grid-template-columns: 1fr; }
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    &--full { grid-column: 1 / -1; }
+  }
+
+  &__label {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--p-text-muted-color);
+  }
+
+  &__optional {
+    font-weight: 400;
+    font-style: italic;
+    font-size: 0.78rem;
+  }
+
+  &__hint {
+    font-size: 0.76rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__textarea {
+    width: 100%;
+    resize: vertical;
+    min-height: 4.5rem;
+  }
+}

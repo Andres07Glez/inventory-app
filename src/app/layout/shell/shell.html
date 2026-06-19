@@ -1,0 +1,215 @@
+<p-toast position="top-right" />
+
+<div class="shell" [class.shell--collapsed]="sidebarCollapsed()">
+
+  <!-- ── Topbar ─────────────────────────────────────────────────────────── -->
+  <header class="topbar">
+    <button
+      class="topbar__toggle"
+      (click)="toggleSidebar()"
+      pTooltip="{{ sidebarCollapsed() ? 'Expandir menú' : 'Colapsar menú' }}"
+      tooltipPosition="right"
+    >
+      <i class="pi pi-bars"></i>
+    </button>
+
+    <div class="topbar__brand">
+      <i class="pi pi-database topbar__brand-icon"></i>
+      @if (!sidebarCollapsed()) {
+        <span class="topbar__brand-text">UNPA · Inventarios</span>
+      }
+    </div>
+
+    <div class="topbar__spacer"></div>
+
+    <!-- Buscador por número de inventario -->
+    <div class="topbar__search" [class.topbar__search--open]="showDropdown()">
+
+      <!-- Input row -->
+      <div class="topbar__search-row">
+        @if (isSearching()) {
+          <i class="pi pi-spin pi-spinner topbar__search-icon"></i>
+        } @else {
+          <i class="pi pi-search topbar__search-icon"></i>
+        }
+        <input
+          class="topbar__search-input"
+          type="text"
+          placeholder="Buscar bien por inventario, descripción…"
+          autocomplete="off"
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
+          (keydown)="onSearchKeydown($event)"
+          (focus)="searchResults().length > 0 && showDropdown.set(true)"
+          aria-label="Buscar bien"
+          aria-autocomplete="list"
+          aria-controls="search-results-list"
+        />
+        @if (searchQuery()) {
+          <button class="topbar__search-clear" (click)="clearSearch()" title="Limpiar">
+            <i class="pi pi-times"></i>
+          </button>
+        }
+      </div>
+
+      <!-- Dropdown de resultados -->
+      @if (showDropdown()) {
+        <div class="search-dropdown" id="search-results-list" role="listbox">
+
+          <!-- Estado: cargando -->
+          @if (isSearching()) {
+            <div class="search-dropdown__state">
+              <i class="pi pi-spin pi-spinner"></i>
+              <span>Buscando…</span>
+            </div>
+          }
+
+          <!-- Estado: sin resultados -->
+          @else if (searchResults().length === 0) {
+            <div class="search-dropdown__state search-dropdown__state--empty">
+              <i class="pi pi-inbox"></i>
+              <span>Sin resultados para <strong>"{{ searchQuery() }}"</strong></span>
+            </div>
+          }
+
+          <!-- Resultados -->
+          @else {
+            @for (item of searchResults(); track item.id; let i = $index) {
+              <button
+                class="search-dropdown__item"
+                [class.search-dropdown__item--focused]="selectedIndex() === i"
+                role="option"
+                [attr.aria-selected]="selectedIndex() === i"
+                (click)="selectResult(item)"
+                (mouseenter)="selectedIndex.set(i)"
+              >
+                <!-- Fila 1: número de inventario + estado de ciclo de vida -->
+                <div class="search-dropdown__item-header">
+                  <span class="search-dropdown__inv-tag">
+                    <i class="pi pi-hashtag"></i>
+                    {{ item.inventoryNumber }}
+                  </span>
+                  <span
+                    class="search-dropdown__lifecycle"
+                    [attr.data-status]="item.lifecycleStatus"
+                  >
+                    {{ lifecycleLabel(item.lifecycleStatus) }}
+                  </span>
+                </div>
+
+                <!-- Fila 2: descripción principal -->
+                <p class="search-dropdown__desc">{{ item.description }}</p>
+
+                <!-- Fila 3: metadatos secundarios -->
+                <div class="search-dropdown__meta">
+                  @if (item.brand || item.model) {
+                    <span class="search-dropdown__meta-chip">
+                      <i class="pi pi-tag"></i>
+                      {{ item.brand }}@if(item.brand && item.model){ · }{{ item.model }}
+                    </span>
+                  }
+                  @if (item.locationName) {
+                    <span class="search-dropdown__meta-chip">
+                      <i class="pi pi-map-marker"></i>
+                      {{ item.locationName }}
+                    </span>
+                  }
+                  @if (item.currentGuardianName) {
+                    <span class="search-dropdown__meta-chip">
+                      <i class="pi pi-user"></i>
+                      {{ item.currentGuardianName }}
+                    </span>
+                  }
+                </div>
+              </button>
+            }
+
+            <!-- Pie: hint de navegación -->
+            <div class="search-dropdown__footer">
+              <span><kbd>↑</kbd><kbd>↓</kbd> navegar</span>
+              <span><kbd>↵</kbd> seleccionar</span>
+              <span><kbd>Esc</kbd> cerrar</span>
+            </div>
+          }
+
+        </div>
+      }
+    </div>
+
+    <!-- Usuario con menú desplegable -->
+    <div class="topbar__user" (click)="toggleUserMenu($event)">
+      <span class="topbar__user-avatar">{{ userInitial() }}</span>
+      <span class="topbar__user-name">{{ fullName() }}</span>
+      <i class="pi pi-chevron-down topbar__user-chevron"></i>
+    </div>
+  </header>
+
+  <!-- ── User menu (Popover) ────────────────────────────────────────────── -->
+  <p-popover #userMenu styleClass="user-popover">
+    <div class="user-menu">
+      <div class="user-menu__header">
+        <span class="user-menu__avatar">{{ userInitial() }}</span>
+        <div class="user-menu__info">
+          <span class="user-menu__name">{{ fullName() }}</span>
+          <span class="user-menu__meta">
+            {{ employeeNumber() }}
+            <span
+              class="user-menu__role-badge"
+              [class.user-menu__role-badge--admin]="role() === 'ADMIN'"
+              [class.user-menu__role-badge--auditor]="role() === 'AUDITOR'"
+            >
+              {{ roleLabel() }}
+            </span>
+          </span>
+        </div>
+      </div>
+
+      <hr class="user-menu__divider">
+
+      <button class="user-menu__item" (click)="goToChangePassword()">
+        <i class="pi pi-key"></i>
+        <span>Cambiar contraseña</span>
+      </button>
+
+      <hr class="user-menu__divider">
+
+      <button class="user-menu__item user-menu__item--danger" (click)="logout()">
+        <i class="pi pi-sign-out"></i>
+        <span>Cerrar sesión</span>
+      </button>
+    </div>
+  </p-popover>
+
+  <!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <nav class="sidebar__nav">
+      @for (group of navGroups(); track group.section) {
+        <div class="sidebar__group">
+          @if (!sidebarCollapsed()) {
+            <span class="sidebar__section-label">{{ group.section }}</span>
+          }
+          @for (item of group.items; track item.route) {
+            <a
+              class="sidebar__nav-item"
+              [routerLink]="item.route"
+              routerLinkActive="sidebar__nav-item--active"
+              [pTooltip]="sidebarCollapsed() ? item.label : ''"
+              tooltipPosition="right"
+            >
+              <i class="{{ item.icon }} sidebar__nav-icon"></i>
+              @if (!sidebarCollapsed()) {
+                <span class="sidebar__nav-label">{{ item.label }}</span>
+              }
+            </a>
+          }
+        </div>
+      }
+    </nav>
+  </aside>
+
+  <!-- ── Contenido dinámico ──────────────────────────────────────────────── -->
+  <main class="shell__content">
+    <router-outlet />
+  </main>
+
+</div>

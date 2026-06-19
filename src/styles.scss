@@ -1,4 +1,269 @@
-/* You can add global styles to this file, and also import other style files */
-@use "primeicons/primeicons.css";
+// SISTEMA DE DISEÑO — INVENTARIOS UNPA
+// Fuente única de verdad para colores, tipografía y tokens de diseño.
 
-//@import "node_modules/primeicons/primeicons.css";
+
+@use 'primeicons/primeicons.css';
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  PALETA COMPLETA Y TOKENS SEMÁNTICOS
+// ─────────────────────────────────────────────────────────────────────────────
+:root {
+
+  // ── Colores de marca (valores MAIN - índice 600)
+  --color-primary:      #007D68;
+  --color-success:      #18B32A;
+  --color-danger:       #D92D2D;
+  --color-warning:      #D9B12D;
+  --color-info:         #2D63D9;
+  --color-neutral:      #7F7F7F;
+
+  // Variantes light (fondos de chips/badges - índice 100)
+  --color-primary-light:  #F5FFFD;
+  --color-success-light:  #F0FEF2;
+  --color-danger-light:   #FFF5F5;
+  --color-warning-light:  #FFFCF5;
+  --color-info-light:     #F5F8FF;
+  --color-neutral-light:  #F7F7F7;
+
+  // Variantes dark (hover, textos sobre fondos claros - índice 800)
+  --color-primary-dark:   #0E5247;
+  --color-success-dark:   #086814;
+  --color-danger-dark:    #8E1010;
+  --color-warning-dark:   #8D6811;
+  --color-info-dark:      #10388E;
+  --color-neutral-dark:   #4D4D4D;
+
+  // ── Superficies y estructura ──────────────────────────────────────────────
+  --surface-ground:  #F4F6F8;   // fondo de página
+  --surface-card:    #FFFFFF;   // tarjetas, tabla, sidebar
+  --surface-section: #F9FAFB;   // filas alternas, headers de tabla
+  --surface-hover:   #EDF8F6;   // hover de filas y nav items
+  --surface-border:  #E2E8ED;   // bordes sutiles
+
+  // ── Texto ─────────────────────────────────────────────────────────────────
+  --text-color:            #1A2332;   // títulos y cuerpo principal
+  --text-color-secondary:  #4A5568;   // subtítulos, metadata
+  --text-color-muted:      #A0ADB8;   // placeholders, vacíos
+
+  // ── Radios y sombras ──────────────────────────────────────────────────────
+  --border-radius-sm:  6px;
+  --border-radius-md:  10px;
+  --border-radius-lg:  16px;
+  --border-radius-xl:  24px;
+
+  --shadow-sm:  0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:  0 4px 16px rgba(0,0,0,.08);
+  --shadow-lg:  0 8px 32px rgba(0,0,0,.10);
+
+  // ── Transiciones ──────────────────────────────────────────────────────────
+  --transition-fast:    0.12s ease;
+  --transition-normal:  0.20s ease;
+
+  // ── Tipografía ────────────────────────────────────────────────────────────
+  --font-primary:     'Roboto', sans-serif;
+  --font-condensed:   'Roboto Condensed', sans-serif;
+
+  // Escala tipográfica (px → rem)
+  --text-80:   5rem;      // 80px  — display hero
+  --text-56:   3.5rem;    // 56px  — títulos grandes
+  --text-36:   2.25rem;   // 36px  — h1 de página
+  --text-24:   1.5rem;    // 24px  — h2 / sección
+  --text-16:   1rem;      // 16px  — cuerpo base
+  --text-label: 0.625rem; // 10px  — Roboto Condensed (labels/detalles)
+
+  // ─────────────────────────────────────────────────────────────────────────
+  //PUENTE PrimeNG — mapea los tokens de PrimeNG al sistema institucional
+  //
+  // PrimeNG 21 con prefix:'p' genera variables --p-*.
+  // Sobrescribir aquí para que TODOS los componentes PrimeNG usen la paleta.
+  // ─────────────────────────────────────────────────────────────────────────
+
+  // Primario
+  --p-primary-color:          var(--color-primary);
+  --p-primary-contrast-color: #ffffff;
+  --p-primary-hover-color:    var(--color-primary-dark);
+
+  // Superficie (inputs, cards, paginador...)
+  --p-surface-0:    #ffffff;
+  --p-surface-50:   var(--surface-section);
+  --p-surface-100:  var(--surface-ground);
+  --p-surface-card: var(--surface-card);
+
+  // Texto
+  --p-text-color:           var(--text-color);
+  --p-text-secondary-color: var(--text-color-secondary);
+  --p-text-muted-color:     var(--text-color-muted);
+
+  // Tags / badges semánticos
+  --p-green-500:    var(--color-success);
+  --p-green-100:    var(--color-success-light);
+  --p-red-500:      var(--color-danger);
+  --p-red-100:      var(--color-danger-light);
+  --p-yellow-500:   var(--color-warning);
+  --p-yellow-100:   var(--color-warning-light);
+  --p-blue-500:     var(--color-info);
+  --p-blue-100:     var(--color-info-light);
+
+  // Bordes
+  --p-surface-border: var(--surface-border);
+  --p-content-border-color: var(--surface-border);
+
+  // Focus ring — usa el primario institucional
+  --p-focus-ring-color: rgba(0, 125, 104, 0.25);
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // PUENTE LEGACY — mantiene compatibilidad con --inv-* de assets-list.scss
+  //    sin tener que reescribir ese archivo completo.
+  // ─────────────────────────────────────────────────────────────────────────
+  --inv-primary:        var(--color-primary);
+  --inv-primary-light:  var(--color-primary-light);
+  --inv-primary-dark:   var(--color-primary-dark);
+  --inv-accent:         var(--color-warning);
+  --inv-accent-light:   var(--color-warning-light);
+  --inv-success:        var(--color-success);
+  --inv-warning:        var(--color-warning);
+  --inv-danger:         var(--color-danger);
+  --inv-info:           var(--color-info);
+  --inv-bg:             var(--surface-ground);
+  --inv-surface:        var(--surface-card);
+  --inv-surface-alt:    var(--surface-section);
+  --inv-border:         var(--surface-border);
+  --inv-text-primary:   var(--text-color);
+  --inv-text-secondary: var(--text-color-secondary);
+  --inv-text-muted:     var(--text-color-muted);
+  --inv-font-body:      var(--font-primary);
+  --inv-font-mono:      monospace;
+  --inv-radius-sm:      var(--border-radius-sm);
+  --inv-radius-md:      var(--border-radius-md);
+  --inv-radius-lg:      var(--border-radius-lg);
+  --inv-shadow-sm:      var(--shadow-sm);
+  --inv-shadow-md:      var(--shadow-md);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RESET TIPOGRÁFICO GLOBAL
+// Aplica Roboto y los tamaños de la escala a todo el documento.
+// ─────────────────────────────────────────────────────────────────────────────
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px; // base para cálculo rem
+}
+
+body {
+  margin: 0;
+  font-family:    var(--font-primary);
+  font-size:      var(--text-16);
+  line-height:    1.5;
+  color:          var(--text-color);
+  background:     var(--surface-ground);
+  -webkit-font-smoothing:  antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1 { font-size: var(--text-36); font-weight: 700; line-height: 1.2; margin: 0; }
+h2 { font-size: var(--text-24); font-weight: 600; line-height: 1.3; margin: 0; }
+h3 { font-size: var(--text-16); font-weight: 600; line-height: 1.4; margin: 0; }
+
+// Labels y detalles — Roboto Condensed 10px
+.label,
+.detail,
+small,
+caption {
+  font-family: var(--font-condensed);
+  font-size:   var(--text-label);
+  line-height: 1.4;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SOBRESCRITURAS GLOBALES DE PRIMENG
+// Ajustes que aplican a todos los componentes PrimeNG sin @ng-deep por componente.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Font global a todos los componentes PrimeNG
+.p-component,
+.p-inputtext,
+.p-button,
+.p-select,
+.p-datatable,
+.p-paginator,
+.p-tag,
+.p-dialog,
+.p-toast {
+  font-family: var(--font-primary) !important;
+}
+
+// Labels de Roboto Condensed dentro de componentes
+.p-column-header-content,
+.p-paginator-current {
+  font-family: var(--font-condensed);
+  font-size:   var(--text-label);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+// Botón primario — color institucional
+.p-button:not(.p-button-outlined):not(.p-button-text):not(.p-button-secondary):not(.p-button-danger):not(.p-button-warning):not(.p-button-info) {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+
+  &:hover:not(:disabled) {
+    background:   var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+  }
+}
+
+// Tag success/danger/warning/info — aplica la paleta institucional
+.p-tag.p-tag-success  { background: var(--color-success-light); color: var(--color-success-dark); }
+.p-tag.p-tag-danger   { background: var(--color-danger-light);  color: var(--color-danger-dark);  }
+.p-tag.p-tag-warn     { background: var(--color-warning-light); color: var(--color-warning-dark); }
+.p-tag.p-tag-info     { background: var(--color-info-light);    color: var(--color-info-dark);    }
+.p-tag.p-tag-secondary { background: var(--color-neutral-light); color: var(--color-neutral-dark); }
+
+// Toast
+.p-toast .p-toast-message-success { border-left-color: var(--color-success); }
+.p-toast .p-toast-message-error   { border-left-color: var(--color-danger);  }
+.p-toast .p-toast-message-warn    { border-left-color: var(--color-warning); }
+.p-toast .p-toast-message-info    { border-left-color: var(--color-info);    }
+
+// Focus ring coherente con la paleta
+.p-focus,
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--p-focus-ring-color);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CLASES UTILITARIAS GLOBALES
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Texto
+.text-primary   { color: var(--color-primary)  !important; }
+.text-success   { color: var(--color-success)  !important; }
+.text-danger    { color: var(--color-danger)   !important; }
+.text-warning   { color: var(--color-warning)  !important; }
+.text-info      { color: var(--color-info)     !important; }
+.text-muted     { color: var(--text-color-muted) !important; }
+.text-secondary { color: var(--text-color-secondary) !important; }
+
+// Monospace — números de inventario, códigos de barras, series
+.font-mono {
+  font-family: monospace;
+  letter-spacing: 0.02em;
+}
+
+// Condensed — etiquetas, headers de tabla
+.font-condensed {
+  font-family: var(--font-condensed);
+}
+
+// Espaciado de página consistente
+.page-content {
+  padding: 24px;
+  max-width: 1200px;
+}

@@ -1,0 +1,250 @@
+<p-toast position="top-right" />
+<p-confirmDialog styleClass="loc-confirm-dialog" />
+
+<div class="loc-tab-content">
+
+  <!-- ── Toolbar ── -->
+  <div class="loc-toolbar">
+    <span class="loc-stat-chip">
+      <i class="pi pi-map-marker"></i>
+      {{ locationTotal() }} ubicacion{{ locationTotal() !== 1 ? 'es' : '' }}
+    </span>
+
+    <p-iconfield styleClass="loc-search-field">
+      <p-inputicon styleClass="pi pi-search" />
+      <input
+        pInputText
+        class="loc-search-input"
+        placeholder="Buscar por nombre, edificio o campus…"
+        [value]="locationKeyword"
+        (input)="onSearch($any($event.target).value)"
+      />
+    </p-iconfield>
+    <button
+      pButton
+      icon="pi pi-plus"
+      label="Nueva ubicación"
+      class="loc-btn loc-btn--primary"
+      (click)="openCreate()"
+    ></button>
+  </div>
+
+  <!-- ── Tabla con lazy load ── -->
+  <p-table
+    [value]="locations()"
+    dataKey="id"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="pageSize"
+    [totalRecords]="locationTotal()"
+    [loading]="locationLoading()"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="{first}–{last} de {totalRecords} ubicaciones"
+    (onLazyLoad)="onLazyLoad($event)"
+    sortField="name"
+    [sortOrder]="1"
+    styleClass="loc-table"
+    responsiveLayout="scroll"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="id"       style="width:5rem">ID <p-sortIcon field="id" /></th>
+        <th pSortableColumn="name">Nombre <p-sortIcon field="name" /></th>
+        <th pSortableColumn="building" style="width:12rem">Edificio <p-sortIcon field="building" /></th>
+        <th pSortableColumn="campus"   style="width:12rem">Campus <p-sortIcon field="campus" /></th>
+        <th>Descripción</th>
+        <th style="width:9rem; text-align:center">Estado</th>
+        <th style="width:9rem; text-align:center">Acciones</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-loc>
+      <tr>
+        <td><span class="loc-id">#{{ loc.id }}</span></td>
+
+        <td>
+          <div class="loc-cell-primary">
+            <i class="pi pi-map-marker loc-cell-icon"></i>
+            {{ loc.name }}
+          </div>
+        </td>
+
+        <td>{{ loc.building || '—' }}</td>
+        <td>{{ getCampusLabel(loc.campus) }}</td>
+
+        <td>
+          <span class="loc-desc" [title]="loc.description ?? ''">
+            {{ loc.description
+                ? (loc.description.length > 55
+                    ? (loc.description.slice(0, 55)) + '…'
+                    : loc.description)
+                : '—' }}
+          </span>
+        </td>
+
+        <td style="text-align:center">
+          <p-tag
+            [value]="loc.isActive ? 'Activa' : 'Inactiva'"
+            [severity]="loc.isActive ? 'success' : 'secondary'"
+            styleClass="loc-tag"
+            [rounded]="true"
+          />
+        </td>
+
+        <td style="text-align:center">
+          <div class="loc-actions">
+            <button
+              pButton type="button"
+              icon="pi pi-pencil"
+              class="loc-btn-icon loc-btn-icon--edit"
+              pTooltip="Editar" tooltipPosition="top"
+              (click)="openEdit(loc)"
+            ></button>
+            <button
+              pButton type="button"
+              icon="pi pi-trash"
+              class="loc-btn-icon loc-btn-icon--danger"
+              pTooltip="Desactivar" tooltipPosition="top"
+              [disabled]="!loc.isActive"
+              (click)="confirmDeactivate(loc)"
+            ></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="7">
+          <div class="loc-empty">
+            <i class="pi pi-map-marker loc-empty__icon"></i>
+            <p class="loc-empty__title">Sin ubicaciones</p>
+            <p class="loc-empty__sub">
+              @if (locationKeyword) {
+                No hay resultados para "{{ locationKeyword }}".
+              } @else {
+                Agrega la primera ubicación con el botón "Nueva ubicación".
+              }
+            </p>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="loadingbody">
+      @for (_ of [1,2,3,4,5]; track $index) {
+        <tr>
+          @for (__ of [1,2,3,4,5,6,7]; track $index) {
+            <td><p-skeleton height="1.25rem" styleClass="loc-skeleton" /></td>
+          }
+        </tr>
+      }
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- ═══ DIÁLOGO ═══ -->
+<p-dialog
+  [header]="dialogMode() === 'create' ? 'Nueva ubicación' : 'Editar ubicación'"
+  [modal]="true"
+  [(visible)]="dialogVisible"
+  [style]="{ width: '540px' }"
+  styleClass="loc-dialog"
+  [draggable]="false"
+  [resizable]="false"
+  [closeOnEscape]="true"
+  (onHide)="closeDialog()"
+>
+  <form [formGroup]="form" class="loc-form">
+
+    <!-- Nombre -->
+    <div class="loc-field loc-field--full">
+      <label class="loc-label">Nombre <span class="loc-req">*</span></label>
+      <input
+        pInputText
+        formControlName="name"
+        class="loc-input"
+        placeholder="Ej. Laboratorio de Cómputo A"
+        maxlength="150"
+        autocomplete="off"
+      />
+      @if (hasError('name', 'required')) {
+        <small class="loc-error"><i class="pi pi-exclamation-circle"></i> El nombre es obligatorio.</small>
+      }
+      @if (hasError('name', 'maxlength')) {
+        <small class="loc-error"><i class="pi pi-exclamation-circle"></i> Máximo 150 caracteres.</small>
+      }
+    </div>
+
+    <!-- Edificio + Campus -->
+    <div class="loc-form-row">
+      <div class="loc-field">
+        <label class="loc-label">Edificio <span class="loc-opt">(opcional)</span></label>
+        <input
+          pInputText
+          formControlName="building"
+          class="loc-input"
+          placeholder="Ej. Edificio Central"
+          maxlength="100"
+          autocomplete="off"
+        />
+        @if (hasError('building', 'maxlength')) {
+          <small class="loc-error"><i class="pi pi-exclamation-circle"></i> Máximo 100 caracteres.</small>
+        }
+      </div>
+
+      <div class="loc-field">
+        <label class="loc-label">Campus <span class="loc-req">*</span></label>
+        <p-select
+          formControlName="campus"
+          [options]="campuses"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Selecciona un campus"
+          styleClass="loc-dropdown-w-100"
+        ></p-select>
+        @if (hasError('campus', 'required')) {
+          <small class="loc-error"><i class="pi pi-exclamation-circle"></i> El campus es obligatorio.</small>
+        }
+      </div>
+    </div>
+
+    <!-- Descripción -->
+    <div class="loc-field loc-field--full">
+      <label class="loc-label">Descripción <span class="loc-opt">(opcional)</span></label>
+      <textarea
+        pTextarea
+        formControlName="description"
+        class="loc-textarea"
+        rows="3"
+        placeholder="Observaciones o referencia adicional de la ubicación…"
+        maxlength="255"
+      ></textarea>
+      @if (hasError('description', 'maxlength')) {
+        <small class="loc-error"><i class="pi pi-exclamation-circle"></i> Máximo 255 caracteres.</small>
+      }
+    </div>
+
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="loc-dialog-footer">
+      <button
+        pButton type="button"
+        label="Cancelar"
+        icon="pi pi-times"
+        class="loc-btn loc-btn--secondary"
+        (click)="closeDialog()"
+        [disabled]="dialogLoading()"
+      ></button>
+      <button
+        pButton type="button"
+        [label]="dialogMode() === 'create' ? 'Registrar ubicación' : 'Guardar cambios'"
+        icon="pi pi-check"
+        class="loc-btn loc-btn--primary"
+        [loading]="dialogLoading()"
+        (click)="save()"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>

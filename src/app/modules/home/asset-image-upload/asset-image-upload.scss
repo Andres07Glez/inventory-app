@@ -1,0 +1,205 @@
+.img-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// ── Skeletons ─────────────────────────────────────────────────────────────────
+
+.img-upload__skeleton-row {
+  display: flex;
+  gap: 12px;
+}
+
+.img-upload__skeleton {
+  width: 100px;
+  height: 100px;
+  border-radius: var(--border-radius-md);
+  background: var(--surface-border);
+  animation: shimmer 1.4s infinite linear;
+}
+
+@keyframes shimmer {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
+// ── Galería ───────────────────────────────────────────────────────────────────
+
+.img-upload__gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.img-upload__thumb {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  border: 2px solid var(--surface-border);
+  cursor: default;
+  transition: border-color 0.15s;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &--primary {
+    border-color: var(--color-primary);
+  }
+
+  // Overlay de acciones — visible al hover
+  &:hover .img-upload__thumb-overlay {
+    opacity: 1;
+  }
+}
+
+.img-upload__badge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 125, 104, 0.85);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 3px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.img-upload__thumb-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.img-upload__action-btn {
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: var(--text-color);
+  transition: background 0.12s;
+
+  &:hover { background: #fff; }
+
+  &--danger {
+    color: var(--color-danger);
+    &:hover { background: #fff3f3; }
+  }
+}
+
+// ── Dropzone ──────────────────────────────────────────────────────────────────
+
+.img-upload__dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 24px 16px;
+  border: 2px dashed var(--surface-border);
+  border-radius: var(--border-radius-lg);
+  background: var(--surface-ground);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+  min-height: 120px;
+
+  &:hover,
+  &--dragging {
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
+  }
+
+  &--busy {
+    cursor: not-allowed;
+    opacity: 0.8;
+  }
+}
+
+.img-upload__file-input {
+  display: none;
+}
+
+.img-upload__drop-icon {
+  font-size: 1.8rem;
+  color: var(--color-primary);
+}
+
+.img-upload__drop-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.img-upload__drop-hint {
+  font-size: 0.78rem;
+  color: var(--text-color-secondary);
+
+  u { color: var(--color-primary); }
+}
+
+.img-upload__drop-counter {
+  font-size: 0.72rem;
+  color: var(--text-color-muted);
+}
+
+.img-upload__progress-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.img-upload__progress-bar {
+  width: 80%;
+  height: 6px !important;
+}
+
+// ── Mensaje límite ────────────────────────────────────────────────────────────
+
+.img-upload__limit-msg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.825rem;
+  color: var(--text-color-secondary);
+  padding: 10px 14px;
+  background: var(--surface-ground);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--surface-border);
+}
+// ── Preview dialog ────────────────────────────────────────────────────────────
+.img-preview-dialog__img {
+  display: block;
+  max-width: 88vw;
+  max-height: 82vh;
+  object-fit: contain;
+  border-radius: var(--border-radius-md);
+}

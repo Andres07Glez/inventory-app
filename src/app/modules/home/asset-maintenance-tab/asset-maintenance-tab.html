@@ -1,0 +1,216 @@
+<p-toast />
+<p-confirmDialog />
+
+<app-maintenance-create
+  [fixedAssetId]="assetId()"
+  (created)="onCreated()" />
+
+<!-- Modal de detalle (Puntos 1 y 5) ────────────────────────────────────────── -->
+<p-dialog
+  header="Detalle del mantenimiento"
+  [visible]="detailVisible()"
+  (visibleChange)="detailVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '480px' }">
+
+  @if (loadingDetail()) {
+    <div>
+      @for (_ of [1,2,3,4]; track $index) {
+        <p-skeleton height="1.5rem" styleClass="mb-3" />
+      }
+    </div>
+  } @else if (detailRecord(); as rec) {
+    <div class="detail-grid">
+
+      <div class="detail-row">
+        <span class="detail-row__label">Tipo</span>
+        <span class="detail-row__value">
+          <p-tag [value]="getTypeLabel(rec.maintenanceType)" [severity]="getTypeSeverity(rec.maintenanceType)" />
+        </span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-row__label">Fecha</span>
+        <span class="detail-row__value">{{ rec.performedDate | date:'dd/MM/yyyy' }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="detail-row__label">Técnico / Empresa</span>
+        <span class="detail-row__value">{{ rec.performedBy ?? '—' }}</span>
+      </div>
+
+      @if (rec.conditionBefore || rec.conditionAfter) {
+        <div class="detail-row">
+          <span class="detail-row__label">Condición</span>
+          <span class="detail-row__value">
+            <div class="condition-pair">
+              @if (rec.conditionBefore) {
+                <p-tag [value]="getCondLabel(rec.conditionBefore)" [severity]="getCondSeverity(rec.conditionBefore)" pTooltip="Antes" />
+                <i class="pi pi-arrow-right cond-arrow"></i>
+              }
+              @if (rec.conditionAfter) {
+                <p-tag [value]="getCondLabel(rec.conditionAfter)" [severity]="getCondSeverity(rec.conditionAfter)" pTooltip="Después" />
+              }
+            </div>
+          </span>
+        </div>
+      }
+
+      <!-- Punto 1: descripción completa -->
+      <div class="detail-row detail-row--full">
+        <span class="detail-row__label">Trabajo realizado</span>
+        <p class="detail-row__description">{{ rec.description }}</p>
+      </div>
+
+      <!-- Punto 1: incidencia vinculada -->
+      @if (rec.incidentId) {
+        <div class="detail-row">
+          <span class="detail-row__label">Incidencia vinculada</span>
+          <span class="detail-row__value detail-row__value--incident">
+            <i class="pi pi-exclamation-circle"></i>
+            #{{ rec.incidentId }}
+          </span>
+        </div>
+      }
+
+      <div class="detail-row">
+        <span class="detail-row__label">Registrado por</span>
+        <span class="detail-row__value">{{ rec.createdByName }}</span>
+      </div>
+
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    @if (detailRecord(); as rec) {
+      <p-button
+        *hasRole="['ADMIN']"
+        label="Eliminar"
+        icon="pi pi-trash"
+        severity="danger"
+        [outlined]="true"
+        [loading]="deletingDetail()"
+        (onClick)="confirmDelete(rec)" />
+    }
+    <p-button
+      label="Cerrar"
+      severity="secondary"
+      [text]="true"
+      (onClick)="detailVisible.set(false)" />
+  </ng-template>
+
+</p-dialog>
+
+<!-- Header del tab ──────────────────────────────────────────────────────────── -->
+<div class="tab-header">
+  <span class="tab-header__count">
+    @if (!loading()) {
+      {{ records().length }} registro{{ records().length !== 1 ? 's' : '' }}
+    }
+  </span>
+
+  <!-- Punto 3: búsqueda -->
+  <div class="tab-search">
+    <i class="pi pi-search tab-search__icon"></i>
+    <input
+      pInputText
+      type="text"
+      [(ngModel)]="searchQuery"
+      placeholder="Buscar…"
+      class="tab-search__input" />
+  </div>
+
+  <p-button
+    *hasRole="['ADMIN', 'OPERADOR']"
+    label="Registrar mantenimiento"
+    icon="pi pi-plus"
+    size="small"
+    (onClick)="openCreateDialog()" />
+</div>
+
+@if (loading()) {
+  <div class="skeleton-list">
+    @for (_ of [1,2,3]; track $index) {
+      <p-skeleton height="3rem" styleClass="mb-2" />
+    }
+  </div>
+} @else if (records().length === 0) {
+  <div class="empty-state">
+    <i class="pi pi-wrench empty-state__icon"></i>
+    <p class="empty-state__text">Sin registros de mantenimiento</p>
+    <p class="empty-state__hint">Los mantenimientos registrados para este bien aparecerán aquí.</p>
+  </div>
+} @else {
+  <p-table
+    [value]="filteredRecords"
+    [rowHover]="true"
+    [paginator]="true"
+    [rows]="10"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    styleClass="p-datatable-sm">
+
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Tipo</th>
+        <th>Fecha</th>
+        <th>Técnico / Empresa</th>
+        <th>Condición</th>
+        <th>Registrado por</th>
+        <th class="col-actions">Acciones</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-row>
+      <tr>
+        <td>
+          <p-tag
+            [value]="getTypeLabel(row.maintenanceType)"
+            [severity]="getTypeSeverity(row.maintenanceType)" />
+        </td>
+
+        <td>{{ row.performedDate | date:'dd/MM/yyyy' }}</td>
+
+        <td>{{ row.performedBy ?? '—' }}</td>
+
+        <td>
+          <div class="condition-pair">
+            @if (row.conditionBefore) {
+              <p-tag
+                [value]="getCondLabel(row.conditionBefore)"
+                [severity]="getCondSeverity(row.conditionBefore)"
+                pTooltip="Antes"
+                tooltipPosition="top" />
+              <i class="pi pi-arrow-right condition-arrow"></i>
+            }
+            @if (row.conditionAfter) {
+              <p-tag
+                [value]="getCondLabel(row.conditionAfter)"
+                [severity]="getCondSeverity(row.conditionAfter)"
+                pTooltip="Después"
+                tooltipPosition="top" />
+            }
+            @if (!row.conditionBefore && !row.conditionAfter) {
+              <span class="text-muted">—</span>
+            }
+          </div>
+        </td>
+
+        <td>{{ row.createdByName }}</td>
+
+        <td class="col-actions">
+          <p-button
+            icon="pi pi-eye"
+            [text]="true"
+            severity="secondary"
+            size="small"
+            (onClick)="openDetail(row)"
+            pTooltip="Ver detalle"
+            tooltipPosition="left" />
+        </td>
+      </tr>
+    </ng-template>
+
+  </p-table>
+}

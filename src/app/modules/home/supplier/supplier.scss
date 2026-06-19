@@ -1,0 +1,325 @@
+// supplier.component.scss
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ✦ VARIABLES 
+// ─────────────────────────────────────────────────────────────────────────────
+:host {
+  // Fondos
+  --cat-bg:              #F7F7F7; 
+  --cat-surface:         #FFFFFF;
+  --cat-surface-raised:  #F5FFFD; 
+
+  // Bordes
+  --cat-border:          #CCCCCC; 
+  --cat-border-focus:    #007D68; 
+
+// Primario
+--cat-primary:         var(--color-primary); 
+--cat-primary-hover:   var(--color-primary-dark); 
+--cat-primary-light:   var(--color-primary-light); 
+--cat-primary-text:    #FFFFFF;
+
+  // Texto
+  --cat-text-primary:    #333333; 
+  --cat-text-secondary:  #666666; 
+  --cat-text-muted:      #999999; 
+
+  // Inputs
+  --cat-input-bg:          #FFFFFF;
+  --cat-input-text:        #333333; 
+  --cat-input-border:      #CCCCCC; 
+  --cat-input-placeholder: #999999; 
+
+  // Semánticos
+  --cat-danger:     #B31818; 
+  --cat-danger-bg:  #FFF5F5; 
+  --cat-warn:       #D4A91D; 
+  --cat-edit-color: #1F4F97; 
+  --cat-edit-bg:    #F5F8FF; 
+  --cat-success:    #18B32A; 
+
+  // Geometría
+  --cat-radius-sm: 4px;
+  --cat-radius-md: 8px;
+  --cat-radius-lg: 12px;
+  --cat-shadow:    0 2px 8px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04);
+  --cat-shadow-lg: 0 8px 28px rgba(0,0,0,.12);
+
+  --cat-font:      'Roboto', sans-serif;
+  
+  display: block;
+  font-family: var(--cat-font);
+}
+
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONTENIDO DEL TAB & TOOLBAR
+// ─────────────────────────────────────────────────────────────────────────────
+.cat-tab-content {
+  padding: 1.5rem;
+  display: flex; flex-direction: column; gap: 1.25rem;
+
+  @media (max-width: 640px) { padding: 1rem; }
+}
+
+.cat-toolbar {
+  display: flex; align-items: center; gap: 0.875rem; flex-wrap: wrap;
+
+  @media (max-width: 560px) {
+    flex-direction: column;
+    align-items: stretch;
+    .cat-btn { width: 100%; justify-content: center; }
+  }
+}
+
+:host ::ng-deep .cat-search-field {
+  flex: 1; min-width: 220px;
+
+  .p-iconfield { width: 100%; }
+  .p-inputicon { color: var(--cat-text-muted); }
+
+  .cat-search-input {
+    width: 100%; font-family: var(--cat-font); font-size: 1rem;
+    border-radius: var(--cat-radius-sm);
+    background: var(--cat-input-bg) !important; color: var(--cat-input-text) !important;
+    border: 1px solid var(--cat-input-border) !important;
+    padding-left: 2.25rem !important;
+
+    &::placeholder { color: var(--cat-input-placeholder) !important; }
+
+    &:focus {
+      border-color: var(--cat-border-focus) !important;
+      box-shadow: 0 0 0 3px rgba(0,125,104,.12) !important;
+      outline: none;
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TABLA Y CELDAS DE PROVEEDORES
+// ─────────────────────────────────────────────────────────────────────────────
+:host ::ng-deep .cat-table {
+  font-family: var(--cat-font);
+
+  .p-datatable-thead > tr > th {
+    background: var(--cat-surface-raised); color: var(--cat-text-secondary);
+    font-size: 0.875rem; font-weight: 500; text-transform: uppercase;
+    border-bottom: 2px solid var(--cat-border); padding: 0.75rem 1rem; white-space: nowrap;
+
+    &.p-highlight, &:hover { background: var(--cat-primary-light) !important; color: var(--cat-primary) !important; }
+    .p-sortable-column-icon { color: var(--cat-text-muted); font-size: 0.875rem; }
+  }
+
+  .p-datatable-tbody > tr {
+    border-bottom: 1px solid var(--cat-border); transition: background 0.1s;
+    &:last-child { border-bottom: none; }
+    &:hover { background: var(--cat-primary-light) !important; }
+
+    > td { padding: 0.75rem 1rem; font-size: 1rem; color: var(--cat-text-primary); vertical-align: middle; }
+  }
+
+  .p-paginator {
+    background: var(--cat-surface-raised); border-top: 1px solid var(--cat-border);
+    padding: 0.625rem 1rem; font-size: 1rem; font-family: var(--cat-font);
+
+    .p-paginator-current { color: var(--cat-text-secondary); }
+    .p-paginator-page.p-highlight { background: var(--cat-primary); color: var(--cat-primary-text); border-radius: var(--cat-radius-sm); }
+    .p-paginator-page:not(.p-highlight):hover, .p-paginator-prev:hover, .p-paginator-next:hover {
+      background: var(--cat-primary-light); color: var(--cat-primary);
+    }
+  }
+}
+
+.cat-cell-primary { font-weight: 500; font-size: 1rem; color: #333333; }
+.cat-link { color: var(--cat-primary); text-decoration: none; &:hover { text-decoration: underline; } }
+.cat-muted { color: var(--cat-text-muted); font-size: 1rem; }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ROW EXPANSION (DETALLES DEL PROVEEDOR)
+// ─────────────────────────────────────────────────────────────────────────────
+.cat-expanded-row {
+  padding: 1.25rem 1.5rem;
+  background: var(--cat-surface-raised);
+  border-radius: var(--cat-radius-md);
+  margin: 0.25rem 0.5rem;
+  border: 1px dashed var(--cat-border);
+}
+.cat-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+}
+.cat-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  &--full {
+    grid-column: 1 / -1;
+  }
+}
+.cat-detail-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--cat-text-muted);
+  letter-spacing: 0.03em;
+}
+.cat-detail-value {
+  font-size: 0.95rem;
+  color: var(--cat-text-primary);
+  line-height: 1.4;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TAGS & BOTONES
+// ─────────────────────────────────────────────────────────────────────────────
+:host ::ng-deep .cat-tag {
+  font-family: var(--cat-font); font-size: 0.875rem; font-weight: 500;
+  border-radius: 2rem; padding: 0.2rem 0.625rem;
+}
+
+.cat-actions { display: flex; align-items: center; justify-content: center; gap: 0.375rem; }
+
+.cat-btn-icon {
+  &.p-button {
+    width: 2rem; height: 2rem; padding: 0; border: none; border-radius: var(--cat-radius-sm);
+    font-size: 0.875rem; transition: all 0.15s;
+  }
+  &--edit.p-button {
+    background: var(--cat-edit-bg); color: var(--cat-edit-color);
+    &:hover:not(:disabled) { filter: brightness(0.92); }
+  }
+  &--danger.p-button {
+    background: var(--cat-danger-bg); color: var(--cat-danger);
+    &:hover:not(:disabled) { filter: brightness(0.92); }
+    &:disabled { opacity: 0.35; cursor: not-allowed; }
+  }
+}
+
+.cat-btn {
+  &.p-button {
+    font-family: var(--cat-font); font-size: 1rem; font-weight: 500;
+    border-radius: var(--cat-radius-sm); padding: 0.5rem 1.25rem; transition: all 0.15s;
+  }
+  &--primary.p-button {
+    background: var(--cat-primary); border-color: var(--cat-primary); color: var(--cat-primary-text);
+    &:hover:not(:disabled) { background: var(--cat-primary-hover); border-color: var(--cat-primary-hover); }
+  }
+  &--secondary.p-button {
+    background: var(--cat-primary); border-color: var(--cat-primary); color: var(--cat-primary-text);
+    &:hover:not(:disabled) { background: var(--cat-surface-raised); }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// STAT CHIP
+// ─────────────────────────────────────────────────────────────────────────────
+.cat-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(0, 125, 104, .10);
+  color: var(--cat-primary);
+  border: 1px solid rgba(0, 125, 104, .2);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+
+  i { font-size: 0.72rem; }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ESTADO VACÍO & SKELETON
+// ─────────────────────────────────────────────────────────────────────────────
+.cat-empty {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: 3rem 2rem; color: var(--cat-text-muted); gap: 0.5rem;
+  &__icon { font-size: 2.5rem; opacity: 0.35; margin-bottom: 0.25rem; }
+  &__title { font-size: 1.5rem; font-weight: 500; color: var(--cat-text-secondary); margin: 0; }
+  &__sub { font-size: 1rem; line-height: 1.6; margin: 0; max-width: 300px; }
+}
+
+:host ::ng-deep .cat-skeleton.p-skeleton { background-color: var(--cat-border); border-radius: var(--cat-radius-sm); }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DIÁLOGOS Y FORMULARIOS
+// ─────────────────────────────────────────────────────────────────────────────
+:host ::ng-deep .cat-dialog {
+  .p-dialog { border-radius: var(--cat-radius-lg); background: var(--cat-surface); box-shadow: var(--cat-shadow-lg); border: 1px solid var(--cat-border); font-family: var(--cat-font); }
+  .p-dialog-header { background: var(--cat-surface); border-bottom: 1px solid var(--cat-border); padding: 1.25rem 1.5rem; border-radius: var(--cat-radius-lg) var(--cat-radius-lg) 0 0; .p-dialog-title { font-size: 1.5rem; font-weight: 700; color: var(--cat-text-primary); } .p-dialog-header-icon { color: var(--cat-text-muted); &:hover { background: var(--cat-surface-raised); color: var(--cat-text-secondary); } } }
+  .p-dialog-content { background: var(--cat-surface); padding: 1.5rem; }
+  .p-dialog-footer { background: var(--cat-surface-raised); border-top: 1px solid var(--cat-border); padding: 1rem 1.5rem; border-radius: 0 0 var(--cat-radius-lg) var(--cat-radius-lg); }
+}
+
+.cat-form { display: flex; flex-direction: column; gap: 1.125rem; }
+.cat-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.125rem; }
+.cat-field { display: flex; flex-direction: column; gap: 0.375rem; &--full { grid-column: 1 / -1; } }
+.cat-label { font-size: 1rem; font-weight: 500; color: var(--cat-text-secondary); }
+.cat-req  { color: var(--cat-danger); margin-left: 2px; }
+.cat-opt  { color: var(--cat-text-muted); font-weight: 400; font-size: 0.625rem; }
+.cat-error { display: flex; align-items: center; gap: 0.3rem; font-size: 0.625rem; color: var(--cat-danger); i { font-size: 0.625rem; } }
+
+// Inputs
+.cat-input, .cat-textarea {
+  width: 100%; font-family: var(--cat-font); font-size: 1rem; border-radius: var(--cat-radius-sm); background: var(--cat-input-bg) !important; color: var(--cat-input-text) !important; border: 1px solid var(--cat-input-border) !important;
+  &::placeholder { color: var(--cat-input-placeholder) !important; }
+  &:focus { border-color: var(--cat-border-focus) !important; box-shadow: 0 0 0 3px rgba(0,125,104,.12) !important; outline: none; }
+}
+.cat-textarea { resize: vertical; min-height: 80px; }
+
+.cat-dialog-footer { display: flex; justify-content: flex-end; gap: 0.75rem; }
+
+:host ::ng-deep .cat-confirm-dialog {
+  .p-confirmdialog { border-radius: var(--cat-radius-lg); background: var(--cat-surface); box-shadow: var(--cat-shadow-lg); border: 1px solid var(--cat-border); font-family: var(--cat-font); }
+  .p-confirmdialog-icon { color: var(--cat-warn); font-size: 2rem; }
+  .p-confirmdialog-message { color: var(--cat-text-primary); font-size: 1rem; line-height: 1.6; }
+  .p-dialog-header { background: var(--cat-surface); border-bottom: 1px solid var(--cat-border); .p-dialog-title { font-size: 1.5rem; font-weight: 700; color: var(--cat-text-primary); } .p-dialog-header-icon { color: var(--cat-text-muted); } }
+  .p-dialog-content { background: var(--cat-surface); }
+  .p-dialog-footer { background: var(--cat-surface-raised); border-top: 1px solid var(--cat-border); }
+  .p-button-danger { background: var(--cat-danger); border-color: var(--cat-danger); color: white; font-family: var(--cat-font); font-weight: 500; border-radius: var(--cat-radius-sm); font-size: 1rem; &:hover { filter: brightness(0.9); } }
+  .p-confirmdialog-reject-button { background: transparent; border: 1px solid var(--cat-border); color: var(--cat-text-secondary); font-family: var(--cat-font); font-weight: 500; border-radius: var(--cat-radius-sm); font-size: 1rem; &:hover { background: var(--cat-surface-raised); } }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FILAS CLIQUEABLES PARA VISTA
+// ─────────────────────────────────────────────────────────────────────────────
+
+:host ::ng-deep .cat-table {
+  .p-datatable-tbody > tr.cat-row-clickable {
+    cursor: pointer;
+
+    // La celda de acciones restaura el cursor normal para no confundir al usuario
+    > td:last-child { cursor: default; }
+  }
+}
+
+/* ── Colores específicos para botones alineados al sistema global ── */
+
+.cat-btn-icon--edit {
+  background-color: var(--color-info) !important;
+  border-color: var(--color-info) !important;
+  color: #FFFFFF !important;
+
+  &:hover {
+    background-color: var(--color-info-dark) !important;
+    border-color: var(--color-info-dark) !important;
+  }
+}
+
+.cat-btn-icon--danger {
+  background-color: var(--color-danger) !important; 
+  border-color: var(--color-danger) !important;
+  color: #FFFFFF !important;
+
+  &:hover {
+    background-color: var(--color-danger-dark) !important;
+    border-color: var(--color-danger-dark) !important;
+  }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+// OVERRIDE FINAL — botón Cancelar blanco (pisa el gris de PrimeNG)
+// ─────────────────────────────────────────────────────────────────────────────

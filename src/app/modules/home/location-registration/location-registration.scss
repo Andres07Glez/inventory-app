@@ -1,0 +1,641 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   location-registration.scss
+   Sigue el mismo patrón visual que marca-registration.scss.
+   En lugar de hardcodear valores, consume los tokens globales de styles.scss
+   (--color-*, --surface-*, --text-*, --border-radius-*, --shadow-*).
+   Prefijo local: --loc-*  /  clases: .loc-*
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   ✦ VARIABLES LOCALES — apuntan a los tokens globales de styles.scss
+───────────────────────────────────────────────────────────────────────────── */
+:host {
+  /* Fondos */
+  --loc-bg:             var(--surface-ground);
+  --loc-surface:        var(--surface-card);
+  --loc-surface-raised: var(--surface-section);
+
+  /* Bordes */
+  --loc-border:         var(--surface-border);
+  --loc-border-focus:   var(--color-primary);
+
+  /* Primario */
+  --loc-primary:        var(--color-primary);
+  --loc-primary-hover:  var(--color-primary-dark);
+  --loc-primary-light:  var(--color-primary-light);
+  --loc-primary-text:   #FFFFFF;
+
+  /* Texto */
+  --loc-text-primary:   var(--text-color);
+  --loc-text-secondary: var(--text-color-secondary);
+  --loc-text-muted:     var(--text-color-muted);
+
+  /* Inputs */
+  --loc-input-bg:          var(--surface-card);
+  --loc-input-text:        var(--text-color);
+  --loc-input-border:      var(--surface-border);
+  --loc-input-placeholder: var(--text-color-muted);
+
+  /* Semánticos */
+  --loc-danger:     var(--color-danger);
+  --loc-danger-bg:  var(--color-danger-light);
+  --loc-warn:       var(--color-warning);
+  --loc-edit-color: var(--color-info);
+  --loc-edit-bg:    var(--color-info-light);
+  --loc-success:    var(--color-success);
+
+  /* Geometría */
+  --loc-radius-sm: var(--border-radius-sm);
+  --loc-radius-md: var(--border-radius-md);
+  --loc-radius-lg: var(--border-radius-lg);
+  --loc-shadow:    var(--shadow-sm);
+  --loc-shadow-lg: var(--shadow-lg);
+
+  --loc-font: var(--font-primary);
+
+  display: block;
+  font-family: var(--loc-font);
+}
+
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   CONTENIDO DEL TAB & TOOLBAR
+───────────────────────────────────────────────────────────────────────────── */
+.loc-tab-content {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+@media (max-width: 640px) {
+  .loc-tab-content { padding: 1rem; }
+}
+
+.loc-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 560px) {
+  .loc-toolbar { flex-direction: column; align-items: stretch; }
+  .loc-toolbar .loc-btn { width: 100%; justify-content: center; }
+}
+
+.loc-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(0, 125, 104, .10);
+  color: var(--loc-primary);
+  border: 1px solid rgba(0, 125, 104, .2);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+
+  i { font-size: 0.72rem; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   TABLA Y CELDAS
+───────────────────────────────────────────────────────────────────────────── */
+:host ::ng-deep .loc-table { font-family: var(--loc-font); }
+
+:host ::ng-deep .loc-table .p-datatable-thead > tr > th {
+  background: var(--loc-surface-raised);
+  color: var(--loc-text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--loc-border);
+  padding: 0.75rem 1rem;
+  white-space: nowrap;
+}
+
+:host ::ng-deep .loc-table .p-datatable-thead > tr > th.p-highlight,
+:host ::ng-deep .loc-table .p-datatable-thead > tr > th:hover {
+  background: var(--loc-primary-light) !important;
+  color: var(--loc-primary) !important;
+}
+
+:host ::ng-deep .loc-table .p-datatable-thead > tr > th .p-sortable-column-icon {
+  color: var(--loc-text-muted);
+  font-size: 0.875rem;
+}
+
+:host ::ng-deep .loc-table .p-datatable-tbody > tr {
+  border-bottom: 1px solid var(--loc-border);
+  transition: background var(--transition-fast);
+}
+
+:host ::ng-deep .loc-table .p-datatable-tbody > tr:last-child { border-bottom: none; }
+
+:host ::ng-deep .loc-table .p-datatable-tbody > tr:hover {
+  background: var(--loc-primary-light) !important;
+}
+
+:host ::ng-deep .loc-table .p-datatable-tbody > tr > td {
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  color: var(--loc-text-primary);
+  vertical-align: middle;
+}
+
+:host ::ng-deep .loc-table .p-paginator {
+  background: var(--loc-surface-raised);
+  border-top: 1px solid var(--loc-border);
+  padding: 0.625rem 1rem;
+  font-size: 1rem;
+  font-family: var(--loc-font);
+}
+
+:host ::ng-deep .loc-table .p-paginator .p-paginator-current {
+  color: var(--loc-text-secondary);
+}
+
+:host ::ng-deep .loc-table .p-paginator .p-paginator-page.p-highlight {
+  background: var(--loc-primary);
+  color: var(--loc-primary-text);
+  border-radius: var(--loc-radius-sm);
+}
+
+:host ::ng-deep .loc-table .p-paginator .p-paginator-page:not(.p-highlight):hover,
+:host ::ng-deep .loc-table .p-paginator .p-paginator-prev:hover,
+:host ::ng-deep .loc-table .p-paginator .p-paginator-next:hover {
+  background: var(--loc-primary-light);
+  color: var(--loc-primary);
+}
+
+/* ── Celdas específicas ── */
+.loc-id {
+  color: var(--loc-text-primary);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.loc-cell-primary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 500;
+  font-size: 1rem;
+  color: var(--loc-text-primary);
+}
+
+.loc-cell-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--loc-radius-sm);
+  background: rgba(0, 125, 104, .10);
+  border: 1px solid rgba(0, 125, 104, .2);
+  color: var(--loc-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.loc-desc {
+  color: var(--loc-text-muted);
+  font-size: 0.9rem;
+  display: block;
+  max-width: 260px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   TAGS & BOTONES
+───────────────────────────────────────────────────────────────────────────── */
+:host ::ng-deep .loc-tag {
+  font-family: var(--loc-font);
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 2rem;
+  padding: 0.2rem 0.625rem;
+}
+
+:host ::ng-deep .p-tag.p-tag-success {
+  background: rgba(0, 125, 104, .15) !important;
+  color: var(--color-primary) !important;
+}
+
+:host ::ng-deep .p-tag.p-tag-secondary {
+  background: rgba(127, 127, 127, .15) !important;
+  color: var(--loc-text-muted) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  :host ::ng-deep .p-tag.p-tag-success { color: #5EC9B5 !important; }
+}
+
+.loc-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+}
+
+.loc-btn-icon.p-button {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--loc-radius-sm);
+  font-size: 0.875rem;
+  transition: all var(--transition-fast);
+}
+
+.loc-btn-icon--edit.p-button   { background: var(--loc-edit-bg);   color: var(--loc-edit-color); }
+.loc-btn-icon--edit.p-button:hover:not(:disabled) { filter: brightness(0.92); }
+
+.loc-btn-icon--danger.p-button { background: var(--loc-danger-bg); color: var(--loc-danger); }
+.loc-btn-icon--danger.p-button:hover:not(:disabled) { filter: brightness(0.92); }
+.loc-btn-icon--danger.p-button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.loc-btn.p-button {
+  font-family: var(--loc-font);
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: var(--loc-radius-sm);
+  padding: 0.5rem 1.25rem;
+  transition: all var(--transition-fast);
+}
+
+.loc-btn--primary.p-button {
+  background: var(--loc-primary);
+  border-color: var(--loc-primary);
+  color: var(--loc-primary-text);
+}
+
+.loc-btn--primary.p-button:hover:not(:disabled) {
+  background: var(--loc-primary-hover);
+  border-color: var(--loc-primary-hover);
+}
+
+.loc-btn--secondary.p-button {
+  background: #FFFFFF;
+  border: 1px solid var(--loc-border);
+  color: var(--loc-text-secondary);
+}
+
+.loc-btn--secondary.p-button:hover:not(:disabled) {
+  background: var(--loc-surface-raised);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   ESTADO VACÍO & SKELETON
+───────────────────────────────────────────────────────────────────────────── */
+.loc-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--loc-text-muted);
+  gap: 0.5rem;
+}
+
+.loc-empty__icon  { font-size: 2.5rem; opacity: 0.35; margin-bottom: 0.25rem; }
+.loc-empty__title { font-size: 1.5rem; font-weight: 500; color: var(--loc-text-secondary); margin: 0; }
+.loc-empty__sub   { font-size: 1rem; line-height: 1.6; margin: 0; max-width: 300px; }
+
+:host ::ng-deep .loc-skeleton.p-skeleton {
+  background-color: var(--loc-border);
+  border-radius: var(--loc-radius-sm);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SEARCH FIELD
+───────────────────────────────────────────────────────────────────────────── */
+:host ::ng-deep .loc-search-field { flex: 1; min-width: 220px; }
+:host ::ng-deep .loc-search-field .p-iconfield { width: 100%; }
+:host ::ng-deep .loc-search-field .p-inputicon { color: var(--loc-text-muted); }
+
+:host ::ng-deep .loc-search-field .loc-search-input {
+  width: 100%;
+  font-family: var(--loc-font);
+  font-size: 1rem;
+  border-radius: var(--loc-radius-sm);
+  background: var(--loc-input-bg) !important;
+  color: var(--loc-input-text) !important;
+  border: 1px solid var(--loc-input-border) !important;
+  padding-left: 2.25rem !important;
+}
+
+:host ::ng-deep .loc-search-field .loc-search-input::placeholder {
+  color: var(--loc-input-placeholder) !important;
+}
+
+:host ::ng-deep .loc-search-field .loc-search-input:focus {
+  border-color: var(--loc-border-focus) !important;
+  box-shadow: 0 0 0 3px rgba(0, 125, 104, .12) !important;
+  outline: none;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   DIÁLOGOS Y FORMULARIOS
+───────────────────────────────────────────────────────────────────────────── */
+:host ::ng-deep .loc-dialog .p-dialog {
+  border-radius: var(--loc-radius-lg);
+  background: var(--loc-surface);
+  box-shadow: var(--loc-shadow-lg);
+  border: 1px solid var(--loc-border);
+  font-family: var(--loc-font);
+}
+
+:host ::ng-deep .loc-dialog .p-dialog-header {
+  background: var(--loc-surface);
+  border-bottom: 1px solid var(--loc-border);
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--loc-radius-lg) var(--loc-radius-lg) 0 0;
+}
+
+:host ::ng-deep .loc-dialog .p-dialog-header .p-dialog-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--loc-text-primary);
+}
+
+:host ::ng-deep .loc-dialog .p-dialog-header .p-dialog-header-icon {
+  color: var(--loc-text-muted);
+}
+
+:host ::ng-deep .loc-dialog .p-dialog-header .p-dialog-header-icon:hover {
+  background: var(--loc-surface-raised);
+  color: var(--loc-text-secondary);
+}
+
+:host ::ng-deep .loc-dialog .p-dialog-content {
+  background: var(--loc-surface);
+  padding: 1.5rem;
+}
+
+:host ::ng-deep .loc-dialog .p-dialog-footer {
+  background: var(--loc-surface-raised);
+  border-top: 1px solid var(--loc-border);
+  padding: 1rem 1.5rem;
+  border-radius: 0 0 var(--loc-radius-lg) var(--loc-radius-lg);
+}
+
+.loc-form        { display: flex; flex-direction: column; gap: 1.125rem; }
+.loc-form-row    { display: grid; grid-template-columns: 1fr 1fr; gap: 1.125rem; }
+.loc-field       { display: flex; flex-direction: column; gap: 0.375rem; }
+.loc-field--full { grid-column: 1 / -1; }
+.loc-label       { font-size: 1rem; font-weight: 500; color: var(--loc-text-secondary); }
+.loc-req         { color: var(--loc-danger); margin-left: 2px; }
+.loc-opt         { color: var(--loc-text-muted); font-weight: 400; font-size: 0.625rem; }
+
+.loc-error {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.625rem;
+  color: var(--loc-danger);
+}
+
+.loc-error i { font-size: 0.625rem; }
+
+.loc-input,
+.loc-textarea {
+  width: 100%;
+  font-family: var(--loc-font);
+  font-size: 1rem;
+  border-radius: var(--loc-radius-sm);
+  background: var(--loc-input-bg) !important;
+  color: var(--loc-input-text) !important;
+  border: 1px solid var(--loc-input-border) !important;
+}
+
+.loc-input::placeholder,
+.loc-textarea::placeholder { color: var(--loc-input-placeholder) !important; }
+
+.loc-input:focus,
+.loc-textarea:focus {
+  border-color: var(--loc-border-focus) !important;
+  box-shadow: 0 0 0 3px rgba(0, 125, 104, .12) !important;
+  outline: none;
+}
+
+.loc-textarea { resize: vertical; min-height: 80px; }
+
+/* Inputs PrimeNG dentro del dialog */
+:host ::ng-deep .loc-dialog .p-inputtext {
+  font-family: var(--loc-font) !important;
+  background: var(--loc-input-bg) !important;
+  border: 1px solid var(--loc-input-border) !important;
+  border-radius: var(--loc-radius-sm) !important;
+  color: var(--loc-input-text) !important;
+  padding: 0.65rem 0.75rem !important;
+  transition: border-color var(--transition-normal);
+  width: 100%;
+}
+
+:host ::ng-deep .loc-dialog .p-inputtext:focus {
+  border-color: var(--loc-border-focus) !important;
+  box-shadow: 0 0 0 3px rgba(0, 125, 104, .12) !important;
+}
+
+:host ::ng-deep .loc-dialog .p-inputtext::placeholder {
+  color: var(--loc-input-placeholder) !important;
+}
+
+:host ::ng-deep .loc-dialog .p-inputtext.ng-invalid.ng-touched {
+  border-color: var(--loc-danger) !important;
+}
+
+:host ::ng-deep .loc-dialog .p-textarea {
+  font-family: var(--loc-font) !important;
+  background: var(--loc-input-bg) !important;
+  border: 1px solid var(--loc-input-border) !important;
+  border-radius: var(--loc-radius-sm) !important;
+  color: var(--loc-input-text) !important;
+  width: 100%;
+  resize: vertical;
+  transition: border-color var(--transition-normal);
+}
+
+:host ::ng-deep .loc-dialog .p-textarea:focus {
+  border-color: var(--loc-border-focus) !important;
+  box-shadow: 0 0 0 3px rgba(0, 125, 104, .12) !important;
+}
+
+:host ::ng-deep .loc-dialog .p-button {
+  font-family: var(--loc-font) !important;
+  font-weight: 500 !important;
+  border-radius: var(--loc-radius-sm) !important;
+  letter-spacing: 0.02em;
+}
+
+.loc-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   CONFIRM DIALOG
+───────────────────────────────────────────────────────────────────────────── */
+:host ::ng-deep .loc-confirm-dialog .p-confirmdialog {
+  border-radius: var(--loc-radius-lg);
+  background: var(--loc-surface);
+  box-shadow: var(--loc-shadow-lg);
+  border: 1px solid var(--loc-border);
+  font-family: var(--loc-font);
+}
+
+:host ::ng-deep .loc-confirm-dialog .p-confirmdialog-icon {
+  color: var(--loc-warn);
+  font-size: 2rem;
+}
+
+:host ::ng-deep .loc-confirm-dialog .p-confirmdialog-message {
+  color: var(--loc-text-primary);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+:host ::ng-deep .loc-confirm-dialog .p-dialog-header {
+  background: var(--loc-surface);
+  border-bottom: 1px solid var(--loc-border);
+}
+
+:host ::ng-deep .loc-confirm-dialog .p-dialog-header .p-dialog-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--loc-text-primary);
+}
+
+:host ::ng-deep .loc-confirm-dialog .p-dialog-header .p-dialog-header-icon {
+  color: var(--loc-text-muted);
+}
+
+:host ::ng-deep .loc-confirm-dialog .p-dialog-content { background: var(--loc-surface); }
+
+:host ::ng-deep .loc-confirm-dialog .p-dialog-footer {
+  background: var(--loc-surface-raised);
+  border-top: 1px solid var(--loc-border);
+}
+
+:host ::ng-deep .loc-confirm-dialog .p-button-danger {
+  background: var(--loc-danger);
+  border-color: var(--loc-danger);
+  color: white;
+  font-family: var(--loc-font);
+  font-weight: 500;
+  border-radius: var(--loc-radius-sm);
+  font-size: 1rem;
+}
+
+:host ::ng-deep .loc-confirm-dialog .p-button-danger:hover { filter: brightness(0.9); }
+
+:host ::ng-deep .loc-confirm-dialog .p-confirmdialog-reject-button {
+  background: transparent;
+  border: 1px solid var(--loc-border);
+  color: var(--loc-text-secondary);
+  font-family: var(--loc-font);
+  font-weight: 500;
+  border-radius: var(--loc-radius-sm);
+  font-size: 1rem;
+}
+
+:host ::ng-deep .loc-confirm-dialog .p-confirmdialog-reject-button:hover {
+  background: var(--loc-surface-raised);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   TOAST
+───────────────────────────────────────────────────────────────────────────── */
+:host ::ng-deep .p-toast .p-toast-message {
+  font-family: var(--loc-font) !important;
+  background: var(--loc-surface) !important;
+  border-left-width: 4px;
+  color: var(--loc-text-primary) !important;
+  box-shadow: var(--loc-shadow-lg) !important;
+}
+
+:host ::ng-deep .p-toast .p-toast-message.p-toast-message-success { border-left-color: var(--loc-primary) !important; }
+:host ::ng-deep .p-toast .p-toast-message.p-toast-message-warn    { border-left-color: var(--loc-warn)    !important; }
+:host ::ng-deep .p-toast .p-toast-message.p-toast-message-error   { border-left-color: var(--loc-danger)  !important; }
+:host ::ng-deep .p-toast .p-toast-summary { color: var(--loc-text-primary) !important; }
+:host ::ng-deep .p-toast .p-toast-detail  { color: var(--loc-text-muted)   !important; }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   TOOLTIP
+───────────────────────────────────────────────────────────────────────────── */
+:host ::ng-deep .p-tooltip .p-tooltip-text {
+  font-family: var(--loc-font) !important;
+  font-size: 0.78rem;
+  background: #0E5247 !important;
+  color: #fff !important;
+}
+
+:host ::ng-deep .p-tooltip.p-tooltip-top    .p-tooltip-arrow { border-top-color:    #0E5247 !important; }
+:host ::ng-deep .p-tooltip.p-tooltip-bottom .p-tooltip-arrow { border-bottom-color: #0E5247 !important; }
+:host ::ng-deep .p-tooltip.p-tooltip-left   .p-tooltip-arrow { border-left-color:   #0E5247 !important; }
+:host ::ng-deep .p-tooltip.p-tooltip-right  .p-tooltip-arrow { border-right-color:  #0E5247 !important; }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   RESPONSIVO
+───────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .loc-tab-content { padding: 1rem; }
+  .loc-form-row    { grid-template-columns: 1fr; }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OVERRIDE FINAL — pisa el color primario del tema de PrimeNG
+// ─────────────────────────────────────────────────────────────────────────────
+.loc-btn-icon--edit {
+  background-color: #2D63D9 !important;
+  border-color: #2D63D9 !important;
+  color: #FFFFFF !important;
+
+  &:hover {
+    background-color: #10388E !important;
+    border-color: #10388E !important;
+  }
+}
+
+.loc-btn-icon--danger {
+  background-color: #D92D2D !important;
+  border-color: #D92D2D !important;
+  color: #FFFFFF !important;
+
+  &:hover {
+    background-color: #8E1010 !important;
+    border-color: #8E1010 !important;
+  }
+}
+// ─────────────────────────────────────────────────────────────────────────────
+// OVERRIDE — encabezado de tabla y paginador con el verde suave de category
+// Color tomado de: --cat-surface-raised: #F5FFFD (category.scss)
+// ─────────────────────────────────────────────────────────────────────────────
+:host ::ng-deep .loc-table .p-datatable-thead > tr > th {
+  background: #F5FFFD !important;
+}
+
+:host ::ng-deep .loc-table .p-paginator {
+  background: #F5FFFD !important;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OVERRIDE FINAL — botón Cancelar blanco (pisa el gris de PrimeNG)
+// ─────────────────────────────────────────────────────────────────────────────
+/*:host ::ng-deep .cat-btn--secondary.p-button {
+  border: 1px solid var(--cat-border) !important;
+  color: var(--loc-primary-text) !important;
+}*/
+
+:host ::ng-deep .loc-btn--secondary.p-button {
+  //background: #FFFFFF !important;
+  border: 1px solid var(--loc-border) !important;
+  //color: var(--loc-text-secondary) !important;  
+  color: var(--loc-primary-text) !important;
+}

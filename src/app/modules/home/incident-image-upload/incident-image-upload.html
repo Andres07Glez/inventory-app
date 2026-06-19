@@ -1,0 +1,97 @@
+<p-toast />
+<p-confirmpopup key="inc-img-delete" />
+
+<!-- Lightbox preview -->
+<p-dialog
+  [visible]="previewUrl() !== null"
+  (visibleChange)="!$event && previewUrl.set(null)"
+  [modal]="true" [draggable]="false" [resizable]="false" [closable]="true"
+  styleClass="img-preview-dialog"
+  [style]="{ width: 'auto', maxWidth: '92vw' }"
+>
+  @if (previewUrl()) {
+    <img [src]="previewUrl()!" alt="Vista previa" class="img-preview-dialog__img" />
+  }
+</p-dialog>
+
+<section class="inc-img">
+
+  <!-- Skeleton -->
+  @if (isLoading()) {
+    <div class="inc-img__skeleton-row">
+      @for (_ of [1,2,3]; track $index) {
+        <div class="inc-img__skeleton"></div>
+      }
+    </div>
+  }
+
+  <!-- Galería de evidencias -->
+  @if (!isLoading() && images().length > 0) {
+    <div class="inc-img__gallery">
+      @for (img of images(); track img.id) {
+        <div class="inc-img__thumb">
+          <img [src]="img.url" [alt]="img.fileName" loading="lazy">
+          <div class="inc-img__thumb-overlay">
+            <button class="inc-img__action-btn"
+              pTooltip="Ver imagen" tooltipPosition="top"
+              (click)="openPreview(img)">
+              <i class="pi pi-eye"></i>
+            </button>
+            @if (!readOnly()) {
+              <button class="inc-img__action-btn inc-img__action-btn--danger"
+                pTooltip="Eliminar evidencia" tooltipPosition="top"
+                (click)="confirmDelete(img, $event)">
+                <i class="pi pi-trash"></i>
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Estado vacío -->
+  @if (!isLoading() && images().length === 0 && readOnly()) {
+    <p class="inc-img__empty-msg">
+      <i class="pi pi-image"></i> Sin imágenes de evidencia registradas.
+    </p>
+  }
+
+  <!-- Zona de carga -->
+  @if (canUploadMore()) {
+    <label class="inc-img__dropzone"
+      [class.inc-img__dropzone--dragging]="isDragging()"
+      [class.inc-img__dropzone--busy]="uploadProgress() !== null"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave()"
+      (drop)="onDrop($event)">
+
+      <input type="file"
+        accept="image/jpeg,image/png,image/webp" multiple
+        class="inc-img__file-input"
+        (change)="onFileSelected($event)"
+        [disabled]="uploadProgress() !== null">
+
+      @if (uploadProgress() !== null) {
+        <div class="inc-img__progress-wrap">
+          <i class="pi pi-spin pi-spinner inc-img__drop-icon"></i>
+          <span class="inc-img__drop-hint">Comprimiendo y subiendo…</span>
+          <p-progressBar [value]="uploadProgress()!" styleClass="inc-img__progress-bar" [showValue]="false" />
+        </div>
+      } @else {
+        <i class="pi pi-cloud-upload inc-img__drop-icon"></i>
+        <span class="inc-img__drop-title">Arrastra evidencias aquí</span>
+        <span class="inc-img__drop-hint">o <u>haz clic para seleccionar</u> · JPEG, PNG, WEBP · máx. 10 MB</span>
+        <span class="inc-img__drop-counter">{{ images().length }} / {{ maxImages }} imágenes</span>
+      }
+    </label>
+  }
+
+  @if (!readOnly() && !canUploadMore()) {
+    <p class="inc-img__limit-msg">
+      <i class="pi pi-info-circle"></i>
+      Límite de {{ maxImages }} imágenes alcanzado. Elimina una para agregar otra.
+    </p>
+  }
+
+</section>

@@ -1,0 +1,236 @@
+$gap-sm:   0.75rem;
+$gap-md:   1.25rem;
+$gap-lg:   1.75rem;
+$radius:   0.625rem;
+$card-pad: 1.25rem;
+
+.inc-det {
+  padding: 1.25rem 2rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: $gap-lg;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  &__skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: $gap-sm;
+    padding: 1.25rem 2rem;
+
+    &-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: $gap-md;
+      margin-top: $gap-sm;
+    }
+  }
+
+  &__topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $gap-md;
+    flex-wrap: wrap;
+    padding-bottom: $gap-sm;
+    border-bottom: 1px solid var(--p-surface-200);
+
+    &-center {
+      display: flex;
+      align-items: center;
+      gap: $gap-sm;
+      flex: 1;
+      justify-content: center;
+    }
+  }
+
+  &__folio {
+    font-family: 'Courier New', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--p-primary-700);
+    letter-spacing: 0.04em;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: $gap-md;
+    align-items: start;
+
+    @media (max-width: 900px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: $gap-md;
+  }
+
+  &__side {
+    display: flex;
+    flex-direction: column;
+    gap: $gap-md;
+    position: sticky;
+    top: 1rem;
+  }
+
+  &__card {
+    background: var(--p-surface-0);
+    border: 1px solid var(--p-surface-200);
+    border-radius: $radius;
+    padding: $card-pad;
+
+    &--action {
+      border-left: 3px solid var(--p-primary-500);
+      background: var(--p-primary-50);
+    }
+
+    &--resolve {
+      border-left: 3px solid var(--p-warning-500, #D9B12D);
+    }
+  }
+
+  &__card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--p-text-muted-color);
+    margin: 0 0 $gap-sm;
+
+    i { color: var(--p-primary-600); }
+  }
+
+  &__img-count {
+    margin-left: auto;
+    font-size: 0.75rem;
+    font-weight: 400;
+    background: var(--p-surface-100);
+    padding: 0.1rem 0.45rem;
+    border-radius: 1rem;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--p-text-muted-color);
+  }
+
+  &__asset-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  &__asset-inv {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--p-primary-700);
+  }
+
+  &__asset-desc {
+    font-size: 0.9rem;
+    color: var(--p-text-color);
+  }
+
+  &__detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $gap-sm $gap-md;
+
+    @media (max-width: 600px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+
+    &--full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--p-text-muted-color);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--p-text-color);
+      line-height: 1.5;
+    }
+
+    textarea {
+      width: 100%;
+      resize: vertical;
+      min-height: 5rem;
+      margin-top: 0.25rem;
+    }
+  }
+
+  &__optional {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--p-text-muted-color);
+    font-size: 0.75rem;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  &__action-hint {
+    font-size: 0.875rem;
+    color: var(--p-text-muted-color);
+    margin: 0 0 $gap-sm;
+    line-height: 1.5;
+  }
+
+  &__resolve-form {
+    display: flex;
+    flex-direction: column;
+    gap: $gap-md;
+  }
+
+  &__resolve-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--p-surface-200);
+  }
+
+  // Aviso informativo que redirige al módulo de Bajas
+  &__baja-hint {
+    width: 100%;
+
+    .inc-det__baja-link {
+      margin-left: 0.25rem;
+      vertical-align: middle;
+    }
+  }
+
+  &__status-dialog {
+    display: flex;
+    flex-direction: column;
+    gap: $gap-md;
+  }
+
+  &__status-dialog-hint {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--p-text-color);
+    line-height: 1.55;
+    padding: 0.625rem 0.875rem;
+    background: var(--p-primary-50);
+    border-radius: 0.5rem;
+    border-left: 3px solid var(--p-primary-400);
+  }
+}

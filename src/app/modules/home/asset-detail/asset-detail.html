@@ -1,0 +1,502 @@
+<!-- Ruta: src/app/modules/home/asset-detail/asset-detail.html -->
+<!-- PrimeNG 21: p-tabs + p-tablist + p-tab + p-tabpanels + p-tabpanel -->
+
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="detail-page">
+
+  <div class="detail-page__nav">
+    <button class="back-btn" (click)="goBack()">
+      <i class="pi pi-arrow-left"></i>
+      <span>Bienes patrimoniales</span>
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="detail-skeleton">
+      <p-skeleton height="2rem" width="40%" styleClass="mb-2" />
+      <p-skeleton height="1rem" width="25%" styleClass="mb-4" />
+      <p-skeleton height="400px" />
+    </div>
+  }
+
+  @if (!loading() && asset(); as bien) {
+
+    <!-- Encabezado -->
+    <div class="detail-header">
+      <div class="detail-header__main">
+        <h1 class="detail-header__title">{{ bien.description }}</h1>
+        <div class="detail-header__meta">
+          <span class="detail-header__inv">{{ bien.inventoryNumber }}</span>
+          <p-tag
+            [value]="getLifecycleLabel(bien.lifecycleStatus)"
+            [severity]="getLifecycleSeverity(bien.lifecycleStatus)"
+          />
+          <p-tag
+            [value]="getConditionLabel(bien.conditionStatus)"
+            [severity]="getConditionSeverity(bien.conditionStatus)"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Tabs PrimeNG 21 ────────────────────────────────────────────────── -->
+    <p-tabs
+      styleClass="detail-tabs"
+      [value]="activeTab()"
+      (valueChange)="onTabChange($event)"
+    >
+
+      <p-tablist>
+        <!-- Resumen: visible para TODOS los roles -->
+        <p-tab value="resumen">
+          <i class="pi pi-info-circle"></i> Resumen
+        </p-tab>
+
+        <!-- Los tabs siguientes son exclusivos para ADMIN y OPERADOR -->
+        @if (canAccessAllTabs()) {
+          <p-tab value="asignaciones">
+            <i class="pi pi-users"></i> Asignaciones
+          </p-tab>
+          <p-tab value="incidencias">
+            <i class="pi pi-exclamation-triangle"></i> Incidencias
+          </p-tab>
+          <p-tab value="mantenimiento">
+            <i class="pi pi-wrench"></i> Mantenimiento
+          </p-tab>
+          <p-tab value="ciclovida">
+            <i class="pi pi-history"></i> Ciclo de vida
+          </p-tab>
+        }
+      </p-tablist>
+
+      <p-tabpanels>
+
+        <!-- ════════════════════ TAB 1 — RESUMEN ════════════════════ -->
+        <p-tabpanel value="resumen">
+          <div class="tab-content">
+
+            <app-asset-image-upload
+              [assetId]="bien.id"
+              [readOnly]="!canEditImages()"
+            />
+
+            <!-- Datos técnicos -->
+            <section class="detail-section">
+              <h3 class="detail-section__title">Datos del bien</h3>
+              <div class="detail-grid">
+                <div class="detail-row">
+                  <span class="detail-row__key">Núm. de inventario</span>
+                  <span class="detail-row__val">{{ bien.inventoryNumber }}</span>
+                </div>
+                @if (bien.barcode) {
+                  <div class="detail-row">
+                    <span class="detail-row__key">Código de barras</span>
+                    <span class="detail-row__val detail-row__val--mono">{{ bien.barcode }}</span>
+                  </div>
+                }
+                <div class="detail-row">
+                  <span class="detail-row__key">Categoría</span>
+                  <span class="detail-row__val">{{ bien.categoryName }}</span>
+                </div>
+                @if (bien.brand || bien.model) {
+                  <div class="detail-row">
+                    <span class="detail-row__key">Marca / Modelo</span>
+                    <span class="detail-row__val">{{ bien.brand }} {{ bien.model }}</span>
+                  </div>
+                }
+                @if (bien.serialNumber) {
+                  <div class="detail-row">
+                    <span class="detail-row__key">Núm. de serie</span>
+                    <span class="detail-row__val detail-row__val--mono">{{ bien.serialNumber }}</span>
+                  </div>
+                }
+                @if (bien.locationName) {
+                  <div class="detail-row">
+                    <span class="detail-row__key">Ubicación</span>
+                    <span class="detail-row__val">
+                      {{ bien.locationName }}
+                      @if (bien.building) { · {{ bien.building }} }
+                      @if (bien.campus) {
+                        <span class="detail-row__campus">
+                          <i class="pi pi-map-marker"></i> {{ campusLabels[bien.campus] }}
+                        </span>
+                      }
+                    </span>
+                  </div>
+                }
+                <div class="detail-row">
+                  <span class="detail-row__key">Fecha de alta</span>
+                  <span class="detail-row__val">{{ bien.entryDate | date:'dd/MM/yyyy' }}</span>
+                </div>
+                @if (bien.invoiceDate) {
+                  <div class="detail-row">
+                    <span class="detail-row__key">Fecha de factura</span>
+                    <span class="detail-row__val">{{ bien.invoiceDate | date:'dd/MM/yyyy' }}</span>
+                  </div>
+                }
+                @if (bien.notes) {
+                  <div class="detail-row detail-row--full">
+                    <span class="detail-row__key">Observaciones</span>
+                    <span class="detail-row__val">{{ bien.notes }}</span>
+                  </div>
+                }
+              </div>
+            </section>
+
+            <!-- Resguardante actual -->
+            <section class="detail-section">
+              <h3 class="detail-section__title">Resguardante actual</h3>
+              @if (bien.guardian) {
+                <div class="guardian-card">
+                  <div class="guardian-card__avatar"><i class="pi pi-user"></i></div>
+                  <div class="guardian-card__info">
+                    <span class="guardian-card__name">{{ bien.guardian.fullName }}</span>
+                    @if (bien.guardian.employeeNumber) {
+                      <span class="guardian-card__meta">{{ bien.guardian.employeeNumber }}</span>
+                    }
+                    @if (bien.guardian.department) {
+                      <span class="guardian-card__meta">{{ bien.guardian.department }}</span>
+                    }
+                  </div>
+                </div>
+              } @else {
+                <p class="detail-empty-msg">
+                  <i class="pi pi-user-minus"></i> Sin resguardante asignado.
+                </p>
+              }
+            </section>
+
+            <!-- SP-09: Actualizar condición -->
+            <section class="detail-section">
+              <h3 class="detail-section__title">
+                Condición física
+                <span class="detail-section__hint">Identificar activos que requieren atención</span>
+              </h3>
+              <p-message severity="info" styleClass="mb-4" [style]="{ width: '100%', marginBottom: '1rem' }">
+                <div style="line-height: 1.5; font-size: 0.9rem;">
+                  <strong>Guía de condiciones:</strong>
+                  <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem;">
+                    <li><i class="pi pi-circle-fill" style="color: #18B32A; font-size: 0.5rem; vertical-align: middle; margin-right: 4px;"></i> <strong>Bueno:</strong> Funcional y en buen estado.</li>
+                    <li><i class="pi pi-circle-fill" style="color: #D4A91D; font-size: 0.5rem; vertical-align: middle; margin-right: 4px;"></i> <strong>Regular:</strong> Funcional pero con desgaste o años de uso.</li>
+                    <li><i class="pi pi-circle-fill" style="color: #B31818; font-size: 0.5rem; vertical-align: middle; margin-right: 4px;"></i> <strong>Malo:</strong> No funcional o muy deteriorado; candidato a baja.</li>
+                  </ul>
+                </div>
+              </p-message>
+
+              <div class="condition-form">
+                <div class="condition-form__field">
+                  <label class="condition-form__label" for="condition-select">Estado de condición</label>
+                  <p-select
+                    inputId="condition-select"
+                    [options]="conditionOptions"
+                    [(ngModel)]="selectedCondition"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Selecciona una condición"
+                    styleClass="condition-form__select"
+                    [disableIfNoRole]="['ADMIN', 'OPERADOR']"
+                  />
+                </div>
+                <button
+                  pButton
+                  *hasRole="['ADMIN', 'OPERADOR']"
+                  icon="pi pi-check"
+                  label="Actualizar condición"
+                  class="p-button-warning"
+                  [loading]="savingCondition()"
+                  [disabled]="!selectedCondition || savingCondition()"
+                  (click)="onUpdateCondition()"
+                ></button>
+              </div>
+            </section>
+
+          </div>
+        </p-tabpanel>
+
+        <!-- ════════════════════ TAB 2 — ASIGNACIONES ════════════════════ -->
+        <p-tabpanel value="asignaciones">
+          <div class="tab-content">
+            <div class="tab-toolbar">
+              <h3 class="tab-toolbar__title">Historial de asignaciones</h3>
+              <button
+                pButton
+                *hasRole="['ADMIN', 'OPERADOR']"
+                icon="pi pi-user-plus"
+                label="Nueva asignación"
+                [disabled]="bien.lifecycleStatus === 'DECOMMISSIONED'"
+                (click)="goToAssignment(bien.id)"
+              ></button>
+            </div>
+
+            @if (loadingAssignments()) {
+              <p-skeleton height="200px" />
+            } @else if (assignments().length === 0) {
+              <div class="detail-empty">
+                <i class="pi pi-users detail-empty__icon"></i>
+                <p>Este bien no tiene historial de asignaciones.</p>
+                <button pButton icon="pi pi-user-plus" label="Crear primera asignación"
+                  (click)="goToAssignment(bien.id)"></button>
+              </div>
+            } @else {
+              <p-table [value]="assignments()" styleClass="p-datatable-sm" [rowHover]="true">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th>Resguardante</th>
+                    <th>Núm. empleado</th>
+                    <th>Ubicación</th>
+                    <th>Asignado el</th>
+                    <th>Devuelto el</th>
+                    <th>Estado</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-a>
+                  <tr>
+                    <td>{{ a.guardianName }}</td>
+                    <td>{{ a.guardianEmployeeNumber ?? '—' }}</td>
+                    <td>{{ a.locationName ?? '—' }}</td>
+                    <td>{{ a.assignedAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                    <td>{{ a.returnedAt ? (a.returnedAt | date:'dd/MM/yyyy HH:mm') : '—' }}</td>
+                    <td>
+                      <p-tag
+                        [value]="isAssignmentActive(a) ? 'Activa' : 'Histórica'"
+                        [severity]="isAssignmentActive(a) ? 'success' : 'secondary'"
+                      />
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            }
+          </div>
+        </p-tabpanel>
+
+        <!-- ════════════════════ TAB 3 — INCIDENCIAS ════════════════════ -->
+        <p-tabpanel value="incidencias">
+          <div class="tab-content">
+            <div class="tab-toolbar">
+              <h3 class="tab-toolbar__title">Incidencias reportadas</h3>
+              <button
+                pButton
+                *hasRole="['ADMIN', 'OPERADOR']"
+                icon="pi pi-plus"
+                label="Nueva incidencia"
+                [disabled]="bien.lifecycleStatus === 'DECOMMISSIONED'"
+                (click)="goToNewIncident(bien.id)"
+              ></button>
+            </div>
+
+            @if (loadingIncidents()) {
+              <p-skeleton height="200px" />
+            } @else if (incidents().length === 0) {
+              <div class="detail-empty">
+                <i class="pi pi-exclamation-triangle detail-empty__icon"></i>
+                <p>Sin incidencias registradas para este bien.</p>
+                <button
+                  pButton
+                  *hasRole="['ADMIN', 'OPERADOR']"
+                  icon="pi pi-plus"
+                  label="Reportar primera incidencia"
+                  (click)="goToNewIncident(bien.id)"
+                ></button>
+              </div>
+            } @else {
+              <p-table
+                [value]="incidents()"
+                styleClass="p-datatable-sm"
+                [rowHover]="true"
+                sortField="incidentDate"
+                [sortOrder]="-1"
+              >
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th pSortableColumn="folio">Folio <p-sortIcon field="folio" /></th>
+                    <th pSortableColumn="incidentDate">Fecha <p-sortIcon field="incidentDate" /></th>
+                    <th>Descripción</th>
+                    <th>Tipo reparación</th>
+                    <th pSortableColumn="status">Estado <p-sortIcon field="status" /></th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-inc>
+                  <tr>
+                    <td><code class="folio-code">{{ inc.folio }}</code></td>
+                    <td class="cell-nowrap">{{ inc.incidentDate | date:'dd/MM/yyyy' }}</td>
+                    <td class="cell-desc">{{ inc.description }}</td>
+                    <td>{{ getRepairTypeLabel(inc.repairType) }}</td>
+                    <td>
+                      <p-tag
+                        [value]="getIncidentStatusLabel(inc.status)"
+                        [severity]="getIncidentStatusSeverity(inc.status)"
+                      />
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            }
+          </div>
+        </p-tabpanel>
+
+        <!-- ════════════════════ TAB 4 — MANTENIMIENTO ════════════════════ -->
+        <p-tabpanel value="mantenimiento">
+          <div class="tab-content">
+            <div class="tab-toolbar">
+              <h3 class="tab-toolbar__title">Bitácora de mantenimiento</h3>
+              <button
+                pButton
+                *hasRole="['ADMIN', 'OPERADOR']"
+                icon="pi pi-plus"
+                label="Registrar mantenimiento"
+                [disabled]="bien.lifecycleStatus === 'DECOMMISSIONED'"
+                (click)="goToNewMaintenance(bien.id)"
+              ></button>
+            </div>
+
+            @if (loadingMaintenances()) {
+              <p-skeleton height="200px" />
+            } @else if (maintenances().length === 0) {
+              <div class="detail-empty">
+                <i class="pi pi-wrench detail-empty__icon"></i>
+                <p>Sin registros de mantenimiento para este bien.</p>
+                <button
+                  pButton
+                  *hasRole="['ADMIN', 'OPERADOR']"
+                  icon="pi pi-plus"
+                  label="Registrar primer mantenimiento"
+                  (click)="goToNewMaintenance(bien.id)"
+                ></button>
+              </div>
+            } @else {
+              <p-table
+                [value]="maintenances()"
+                styleClass="p-datatable-sm"
+                [rowHover]="true"
+                sortField="performedDate"
+                [sortOrder]="-1"
+              >
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th pSortableColumn="maintenanceType">Tipo <p-sortIcon field="maintenanceType" /></th>
+                    <th pSortableColumn="performedDate">Fecha <p-sortIcon field="performedDate" /></th>
+                    <th>Técnico / Empresa</th>
+                    <th>Costo</th>
+                    <th>Condición</th>
+                    <th>Registrado por</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-m>
+                  <tr>
+                    <td>
+                      <p-tag
+                        [value]="getMaintenanceTypeLabel(m.maintenanceType)"
+                        [severity]="getMaintenanceTypeSeverity(m.maintenanceType)"
+                      />
+                    </td>
+                    <td class="cell-nowrap">{{ m.performedDate | date:'dd/MM/yyyy' }}</td>
+                    <td>{{ m.performedBy ?? '—' }}</td>
+                    <td class="cell-nowrap">
+                      {{ m.cost != null ? (m.cost | currency:'MXN':'symbol':'1.2-2') : '—' }}
+                    </td>
+                    <!-- Muestra condición antes → después si existe -->
+                    <td>
+                      <div class="condition-change">
+                        @if (m.conditionBefore) {
+                          <p-tag
+                            [value]="getConditionLabel(m.conditionBefore)"
+                            [severity]="getConditionSeverity(m.conditionBefore)"
+                          />
+                        }
+                        @if (m.conditionBefore && m.conditionAfter) {
+                          <i class="pi pi-arrow-right condition-change__arrow"></i>
+                        }
+                        @if (m.conditionAfter) {
+                          <p-tag
+                            [value]="getConditionLabel(m.conditionAfter)"
+                            [severity]="getConditionSeverity(m.conditionAfter)"
+                          />
+                        }
+                        @if (!m.conditionBefore && !m.conditionAfter) {
+                          <span class="cell-muted">—</span>
+                        }
+                      </div>
+                    </td>
+                    <td>{{ m.createdByName }}</td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            }
+          </div>
+        </p-tabpanel>
+
+        <!-- ════════════════════ TAB 5 — CICLO DE VIDA ════════════════════ -->
+        <!--
+          El timeline se construye de forma sintética en el computed `timelineEvents`:
+          combina la fecha de alta del bien, asignaciones, incidencias y mantenimientos.
+          No requiere ningún endpoint nuevo ni tabla asset_movement_history.
+        -->
+        <p-tabpanel value="ciclovida">
+          <div class="tab-content">
+
+            @if (loadingTimeline()) {
+              <div class="timeline-skeleton">
+                @for (_ of [1, 2, 3]; track $index) {
+                  <div class="timeline-skeleton__row">
+                    <p-skeleton shape="circle" size="36px" />
+                    <div class="timeline-skeleton__card">
+                      <p-skeleton height="1rem" width="60%" styleClass="mb-2" />
+                      <p-skeleton height="0.8rem" width="40%" />
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p-timeline [value]="timelineEvents()" align="left" styleClass="asset-timeline">
+
+                <!-- Marcador circular con icono y color semántico -->
+                <ng-template pTemplate="marker" let-event>
+                  <span class="timeline-marker" [style.background]="event.color">
+                    <i [class]="event.icon"></i>
+                  </span>
+                </ng-template>
+
+                <!-- Tarjeta de contenido del evento -->
+                <ng-template pTemplate="content" let-event>
+                  <div class="timeline-card">
+                    <div class="timeline-card__header">
+                      <span class="timeline-card__title">{{ event.title }}</span>
+                      @if (event.badge) {
+                        <p-tag
+                          [value]="event.badge"
+                          [severity]="event.badgeSeverity"
+                          styleClass="timeline-card__badge"
+                        />
+                      }
+                    </div>
+                    @if (event.subtitle) {
+                      <p class="timeline-card__sub">{{ event.subtitle }}</p>
+                    }
+                    <span class="timeline-card__date">
+                      <i class="pi pi-calendar"></i>
+                      {{ event.dateObj | date:'dd MMM yyyy' }}
+                    </span>
+                  </div>
+                </ng-template>
+
+              </p-timeline>
+            }
+
+          </div>
+        </p-tabpanel>
+
+      </p-tabpanels>
+    </p-tabs>
+  }
+
+  @if (!loading() && !asset()) {
+    <div class="detail-empty">
+      <i class="pi pi-inbox detail-empty__icon"></i>
+      <p>No se encontró el bien solicitado.</p>
+      <button pButton label="Volver al inventario" icon="pi pi-arrow-left" (click)="goBack()"></button>
+    </div>
+  }
+
+</div>

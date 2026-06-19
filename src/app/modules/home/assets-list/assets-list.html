@@ -51,7 +51,7 @@
 
       <div class="inv-filter-item">
         <label class="inv-filter-item__label" for="filter-lifecycle">
-          <i class="pi pi-sync"></i> Estado
+          <i class="pi pi-sync"></i> Estado de vida
         </label>
         <p-select
           inputId="filter-lifecycle"
@@ -65,12 +65,28 @@
         />
       </div>
 
+      <div class="inv-filter-item">
+        <label class="inv-filter-item__label" for="filter-date">Fecha de registro</label>
+        <p-datepicker
+          id="filter-date"
+          [(ngModel)]="selectedDateRange"
+          selectionMode="range"
+          [readonlyInput]="true"
+          placeholder="Seleccionar rango"
+          [showClear]="true"
+          (onSelect)="onFilterChange()"
+          (onClear)="onFilterChange()"
+          styleClass="w-full">
+        </p-datepicker>
+      </div>
+
     </div>
 
     @if (hasActiveFilters) {
       <button
         pButton
         pRipple
+        
         icon="pi pi-filter-slash"
         label="Limpiar filtros"
         class="inv-btn-clear"
@@ -119,13 +135,17 @@
             Ingreso <p-sortIcon field="entryDate" />
           </th> -->
           <th style="min-width: 110px; text-align: center">Condición</th>
-          <th style="min-width: 130px; text-align: center">Estado</th>
+          <th style="min-width: 130px; text-align: center">Estado de vida</th>
         </tr>
       </ng-template>
 
       <!-- ── Filas ─────────────────────────────────────────────────────────── -->
       <ng-template pTemplate="body" let-asset>
-        <tr class="inv-table__row">
+        <tr class="inv-table__row
+          inv-table__row--clickable"
+          (click)="navigateToDetail(asset.id)"
+          pTooltip="Ver detalle del bien"
+          tooltipPosition="left">
           <!-- No. inventario -->
           <td>
             <span class="inv-inv-number">{{ asset.inventoryNumber }}</span>
@@ -172,7 +192,7 @@
               <span class="inv-location__name">{{ asset.locationName }}</span>
               @if (asset.campus) {
                 <span class="inv-location__campus">
-                  <i class="pi pi-map-marker"></i> {{ asset.campus }}
+                  <i class="pi pi-map-marker"></i> {{ getCampusLabel(asset.campus) }}
                 </span>
               }
             </div>

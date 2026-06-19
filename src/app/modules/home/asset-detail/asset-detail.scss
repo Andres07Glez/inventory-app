@@ -1,0 +1,415 @@
+// Ruta: src/app/modules/home/asset-detail/asset-detail.scss
+
+.detail-page {
+  max-width: 960px;
+
+  &__nav { margin-bottom: 16px; }
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--primary-color);
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 4px 0;
+  font-family: inherit;
+  transition: opacity 0.15s;
+
+  &:hover { opacity: 0.7; }
+}
+
+// ── Encabezado ───────────────────────────────────────────────────────────────
+.detail-header {
+  margin-bottom: 20px;
+  padding: 20px 24px;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+
+  &__title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 10px;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  &__inv {
+    font-family: monospace;
+    font-size: 0.9rem;
+    color: var(--text-color-secondary);
+    background: var(--surface-ground);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+}
+
+// ── Tabs ─────────────────────────────────────────────────────────────────────
+.detail-tabs {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.tab-content {
+  padding: 20px 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+// ── Toolbar de tab (título + botón de acción a la derecha) ────────────────────
+.tab-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  &__title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0;
+  }
+}
+
+// ── Imagen placeholder ───────────────────────────────────────────────────────
+.asset-img-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 160px;
+  background: var(--surface-ground);
+  border: 2px dashed var(--surface-border);
+  border-radius: 8px;
+  color: var(--text-color-secondary);
+
+  i { font-size: 2.5rem; opacity: 0.4; }
+  span { font-size: 0.875rem; }
+}
+
+// ── Secciones de detalle ──────────────────────────────────────────────────────
+.detail-section {
+  &__title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--surface-border);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  &__hint {
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: var(--text-color-secondary);
+  }
+}
+
+// ── Grid de datos ─────────────────────────────────────────────────────────────
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 16px;
+
+  @media (max-width: 640px) { grid-template-columns: 1fr; }
+}
+
+.detail-row {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--surface-border);
+  align-items: start;
+
+  &--full { grid-column: 1 / -1; }
+
+  &__key {
+    font-size: 0.8rem;
+    color: var(--text-color-secondary);
+    padding-top: 1px;
+  }
+
+  &__val {
+    font-size: 0.875rem;
+    color: var(--text-color);
+    font-weight: 500;
+
+    &--mono { font-family: monospace; letter-spacing: 0.02em; }
+  }
+
+  &__campus {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.78rem;
+    color: var(--text-color-secondary);
+    margin-left: 8px;
+  }
+}
+
+// ── Guardián ──────────────────────────────────────────────────────────────────
+.guardian-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--surface-ground);
+  border-radius: 8px;
+  border: 1px solid var(--surface-border);
+
+  &__avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    i { color: white; font-size: 1.1rem; }
+  }
+
+  &__info { display: flex; flex-direction: column; gap: 2px; }
+  &__name { font-weight: 600; font-size: 0.95rem; }
+  &__meta { font-size: 0.8rem; color: var(--text-color-secondary); }
+}
+
+// ── SP-09: Formulario de condición ────────────────────────────────────────────
+.condition-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__label {
+    font-size: 0.8rem;
+    color: var(--text-color-secondary);
+    font-weight: 500;
+  }
+
+  &__select { min-width: 200px; }
+}
+
+// ── Mensajes de estado ────────────────────────────────────────────────────────
+.detail-empty-msg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: var(--text-color-secondary);
+  padding: 12px 0;
+}
+
+.detail-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-color-secondary);
+
+  &__icon { font-size: 3rem; opacity: 0.3; }
+}
+
+// ── Celdas de tabla ───────────────────────────────────────────────────────────
+
+/** Evita saltos de línea en fechas y montos */
+.cell-nowrap {
+  white-space: nowrap;
+}
+
+/** Trunca descripciones largas en tablas */
+.cell-desc {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cell-muted {
+  color: var(--text-color-secondary);
+  font-size: 0.875rem;
+}
+
+/** Código de folio (ej: INC-2026-00001) */
+.folio-code {
+  font-family: monospace;
+  font-size: 0.82rem;
+  background: var(--surface-ground);
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.03em;
+}
+
+// ── Cambio de condición antes → después en bitácora ───────────────────────────
+.condition-change {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+
+  &__arrow {
+    font-size: 0.7rem;
+    color: var(--text-color-secondary);
+    flex-shrink: 0;
+  }
+}
+
+// ── Timeline del ciclo de vida ────────────────────────────────────────────────
+
+/**
+ * Marcador circular con icono centrado.
+ * El color se aplica inline desde el computed (event.color).
+ */
+.timeline-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+
+  i {
+    color: #fff;
+    font-size: 0.85rem;
+  }
+}
+
+/**
+ * Tarjeta de evento del timeline.
+ * Usa max-width para que no se expanda a todo el ancho en pantallas grandes.
+ */
+.timeline-card {
+  padding: 12px 16px;
+  background: var(--surface-ground);
+  border: 1px solid var(--surface-border);
+  border-radius: 8px;
+  margin-bottom: 16px;
+  max-width: 520px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+  }
+
+  &__title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-color);
+    line-height: 1.3;
+  }
+
+  &__badge {
+    flex-shrink: 0;
+  }
+
+  &__sub {
+    font-size: 0.8rem;
+    color: var(--text-color-secondary);
+    margin: 4px 0 6px;
+    line-height: 1.4;
+  }
+
+  &__date {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.78rem;
+    color: var(--text-color-secondary);
+    margin-top: 2px;
+
+    i { font-size: 0.72rem; }
+  }
+}
+
+/** Ajusta el padding interno del componente p-timeline de PrimeNG */
+.asset-timeline {
+  padding: 4px 0 4px 4px;
+}
+
+// ── Skeleton del timeline ─────────────────────────────────────────────────────
+.timeline-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 8px 0;
+
+  &__row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  &__card {
+    flex: 1;
+    max-width: 400px;
+  }
+}
+
+// ── Skeleton general ──────────────────────────────────────────────────────────
+.detail-skeleton { display: flex; flex-direction: column; gap: 8px; }
+
+// ── Placeholder de módulo en desarrollo ──────────────────────────────────────
+// Mantenido para el tab de ciclo de vida antes de que se carguen los datos
+.detail-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-color-secondary);
+  gap: 8px;
+
+  &__icon { font-size: 2.5rem; opacity: 0.3; margin-bottom: 8px; }
+
+  &__title {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-color);
+  }
+
+  &__sub {
+    font-size: 0.875rem;
+    max-width: 400px;
+
+    code {
+      background: var(--surface-ground);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+  }
+}

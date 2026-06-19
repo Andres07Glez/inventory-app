@@ -1,0 +1,501 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   marca-registration.css
+   Variables de diseño auto-contenidas (sin depender de shared/styles).
+   Paleta, tipografía y tokens copiados del módulo supplier.
+   Sobreescrituras PrimeNG encapsuladas con :host ::ng-deep.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Importar tipografía ── */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   ✦ VARIABLES (modo claro — por defecto)
+───────────────────────────────────────────────────────────────────────────── */
+:host {
+  /* Fondos */
+  --cat-bg:              #F7F7F7;
+  --cat-surface:         #FFFFFF;
+  --cat-surface-raised:  #F5FFFD;
+
+  /* Bordes */
+  --cat-border:          #CCCCCC;
+  --cat-border-focus:    #007D68;
+
+// Primario
+--cat-primary:         var(--color-primary); 
+--cat-primary-hover:   var(--color-primary-dark); 
+--cat-primary-light:   var(--color-primary-light); 
+--cat-primary-text:    #FFFFFF;
+
+  /* Texto */
+  --cat-text-primary:    #333333;
+  --cat-text-secondary:  #666666;
+  --cat-text-muted:      #999999;
+
+  /* Inputs */
+  --cat-input-bg:          #FFFFFF;
+  --cat-input-text:        #333333;
+  --cat-input-border:      #CCCCCC;
+  --cat-input-placeholder: #999999;
+
+  /* Semánticos */
+  --cat-danger:     #B31818;
+  --cat-danger-bg:  #FFF5F5;
+  --cat-warn:       #D4A91D;
+  --cat-edit-color: #1F4F97;
+  --cat-edit-bg:    #F5F8FF;
+  --cat-success:    #18B32A;
+
+  /* Geometría */
+  --cat-radius-sm: 4px;
+  --cat-radius-md: 8px;
+  --cat-radius-lg: 12px;
+  --cat-shadow:    0 2px 8px rgba(0,0,0,.06), 0 0 0 1px rgba(0,0,0,.04);
+  --cat-shadow-lg: 0 8px 28px rgba(0,0,0,.12);
+
+  --cat-font: 'Roboto', sans-serif;
+
+  display: block;
+  font-family: var(--cat-font);
+}
+
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   CONTENIDO DEL TAB & TOOLBAR
+───────────────────────────────────────────────────────────────────────────── */
+.cat-tab-content {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+@media (max-width: 640px) {
+  .cat-tab-content { padding: 1rem; }
+}
+
+.cat-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 560px) {
+  .cat-toolbar { flex-direction: column; align-items: stretch; }
+  .cat-toolbar .cat-btn { width: 100%; justify-content: center; }
+}
+
+/* ── Stat chip ── */
+.stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(0, 125, 104, .10);
+  color: var(--cat-primary);
+  border: 1px solid rgba(0, 125, 104, .2);
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: var(--cat-font);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+}
+
+.stat-chip i { font-size: 0.72rem; }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   TABLA Y CELDAS DE MARCAS
+───────────────────────────────────────────────────────────────────────────── */
+:host ::ng-deep .cat-table { font-family: var(--cat-font); }
+
+:host ::ng-deep .cat-table .p-datatable-thead > tr > th {
+  background: var(--cat-surface-raised); color: var(--cat-text-secondary);
+  font-size: 0.875rem; font-weight: 500; text-transform: uppercase;
+  border-bottom: 2px solid var(--cat-border); padding: 0.75rem 1rem; white-space: nowrap;
+}
+
+:host ::ng-deep .cat-table .p-datatable-thead > tr > th.p-highlight,
+:host ::ng-deep .cat-table .p-datatable-thead > tr > th:hover {
+  background: var(--cat-primary-light) !important; color: var(--cat-primary) !important;
+}
+
+:host ::ng-deep .cat-table .p-datatable-thead > tr > th .p-sortable-column-icon {
+  color: var(--cat-text-muted); font-size: 0.875rem;
+}
+
+:host ::ng-deep .cat-table .p-datatable-tbody > tr {
+  border-bottom: 1px solid var(--cat-border); transition: background 0.1s;
+}
+
+:host ::ng-deep .cat-table .p-datatable-tbody > tr:last-child { border-bottom: none; }
+
+:host ::ng-deep .cat-table .p-datatable-tbody > tr:hover {
+  background: var(--cat-primary-light) !important;
+}
+
+:host ::ng-deep .cat-table .p-datatable-tbody > tr > td {
+  padding: 0.75rem 1rem; font-size: 1rem; color: var(--cat-text-primary); vertical-align: middle;
+}
+
+:host ::ng-deep .cat-table .p-paginator {
+  background: var(--cat-surface-raised); border-top: 1px solid var(--cat-border);
+  padding: 0.625rem 1rem; font-size: 1rem; font-family: var(--cat-font);
+}
+
+:host ::ng-deep .cat-table .p-paginator .p-paginator-current { color: var(--cat-text-secondary); }
+
+:host ::ng-deep .cat-table .p-paginator .p-paginator-page.p-highlight {
+  background: var(--cat-primary); color: var(--cat-primary-text); border-radius: var(--cat-radius-sm);
+}
+
+:host ::ng-deep .cat-table .p-paginator .p-paginator-page:not(.p-highlight):hover,
+:host ::ng-deep .cat-table .p-paginator .p-paginator-prev:hover,
+:host ::ng-deep .cat-table .p-paginator .p-paginator-next:hover {
+  background: var(--cat-primary-light); color: var(--cat-primary);
+}
+
+/* ── Celdas específicas ── */
+.cat-cell-id {
+  color: var(--cat-text-muted); font-size: 0.875rem; font-weight: 700; letter-spacing: 0.04em;
+}
+
+.cat-cell-primary { font-weight: 500; font-size: 1rem; color: var(--cat-primary); }
+
+.cat-brand-name-cell {
+  display: flex; align-items: center; gap: 0.6rem;
+  font-weight: 500; font-size: 1rem; color: var(--cat-text-primary);
+}
+
+.cat-brand-avatar {
+  width: 2rem; height: 2rem; border-radius: var(--cat-radius-sm);
+  background: rgba(0, 125, 104, .10); border: 1px solid rgba(0, 125, 104, .2);
+  color: var(--cat-primary); display: inline-flex; align-items: center;
+  justify-content: center; font-size: 0.75rem; flex-shrink: 0;
+}
+
+.cat-muted { color: var(--cat-text-muted); font-size: 1rem; }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   TAGS & BOTONES
+───────────────────────────────────────────────────────────────────────────── */
+:host ::ng-deep .cat-tag {
+  font-family: var(--cat-font); font-size: 0.875rem; font-weight: 500;
+  border-radius: 2rem; padding: 0.2rem 0.625rem;
+}
+
+:host ::ng-deep .p-tag.p-tag-success {
+  background: rgba(0, 125, 104, .15) !important; color: #007D68 !important;
+}
+
+:host ::ng-deep .p-tag.p-tag-secondary {
+  background: rgba(127, 127, 127, .15) !important; color: var(--cat-text-muted) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  :host ::ng-deep .p-tag.p-tag-success { color: #5EC9B5 !important; }
+}
+
+.cat-actions { display: flex; align-items: center; justify-content: center; gap: 0.375rem; }
+
+.cat-btn-icon.p-button {
+  width: 2rem; height: 2rem; padding: 0; border: none;
+  border-radius: var(--cat-radius-sm); font-size: 0.875rem; transition: all 0.15s;
+}
+
+.cat-btn-icon--edit.p-button { background: var(--cat-edit-bg); color: var(--cat-edit-color); }
+.cat-btn-icon--edit.p-button:hover:not(:disabled) { filter: brightness(0.92); }
+
+.cat-btn-icon--danger.p-button { background: var(--cat-danger-bg); color: var(--cat-danger); }
+.cat-btn-icon--danger.p-button:hover:not(:disabled) { filter: brightness(0.92); }
+.cat-btn-icon--danger.p-button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.cat-btn.p-button {
+  font-family: var(--cat-font); font-size: 1rem; font-weight: 500;
+  border-radius: var(--cat-radius-sm); padding: 0.5rem 1.25rem; transition: all 0.15s;
+}
+
+.cat-btn--primary.p-button {
+  background: var(--cat-primary); border-color: var(--cat-primary); color: var(--cat-primary-text);
+}
+
+.cat-btn--primary.p-button:hover:not(:disabled) {
+  background: var(--cat-primary-hover); border-color: var(--cat-primary-hover);
+}
+
+.cat-btn--secondary.p-button {
+  background: transparent; border: 1px solid var(--cat-border); color: var(--cat-text-secondary);
+}
+
+.cat-btn--secondary.p-button:hover:not(:disabled) { background: var(--cat-surface-raised); }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   ESTADO VACÍO & SKELETON
+───────────────────────────────────────────────────────────────────────────── */
+.cat-empty {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: 3rem 2rem; color: var(--cat-text-muted); gap: 0.5rem;
+}
+
+.cat-empty__icon { font-size: 2.5rem; opacity: 0.35; margin-bottom: 0.25rem; }
+
+.cat-empty__title { font-size: 1.5rem; font-weight: 500; color: var(--cat-text-secondary); margin: 0; }
+
+.cat-empty__sub { font-size: 1rem; line-height: 1.6; margin: 0; max-width: 300px; }
+
+:host ::ng-deep .cat-skeleton.p-skeleton {
+  background-color: var(--cat-border); border-radius: var(--cat-radius-sm);
+}
+
+.skeleton-list { padding: 0.25rem 0; }
+
+.skeleton-row {
+  display: flex; align-items: center; gap: 1.25rem;
+  padding: 0.9rem 1.25rem; border-bottom: 1px solid var(--cat-border);
+}
+
+.skeleton-row:last-child { border-bottom: none; }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   SEARCH FIELD
+───────────────────────────────────────────────────────────────────────────── */
+:host ::ng-deep .cat-search-field { flex: 1; min-width: 220px; }
+:host ::ng-deep .cat-search-field .p-iconfield { width: 100%; }
+:host ::ng-deep .cat-search-field .p-inputicon { color: var(--cat-text-muted); }
+
+:host ::ng-deep .cat-search-field .cat-search-input {
+  width: 100%; font-family: var(--cat-font); font-size: 1rem;
+  border-radius: var(--cat-radius-sm);
+  background: var(--cat-input-bg) !important; color: var(--cat-input-text) !important;
+  border: 1px solid var(--cat-input-border) !important;
+  padding-left: 2.25rem !important;
+}
+
+:host ::ng-deep .cat-search-field .cat-search-input::placeholder {
+  color: var(--cat-input-placeholder) !important;
+}
+
+:host ::ng-deep .cat-search-field .cat-search-input:focus {
+  border-color: var(--cat-border-focus) !important;
+  box-shadow: 0 0 0 3px rgba(0,125,104,.12) !important;
+  outline: none;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   DIÁLOGOS Y FORMULARIOS
+───────────────────────────────────────────────────────────────────────────── */
+:host ::ng-deep .cat-dialog .p-dialog {
+  border-radius: var(--cat-radius-lg); background: var(--cat-surface);
+  box-shadow: var(--cat-shadow-lg); border: 1px solid var(--cat-border); font-family: var(--cat-font);
+}
+
+:host ::ng-deep .cat-dialog .p-dialog-header {
+  background: var(--cat-surface); border-bottom: 1px solid var(--cat-border);
+  padding: 1.25rem 1.5rem; border-radius: var(--cat-radius-lg) var(--cat-radius-lg) 0 0;
+}
+
+:host ::ng-deep .cat-dialog .p-dialog-header .p-dialog-title {
+  font-size: 1.5rem; font-weight: 700; color: var(--cat-text-primary);
+}
+
+:host ::ng-deep .cat-dialog .p-dialog-header .p-dialog-header-icon { color: var(--cat-text-muted); }
+
+:host ::ng-deep .cat-dialog .p-dialog-header .p-dialog-header-icon:hover {
+  background: var(--cat-surface-raised); color: var(--cat-text-secondary);
+}
+
+:host ::ng-deep .cat-dialog .p-dialog-content { background: var(--cat-surface); padding: 1.5rem; }
+
+:host ::ng-deep .cat-dialog .p-dialog-footer {
+  background: var(--cat-surface-raised); border-top: 1px solid var(--cat-border);
+  padding: 1rem 1.5rem; border-radius: 0 0 var(--cat-radius-lg) var(--cat-radius-lg);
+}
+
+.cat-form { display: flex; flex-direction: column; gap: 1.125rem; }
+.cat-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.125rem; }
+.cat-field { display: flex; flex-direction: column; gap: 0.375rem; }
+.cat-field--full { grid-column: 1 / -1; }
+.cat-label { font-size: 1rem; font-weight: 500; color: var(--cat-text-secondary); }
+.cat-req { color: var(--cat-danger); margin-left: 2px; }
+.cat-opt { color: var(--cat-text-muted); font-weight: 400; font-size: 0.625rem; }
+
+.cat-error {
+  display: flex; align-items: center; gap: 0.3rem;
+  font-size: 0.625rem; color: var(--cat-danger);
+}
+
+.cat-error i { font-size: 0.625rem; }
+
+.cat-input, .cat-textarea {
+  width: 100%; font-family: var(--cat-font); font-size: 1rem;
+  border-radius: var(--cat-radius-sm);
+  background: var(--cat-input-bg) !important; color: var(--cat-input-text) !important;
+  border: 1px solid var(--cat-input-border) !important;
+}
+
+.cat-input::placeholder, .cat-textarea::placeholder { color: var(--cat-input-placeholder) !important; }
+
+.cat-input:focus, .cat-textarea:focus {
+  border-color: var(--cat-border-focus) !important;
+  box-shadow: 0 0 0 3px rgba(0,125,104,.12) !important;
+  outline: none;
+}
+
+.cat-textarea { resize: vertical; min-height: 80px; }
+
+/* Inputs PrimeNG dentro del dialog */
+:host ::ng-deep .cat-dialog .p-inputtext {
+  font-family: var(--cat-font) !important;
+  background: var(--cat-input-bg) !important;
+  border: 1px solid var(--cat-input-border) !important;
+  border-radius: var(--cat-radius-sm) !important;
+  color: var(--cat-input-text) !important;
+  padding: 0.65rem 0.75rem !important;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+
+:host ::ng-deep .cat-dialog .p-inputtext:focus {
+  border-color: var(--cat-border-focus) !important;
+  box-shadow: 0 0 0 3px rgba(0,125,104,.12) !important;
+}
+
+:host ::ng-deep .cat-dialog .p-inputtext::placeholder { color: var(--cat-input-placeholder) !important; }
+
+:host ::ng-deep .cat-dialog .p-inputtext.ng-invalid.ng-touched {
+  border-color: var(--cat-danger) !important;
+}
+
+:host ::ng-deep .cat-dialog .p-iconfield .p-inputicon {
+  top: 50% !important; transform: translateY(-50%) !important;
+  margin-top: 0 !important; color: var(--cat-text-muted); pointer-events: none;
+}
+
+:host ::ng-deep .cat-dialog .p-iconfield .p-inputicon:first-child { left: 0.65rem !important; }
+:host ::ng-deep .cat-dialog .p-iconfield > .p-inputtext { padding-left: 2.2rem !important; }
+
+:host ::ng-deep .cat-dialog .p-button {
+  font-family: var(--cat-font) !important; font-weight: 500 !important;
+  border-radius: var(--cat-radius-sm) !important; letter-spacing: 0.02em;
+}
+
+.cat-dialog-footer { display: flex; justify-content: flex-end; gap: 0.75rem; }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   CONFIRM DIALOG
+───────────────────────────────────────────────────────────────────────────── */
+:host ::ng-deep .cat-confirm-dialog .p-confirmdialog {
+  border-radius: var(--cat-radius-lg); background: var(--cat-surface);
+  box-shadow: var(--cat-shadow-lg); border: 1px solid var(--cat-border); font-family: var(--cat-font);
+}
+
+:host ::ng-deep .cat-confirm-dialog .p-confirmdialog-icon { color: var(--cat-warn); font-size: 2rem; }
+
+:host ::ng-deep .cat-confirm-dialog .p-confirmdialog-message {
+  color: var(--cat-text-primary); font-size: 1rem; line-height: 1.6;
+}
+
+:host ::ng-deep .cat-confirm-dialog .p-dialog-header {
+  background: var(--cat-surface); border-bottom: 1px solid var(--cat-border);
+}
+
+:host ::ng-deep .cat-confirm-dialog .p-dialog-header .p-dialog-title {
+  font-size: 1.5rem; font-weight: 700; color: var(--cat-text-primary);
+}
+
+:host ::ng-deep .cat-confirm-dialog .p-dialog-header .p-dialog-header-icon { color: var(--cat-text-muted); }
+:host ::ng-deep .cat-confirm-dialog .p-dialog-content { background: var(--cat-surface); }
+
+:host ::ng-deep .cat-confirm-dialog .p-dialog-footer {
+  background: var(--cat-surface-raised); border-top: 1px solid var(--cat-border);
+}
+
+:host ::ng-deep .cat-confirm-dialog .p-button-danger {
+  background: var(--cat-danger); border-color: var(--cat-danger); color: white;
+  font-family: var(--cat-font); font-weight: 500;
+  border-radius: var(--cat-radius-sm); font-size: 1rem;
+}
+
+:host ::ng-deep .cat-confirm-dialog .p-button-danger:hover { filter: brightness(0.9); }
+
+:host ::ng-deep .cat-confirm-dialog .p-confirmdialog-reject-button {
+  background: transparent; border: 1px solid var(--cat-border); color: var(--cat-text-secondary);
+  font-family: var(--cat-font); font-weight: 500;
+  border-radius: var(--cat-radius-sm); font-size: 1rem;
+}
+
+:host ::ng-deep .cat-confirm-dialog .p-confirmdialog-reject-button:hover {
+  background: var(--cat-surface-raised);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   TOAST
+───────────────────────────────────────────────────────────────────────────── */
+:host ::ng-deep .p-toast .p-toast-message {
+  font-family: var(--cat-font) !important; background: var(--cat-surface) !important;
+  border-left-width: 4px; color: var(--cat-text-primary) !important;
+  box-shadow: var(--cat-shadow-lg) !important;
+}
+
+:host ::ng-deep .p-toast .p-toast-message.p-toast-message-success { border-left-color: var(--cat-primary) !important; }
+:host ::ng-deep .p-toast .p-toast-message.p-toast-message-warn    { border-left-color: var(--cat-warn) !important; }
+:host ::ng-deep .p-toast .p-toast-message.p-toast-message-error   { border-left-color: var(--cat-danger) !important; }
+:host ::ng-deep .p-toast .p-toast-summary { color: var(--cat-text-primary) !important; }
+:host ::ng-deep .p-toast .p-toast-detail  { color: var(--cat-text-muted) !important; }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   TOOLTIP
+───────────────────────────────────────────────────────────────────────────── */
+:host ::ng-deep .p-tooltip .p-tooltip-text {
+  font-family: var(--cat-font) !important; font-size: 0.78rem;
+  background: #0E5247 !important; color: #fff !important;
+}
+
+:host ::ng-deep .p-tooltip.p-tooltip-top    .p-tooltip-arrow { border-top-color:    #0E5247 !important; }
+:host ::ng-deep .p-tooltip.p-tooltip-bottom .p-tooltip-arrow { border-bottom-color: #0E5247 !important; }
+:host ::ng-deep .p-tooltip.p-tooltip-left   .p-tooltip-arrow { border-left-color:   #0E5247 !important; }
+:host ::ng-deep .p-tooltip.p-tooltip-right  .p-tooltip-arrow { border-right-color:  #0E5247 !important; }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   RESPONSIVO
+───────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .cat-tab-content { padding: 1rem; }
+  .cat-form-row { grid-template-columns: 1fr; }
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OVERRIDE FINAL — pisa el color primario del tema de PrimeNG
+// ─────────────────────────────────────────────────────────────────────────────
+.cat-btn-icon--edit {
+  background-color: #2D63D9 !important;
+  border-color: #2D63D9 !important;
+  color: #FFFFFF !important;
+
+  &:hover {
+    background-color: #10388E !important;
+    border-color: #10388E !important;
+  }
+}
+
+.cat-btn-icon--danger {
+  background-color: #D92D2D !important;
+  border-color: #D92D2D !important;
+  color: #FFFFFF !important;
+
+  &:hover {
+    background-color: #8E1010 !important;
+    border-color: #8E1010 !important;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OVERRIDE FINAL — botón Cancelar blanco (pisa el gris de PrimeNG)
+// ─────────────────────────────────────────────────────────────────────────────
+:host ::ng-deep .cat-btn--secondary.p-button {
+  border: 1px solid var(--cat-border) !important;
+  color: var(--cat-bg) !important;
+}

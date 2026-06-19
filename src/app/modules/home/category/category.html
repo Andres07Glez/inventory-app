@@ -1,0 +1,215 @@
+<p-toast position="top-right" />
+<p-confirmDialog styleClass="cat-confirm-dialog" />
+
+<div class="cat-tab-content">
+  <div class="cat-toolbar">
+
+    <span class="cat-stat-chip">
+      <i class="pi pi-warehouse"></i>
+      {{ categoryTotal() }} CATEGORÍA{{ categoryTotal() !== 1 ? 'S' : '' }}
+    </span>
+
+    <p-iconfield styleClass="cat-search-field">
+      <p-inputicon styleClass="pi pi-search" />
+      <input
+        pInputText
+        class="cat-search-input"
+        placeholder="Buscar categoría…"
+        [value]="categoryKeyword"
+        (input)="onCategorySearch($any($event.target).value)"
+      />
+    </p-iconfield>
+    <button
+      pButton
+      icon="pi pi-plus"
+      label="Nueva categoría"
+      class="cat-btn cat-btn--primary"
+      (click)="openCreateCategory()"
+    ></button>
+  </div>
+
+  <p-table
+    [value]="visibleCategories()"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="pageSize"
+    [totalRecords]="categoryTotal()"
+    [loading]="categoryLoading()"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="{first}–{last} de {totalRecords} categorías"
+    (onLazyLoad)="onCategoryLazyLoad($event)"
+    sortMode="single"
+    sortField="id"
+    styleClass="cat-table"
+    responsiveLayout="scroll"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="name">Nombre <p-sortIcon field="name" /></th>
+        <th>Descripción</th>
+        <th>Categoría padre</th>
+        <th style="width:100px;text-align:center">Estado</th>
+        <th style="width:110px;text-align:center">Acciones</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-cat>
+      <tr [class.cat-row--child]="cat.parentId">
+        <td>
+          <div class="cat-cell-name" [class.cat-cell-name--child]="cat.parentId">
+
+            @if (categoriesWithChildren().has(cat.id)) {
+              <!-- Categoría raíz CON hijos: botón expand/collapse -->
+              <button
+                pButton
+                type="button"
+                [icon]="expandedCategories().has(cat.id) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                class="cat-btn-icon cat-btn-icon--toggle"
+                [pTooltip]="expandedCategories().has(cat.id) ? 'Colapsar' : 'Expandir subcategorías'"
+                tooltipPosition="top"
+                (click)="toggleCategory(cat.id)"
+              ></button>
+              <i class="pi pi-folder cat-cell-name__root"></i>
+            } @else if (cat.parentId) {
+              <!-- Subcategoría (hijo) -->
+              <i class="pi pi-angle-right cat-cell-name__indent"></i>
+            } @else {
+              <!-- Categoría raíz SIN hijos -->
+              <i class="pi pi-folder cat-cell-name__root"></i>
+            }
+
+            {{ cat.name }}
+          </div>
+        </td>
+        <td>
+          <span class="cat-cell-desc" [pTooltip]="cat.description" tooltipPosition="top">
+            {{ cat.description || '—' }}
+          </span>
+        </td>
+        <td>
+          @if (cat.parentName) {
+            <span class="cat-parent-chip">
+              <i class="pi pi-folder"></i> {{ cat.parentName }}
+            </span>
+          } @else {
+            <span class="cat-muted">Raíz</span>
+          }
+        </td>
+        <td style="text-align:center">
+          <p-tag
+            [value]="cat.isActive ? 'Activa' : 'Inactiva'"
+            [severity]="cat.isActive ? 'success' : 'secondary'"
+            styleClass="cat-tag"
+          />
+        </td>
+        <td style="text-align:center">
+          <div class="cat-actions">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-pencil"
+              class="cat-btn-icon cat-btn-icon--edit"
+              pTooltip="Editar"
+              tooltipPosition="top"
+              (click)="openEditCategory(cat)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-trash"
+              class="cat-btn-icon cat-btn-icon--danger"
+              pTooltip="Desactivar"
+              tooltipPosition="top"
+              [disabled]="!cat.isActive"
+              (click)="confirmDeactivateCategory(cat)"
+            ></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="5">
+        <div class="cat-empty">
+          <i class="pi pi-sitemap cat-empty__icon"></i>
+          <p class="cat-empty__title">Sin categorías</p>
+          <p class="cat-empty__sub">
+            @if (categoryKeyword) { No hay resultados para "{{ categoryKeyword }}". }
+            @else { Agrega la primera categoría con el botón "Nueva categoría". }
+          </p>
+        </div>
+      </td></tr>
+    </ng-template>
+
+    <ng-template pTemplate="loadingbody">
+      @for (_ of [1,2,3,4,5]; track $index) {
+        <tr>
+          @for (__ of [1,2,3,4,5]; track $index) {
+            <td><p-skeleton height="1.25rem" styleClass="cat-skeleton" /></td>
+          }
+        </tr>
+      }
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog
+  [header]="categoryDialogMode() === 'create' ? 'Nueva categoría' : 'Editar categoría'"
+  [modal]="true"
+  [(visible)]="categoryDialogVisible"
+  [style]="{ width: '450px' }"
+  styleClass="cat-dialog"
+  [draggable]="false"
+  [resizable]="false"
+  [closeOnEscape]="true"
+>
+  <form [formGroup]="categoryForm" class="cat-form">
+    <div class="cat-field cat-field--full">
+      <label class="cat-label">Nombre <span class="cat-req">*</span></label>
+      <input pInputText formControlName="name" class="cat-input"
+        placeholder="Ej. Computo, Mobiliario…" maxlength="100" />
+      <span class="cat-char-count">{{ categoryForm.get('name')?.value?.length ?? 0 }}/100</span>
+      @if (categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched) {
+        <small class="cat-error"><i class="pi pi-exclamation-circle"></i> El nombre es requerido.</small>
+      }
+    </div>
+
+    <div class="cat-field cat-field--full">
+      <label class="cat-label">Categoría padre <span class="cat-opt">(opcional)</span></label>
+      <p-select formControlName="parentId"
+        [options]="parentCategoryOptions()"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="— Sin categoría padre (raíz) —"
+        styleClass="cat-select"
+        appendTo="body"
+      />
+      <p class="cat-hint">
+        <i class="pi pi-info-circle"></i>
+        Deja vacío para crear una categoría raíz. Úsala para agrupar subcategorías.
+      </p>
+    </div>
+
+    <div class="cat-field cat-field--full">
+      <label class="cat-label">Descripción <span class="cat-opt">(opcional)</span></label>
+      <textarea pTextarea formControlName="description" class="cat-textarea" rows="3"
+        placeholder="Describe qué tipo de bienes pertenecen a esta categoría…"
+        maxlength="255"></textarea>
+      <span class="cat-char-count">{{ categoryForm.get('description')?.value?.length ?? 0 }}/255</span>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="cat-dialog-footer">
+      <button pButton type="button" label="Cancelar" icon="pi pi-times"
+        class="cat-btn cat-btn--secondary" (click)="categoryDialogVisible.set(false)"></button>
+      <button pButton type="button"
+        [label]="categoryDialogMode() === 'create' ? 'Crear categoría' : 'Guardar cambios'"
+        icon="pi pi-check"
+        class="cat-btn cat-btn--primary"
+        [loading]="categoryDialogLoading()"
+        (click)="saveCategory()"></button>
+    </div>
+  </ng-template>
+</p-dialog>

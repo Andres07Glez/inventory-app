@@ -1,0 +1,146 @@
+<p-toast />
+
+<div class="inc-list">
+
+  <div class="inc-list__header">
+    <div class="inc-list__header-left">
+      <h2 class="inc-list__title">
+        <i class="pi pi-exclamation-triangle"></i> Incidencias
+      </h2>
+      @if (pageData()) {
+        <span class="inc-list__count">
+          {{ pageData()!.totalElements }} registros
+        </span>
+      }
+    </div>
+    
+    <div class="inc-list__header-right">
+      
+      <p-iconfield styleClass="inc-list__folio-search">
+        <p-inputicon styleClass="pi pi-search" />
+        <input
+          pInputText
+          type="text"
+          placeholder="Buscar folio..."
+          [ngModel]="folioSearch()"
+          (ngModelChange)="onFolioInput($event)"
+          class="inc-list__folio-input"
+        />
+        @if (folioSearch()) {
+          <p-inputicon
+            styleClass="pi pi-times inc-list__folio-clear"
+            (click)="clearFolioSearch()"
+          />
+        }
+      </p-iconfield>
+
+      <p-select
+        [options]="statusOptions"
+        [(ngModel)]="selectedStatus"
+        (ngModelChange)="onStatusChange()"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="inc-list__filter"
+        placeholder="Filtrar por estado"
+      />
+      <p-button
+        label="Nueva incidencia"
+        icon="pi pi-plus"
+        (onClick)="showCreate.set(true)"
+      />
+    </div>
+  </div>
+
+  <p-table
+    [value]="pageData()?.content ?? []"
+    [loading]="loading()"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="pageSize()"
+    [totalRecords]="pageData()?.totalElements ?? 0"
+    [rowsPerPageOptions]="[10, 20, 50]"
+    (onPage)="onPageChange($event)"
+    [rowHover]="true"
+    styleClass="p-datatable-sm"
+    dataKey="id"
+  >
+    <ng-template #header>
+      <tr>
+        <th style="width: 10rem">Folio</th>
+        <th>Descripción</th>
+        <th style="width: 8rem">Estado</th>
+        <th style="width: 7rem">Condición</th>
+        <th style="width: 8rem">Fecha evento</th>
+        <th style="width: 10rem">Registrada por</th>
+        <th style="width: 3rem"></th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-inc>
+      <tr class="inc-list__row" (click)="goToDetail(inc)">
+        <td>
+          <span class="inc-list__folio">{{ inc.folio }}</span>
+        </td>
+        <td>
+          <span class="inc-list__desc" [title]="inc.description">
+            {{ inc.description }}
+          </span>
+        </td>
+        <td>
+          <p-tag
+            [value]="statusLabel(inc.status)"
+            [severity]="statusSeverity(inc.status)"
+          />
+        </td>
+        <td>
+          <p-tag
+            [value]="conditionLabel(inc.conditionAtIncident)"
+            [severity]="conditionSeverity(inc.conditionAtIncident)"
+          />
+        </td>
+        <td class="inc-list__date">{{ formatDateOnly(inc.incidentDate) }}</td>
+        <td class="inc-list__user">{{ inc.createdByName }}</td>
+        <td>
+          <p-button
+            icon="pi pi-chevron-right"
+            [text]="true"
+            severity="secondary"
+            size="small"
+            pTooltip="Ver detalle"
+            (click)="$event.stopPropagation(); goToDetail(inc)"
+          />
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #emptymessage>
+      <tr>
+        <td colspan="7" class="inc-list__empty">
+          <i class="pi pi-inbox"></i>
+          @if (folioSearch()) {
+            <span>No se encontró ninguna incidencia con el folio "{{ folioSearch() }}".</span>
+          } @else {
+            <span>No hay incidencias registradas.</span>
+          }
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template #loadingbody>
+      @for (_ of [1,2,3,4,5]; track $index) {
+        <tr>
+          @for (_ of [1,2,3,4,5,6,7]; track $index) {
+            <td><p-skeleton height="1.5rem" /></td>
+          }
+        </tr>
+      }
+    </ng-template>
+  </p-table>
+
+</div>
+
+<app-incident-create
+  [visible]="showCreate()"
+  (visibleChange)="showCreate.set($event)"
+  (created)="onIncidentCreated($event)"
+/>

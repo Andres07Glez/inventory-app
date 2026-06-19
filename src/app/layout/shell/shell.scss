@@ -1,0 +1,497 @@
+$sidebar-width:           220px;
+$sidebar-collapsed-width: 60px;
+$topbar-height:           56px;
+$transition:              0.2s ease;
+
+.shell {
+  display: grid;
+  grid-template-rows: $topbar-height 1fr;
+  grid-template-columns: $sidebar-width 1fr;
+  grid-template-areas:
+    "topbar  topbar"
+    "sidebar content";
+  height: 100vh;
+  overflow: hidden;
+  transition: grid-template-columns $transition;
+
+  &--collapsed {
+    grid-template-columns: $sidebar-collapsed-width 1fr;
+  }
+}
+
+// ── Topbar ───────────────────────────────────────────────────────────────────
+.topbar {
+  grid-area: topbar;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  background: var(--surface-card);
+  border-bottom: 1px solid var(--surface-border);
+  z-index: 100;
+  font-family: var(--font-primary);
+
+  &__toggle {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-color-secondary);
+    padding: 6px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    transition: background $transition, color $transition;
+
+    &:hover {
+      background: var(--surface-hover);
+      color: var(--text-color);
+    }
+
+    i { font-size: 1rem; }
+  }
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--color-primary);
+    white-space: nowrap;
+    letter-spacing: -0.01em;
+  }
+
+  &__brand-icon { font-size: 1.1rem; }
+  &__spacer { flex: 1; }
+
+  &__search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-ground);
+    border: 1px solid var(--surface-border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    transition: border-color $transition, box-shadow $transition;
+
+    &:focus-within {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(0, 125, 104, 0.12);
+    }
+  }
+
+  &__search-icon { color: var(--text-color-muted); font-size: 0.85rem; }
+
+  &__search-input {
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: var(--font-primary);
+    font-size: 0.875rem;
+    color: var(--text-color);
+    width: 240px;
+
+    &::placeholder { color: var(--text-color-muted); }
+  }
+
+  &__search-clear {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: var(--text-color-muted);
+    display: flex;
+    align-items: center;
+    font-size: 0.75rem;
+    transition: color $transition;
+
+    &:hover { color: var(--text-color); }
+  }
+
+  &__user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background $transition;
+    user-select: none;
+
+    &:hover { background: var(--surface-hover); }
+  }
+
+  &__user-avatar {
+    background: var(--color-primary);
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  &__user-chevron {
+    font-size: 0.7rem;
+    color: var(--text-color-muted);
+    transition: transform $transition;
+  }
+}
+
+// ── User menu (contenido del Popover) ────────────────────────────────────────
+.user-menu {
+  min-width: 220px;
+  padding: 4px 0;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px 10px;
+  }
+
+  &__avatar {
+    background: var(--color-primary);
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+  }
+
+  &__name {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+  }
+
+  &__role-badge {
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--color-neutral-light);
+    color: var(--color-neutral-dark);
+
+    // ADMIN → verde institucional
+    &--admin {
+      background: var(--color-primary-light);
+      color: var(--color-primary-dark);
+    }
+
+    // AUDITOR → azul informativo
+    &--auditor {
+      background: var(--color-info-light);
+      color: var(--color-info-dark);
+    }
+  }
+
+  &__divider {
+    border: none;
+    border-top: 1px solid var(--surface-border);
+    margin: 4px 0;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-primary);
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+    text-align: left;
+    transition: background 0.12s ease, color 0.12s ease;
+
+    i { font-size: 0.9rem; }
+
+    &:hover {
+      background: var(--surface-hover);
+      color: var(--color-primary);
+    }
+
+    &--danger {
+      color: var(--color-danger);
+
+      &:hover {
+        background: var(--color-danger-light);
+        color: var(--color-danger-dark);
+      }
+    }
+  }
+}
+
+// ── Sidebar ──────────────────────────────────────────────────────────────────
+.sidebar {
+  grid-area: sidebar;
+  background: var(--surface-card);
+  border-right: 1px solid var(--surface-border);
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-family: var(--font-primary);
+
+  &__nav { padding: 8px 0; }
+
+  &__group {
+    margin-bottom: 4px;
+    & + & { margin-top: 8px; }
+  }
+
+  &__section-label {
+    display: block;
+    font-family: var(--font-condensed);
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-color-muted);
+    padding: 8px 16px 4px;
+  }
+
+  &__nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: var(--text-color-secondary);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition: all $transition;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--surface-hover);
+      color: var(--color-primary);
+    }
+
+    &--active {
+      background: var(--color-primary-light);
+      color: var(--color-primary);
+      border-left-color: var(--color-primary);
+      font-weight: 500;
+    }
+  }
+
+  &__nav-icon  { font-size: 0.95rem; flex-shrink: 0; }
+  &__nav-label { overflow: hidden; text-overflow: ellipsis; }
+}
+
+// ── Content ──────────────────────────────────────────────────────────────────
+.shell__content {
+  grid-area: content;
+  overflow-y: auto;
+  background: var(--surface-ground);
+  padding: 24px;
+  font-family: var(--font-primary);
+}
+// ── Search dropdown ───────────────────────────────────────────────────────────
+
+// El contenedor padre necesita ser el punto de anclaje del absolute
+.topbar__search {
+  position: relative; // ← nuevo, necesario para el dropdown
+
+  // Cuando el dropdown está abierto: borde activo sin esperar :focus-within
+  &--open {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(0, 125, 104, 0.12);
+  }
+}
+
+// Separar la fila del input para facilitar el layout
+.topbar__search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);   // 10px debajo del borde del search
+  left: 50%;
+  transform: translateX(-50%);
+  width: 520px;              // más ancho que el input para mostrar info
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.08);
+  z-index: 200;
+  overflow: hidden;
+  animation: dropdown-enter 0.12s ease;
+
+  // Estado: cargando / vacío
+  &__state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 20px 16px;
+    font-size: 0.875rem;
+    color: var(--text-color-secondary);
+
+    i { font-size: 1.1rem; color: var(--text-color-muted); }
+
+    &--empty i { color: var(--text-color-muted); }
+  }
+
+  // Cada resultado
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    border-bottom: 1px solid var(--surface-border);
+    transition: background 0.12s ease;
+    font-family: var(--font-primary);
+
+    &:last-of-type { border-bottom: none; }
+
+    &:hover,
+    &--focused {
+      background: var(--surface-hover);
+    }
+
+    &--focused .search-dropdown__inv-tag {
+      background: var(--color-primary);
+      color: #fff;
+    }
+  }
+
+  // Fila 1 del item: número + badge lifecycle
+  &__item-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__inv-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    background: var(--color-primary-light);
+    padding: 2px 8px;
+    border-radius: 4px;
+    transition: background 0.12s, color 0.12s;
+
+    i { font-size: 0.65rem; }
+  }
+
+  // Badge de estado del ciclo de vida
+  &__lifecycle {
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+
+    &[data-status='AVAILABLE']    { background: #B4FDBD; color: #0F8A1E; }
+    &[data-status='ASSIGNED']     { background: #E2EBFE; color: #1A4CB7; }
+    &[data-status='MAINTENANCE']  { background: #FDF7E2; color: #B68D1B; }
+    &[data-status='DECOMMISSIONED'] { background: #FEE2E2; color: #B71A1A; }
+  }
+
+  // Fila 2: descripción
+  &__desc {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // Fila 3: chips de metadatos
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 1px;
+  }
+
+  &__meta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.72rem;
+    color: var(--text-color-secondary);
+
+    i { font-size: 0.65rem; color: var(--text-color-muted); }
+  }
+
+  // Pie con shortcuts de teclado
+  &__footer {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 7px 14px;
+    background: var(--surface-ground);
+    border-top: 1px solid var(--surface-border);
+    font-size: 0.68rem;
+    color: var(--text-color-muted);
+
+    kbd {
+      display: inline-block;
+      padding: 1px 5px;
+      background: var(--surface-card);
+      border: 1px solid var(--surface-border);
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 0.65rem;
+      color: var(--text-color-secondary);
+      box-shadow: 0 1px 0 var(--surface-border);
+    }
+  }
+}
+
+@keyframes dropdown-enter {
+  from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}

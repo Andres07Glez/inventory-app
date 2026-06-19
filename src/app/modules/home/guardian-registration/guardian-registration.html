@@ -1,0 +1,319 @@
+<p-toast position="top-right" />
+<p-confirmDialog styleClass="cat-confirm-dialog" />
+
+<div class="cat-tab-content">
+
+  <!-- ── TOOLBAR ───────────────────────────────────────────────────── -->
+  <div class="cat-toolbar">
+    <span class="stat-chip">
+      <i class="pi pi-id-card"></i>
+      {{ totalRecords() }} resguardante{{ totalRecords() !== 1 ? 's' : '' }}
+    </span>
+
+    <p-iconfield styleClass="cat-search-field">
+      <p-inputicon styleClass="pi pi-search" />
+      <input
+        pInputText
+        class="cat-search-input"
+        placeholder="Buscar por nombre, número de empleado o departamento…"
+        [value]="searchTerm()"
+        (input)="onSearch($any($event.target).value)"
+      />
+    </p-iconfield>
+
+    <button
+      pButton
+      icon="pi pi-plus"
+      label="Nuevo resguardante"
+      class="cat-btn cat-btn--primary"
+      (click)="openCreate()"
+    ></button>
+  </div>
+
+  <!-- ── TABLA ─────────────────────────────────────────────────────── -->
+  <p-table
+    [value]="guardians()"
+    dataKey="id"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="pageSize()"
+    [totalRecords]="totalRecords()"
+    [loading]="loading()"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="{first}–{last} de {totalRecords} resguardantes"
+    (onLazyLoad)="onLazyLoad($event)"
+    sortMode="single"
+    sortField="fullName"
+    styleClass="cat-table"
+    responsiveLayout="scroll"
+  >
+    <!-- Skeleton -->
+    <ng-template pTemplate="loadingbody">
+      @for (_ of [1,2,3,4,5,6]; track $index) {
+        <tr>
+          @for (__ of [1,2,3,4,5,6]; track $index) {
+            <td><p-skeleton height="1.25rem" styleClass="cat-skeleton" /></td>
+          }
+        </tr>
+      }
+    </ng-template>
+
+    <!-- Header -->
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 3rem"></th>
+        <th pSortableColumn="employeeNumber" style="width: 9rem">
+          No. Empleado <p-sortIcon field="employeeNumber" />
+        </th>
+        <th pSortableColumn="fullName">
+          Nombre completo <p-sortIcon field="fullName" />
+        </th>
+        <th>Contacto</th>
+        <th pSortableColumn="department">
+          Departamento <p-sortIcon field="department" />
+        </th>
+        <th style="width: 11rem">Ubicación</th>
+        <th style="width: 7rem; text-align: center">Acciones</th>
+      </tr>
+    </ng-template>
+
+    <!-- Body -->
+    <ng-template pTemplate="body" let-g>
+      <tr>
+        <!-- Avatar -->
+        <td>
+          <p-avatar
+            [label]="getInitials(g.fullName)"
+            shape="circle"
+            styleClass="guardian-avatar"
+          />
+        </td>
+
+        <!-- No. Empleado -->
+        <td>
+          <span class="cat-emp-chip">{{ g.employeeNumber }}</span>
+        </td>
+
+        <!-- Nombre -->
+        <td>
+          <div class="cat-cell-primary">{{ g.fullName }}</div>
+        </td>
+
+        <!-- Contacto -->
+        <td>
+          <div class="cat-contact-cell">
+            @if (g.email) {
+              <div class="cat-contact-item">
+                <i class="pi pi-envelope"></i>
+                <a [href]="'mailto:' + g.email" class="cat-link">{{ g.email }}</a>
+              </div>
+            }
+            @if (g.phone) {
+              <div class="cat-contact-item">
+                <i class="pi pi-phone"></i>
+                <span>{{ g.phone }}</span>
+              </div>
+            }
+            @if (!g.email && !g.phone) {
+              <span class="cat-muted">—</span>
+            }
+          </div>
+        </td>
+
+        <!-- Departamento -->
+        <td>{{ g.department || '—' }}</td>
+
+        <!-- Ubicación -->
+        <td>
+          @if (g.locationName) {
+            <div class="cat-contact-item">
+              <i class="pi pi-map-marker"></i>
+              <span>{{ g.locationName }}</span>
+            </div>
+          } @else {
+            <span class="cat-muted">—</span>
+          }
+        </td>
+
+        <!-- Acciones -->
+        <td style="text-align: center">
+          <div class="cat-actions">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-pencil"
+              class="cat-btn-icon cat-btn-icon--edit"
+              pTooltip="Editar"
+              tooltipPosition="top"
+              (click)="openEdit(g)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-trash"
+              class="cat-btn-icon cat-btn-icon--danger"
+              pTooltip="Dar de baja"
+              tooltipPosition="top"
+              (click)="confirmDelete(g)"
+            ></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <!-- Empty -->
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="7">
+        <div class="cat-empty">
+          <i class="pi pi-id-card cat-empty__icon"></i>
+          <p class="cat-empty__title">Sin resguardantes</p>
+          <p class="cat-empty__sub">
+            @if (searchTerm()) {
+              No hay resultados para "{{ searchTerm() }}".
+            } @else {
+              Agrega el primer resguardante con el botón "Nuevo resguardante".
+            }
+          </p>
+        </div>
+      </td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ DIALOG -->
+<p-dialog
+  [header]="isEditing() ? 'Editar resguardante' : 'Nuevo resguardante'"
+  [(visible)]="dialogVisible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closeOnEscape]="true"
+  styleClass="cat-dialog"
+  [style]="{ width: '520px' }"
+  (onHide)="closeDialog()"
+>
+  <form [formGroup]="form" class="cat-form" autocomplete="off" novalidate>
+
+    <!-- No. de empleado -->
+    <div class="cat-field cat-field--full">
+      <label class="cat-label">
+        No. de empleado <span class="cat-req">*</span>
+      </label>
+      <input
+        pInputText
+        formControlName="employeeNumber"
+        class="cat-input"
+        placeholder="Ej. EMP-0042"
+        maxlength="30"
+      />
+      @if (hasError('employeeNumber', 'required')) {
+        <small class="cat-error"><i class="pi pi-exclamation-circle"></i> El número de empleado es obligatorio.</small>
+      }
+      @if (hasError('employeeNumber', 'maxlength')) {
+        <small class="cat-error"><i class="pi pi-exclamation-circle"></i> Máximo 30 caracteres.</small>
+      }
+    </div>
+
+    <!-- Nombre completo -->
+    <div class="cat-field cat-field--full">
+      <label class="cat-label">
+        Nombre completo <span class="cat-req">*</span>
+      </label>
+      <input
+        pInputText
+        formControlName="fullName"
+        class="cat-input"
+        placeholder="Ej. Juan Pérez García"
+        maxlength="150"
+      />
+      @if (hasError('fullName', 'required')) {
+        <small class="cat-error"><i class="pi pi-exclamation-circle"></i> El nombre completo es obligatorio.</small>
+      }
+      @if (hasError('fullName', 'maxlength')) {
+        <small class="cat-error"><i class="pi pi-exclamation-circle"></i> Máximo 150 caracteres.</small>
+      }
+    </div>
+
+    <!-- Correo | Teléfono -->
+    <div class="cat-form-row">
+      <div class="cat-field">
+        <label class="cat-label">Correo electrónico <span class="cat-opt">(opcional)</span></label>
+        <input
+          pInputText
+          type="email"
+          formControlName="email"
+          class="cat-input"
+          placeholder="correo@unpa.edu.mx"
+          maxlength="150"
+        />
+        @if (hasError('email', 'email')) {
+          <small class="cat-error"><i class="pi pi-exclamation-circle"></i> Formato de correo inválido.</small>
+        }
+      </div>
+      <div class="cat-field">
+        <label class="cat-label">Teléfono <span class="cat-opt">(opcional)</span></label>
+        <input
+          pInputText
+          formControlName="phone"
+          class="cat-input"
+          placeholder="Ej. 287 123 4567"
+          maxlength="25"
+        />
+        @if (hasError('phone', 'pattern')) {
+          <small class="cat-error"><i class="pi pi-exclamation-circle"></i> El teléfono debe tener 10 dígitos.</small>
+        }
+      </div>
+    </div>
+
+    <!-- Departamento -->
+    <div class="cat-field cat-field--full">
+      <label class="cat-label">Departamento <span class="cat-opt">(opcional)</span></label>
+      <input
+        pInputText
+        formControlName="department"
+        class="cat-input"
+        placeholder="Ej. Servicios Escolares"
+        maxlength="150"
+      />
+    </div>
+
+    <!-- Ubicación -->
+    <div class="cat-field cat-field--full">
+      <label class="cat-label">Ubicación <span class="cat-opt">(opcional)</span></label>
+      <p-select
+        formControlName="locationId"
+        [options]="locationOptions()"
+        placeholder="Seleccionar ubicación…"
+        [showClear]="true"
+        [filter]="true"
+        filterPlaceholder="Buscar ubicación…"
+        [scrollHeight]="'200px'"
+        styleClass="cat-select"
+      />
+    </div>
+
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="cat-dialog-footer">
+      <button
+        pButton
+        type="button"
+        label="Cancelar"
+        icon="pi pi-times"
+        class="cat-btn cat-btn--secondary"
+        (click)="closeDialog()"
+        [disabled]="saving()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        [label]="isEditing() ? 'Guardar cambios' : 'Crear resguardante'"
+        icon="pi pi-check"
+        class="cat-btn cat-btn--primary"
+        [loading]="saving()"
+        (click)="save()"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>
