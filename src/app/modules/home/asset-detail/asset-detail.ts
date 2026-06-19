@@ -422,7 +422,7 @@ export class AssetDetail implements OnInit{
   }
 
   goToAssignment(assetId: number): void {
-    this.router.navigate(['/asignaciones'],/* { queryParams: { assetId } }*/);
+    this.router.navigate(['/inventario/asignaciones'], { queryParams: { assetId } });
   }
 
   /**
