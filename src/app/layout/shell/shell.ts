@@ -12,22 +12,30 @@ import { UserRole } from '../../core/models/auth.model';
 import { toObservable, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { map, debounceTime, distinctUntilChanged, tap, filter, switchMap, catchError, of } from 'rxjs';
 import { AssetSearchItemDTO } from '../../core/models/asset.model';
+import { HasRoleDirective } from '../../shared/directives/has-role.directive';
 
 
-interface NavItem  { label: string; icon: string; route: string; roles?: UserRole[]; }
+interface NavItem  {
+  label: string;
+  icon: string;
+  route: string;
+  roles?: UserRole[];
+  requiresGuardian?: boolean; // true = visible solo si el usuario tiene guardianId
+}
 interface NavGroup { section: string; items: NavItem[]; roles?: UserRole[]; }
 
 const ALL_NAV_GROUPS: NavGroup[] = [
   {
     section: 'Principal',
     items: [
-      { label: 'Dashboard', icon: 'pi pi-home', route: '/inventario/dashboard' },
+      { label: 'Dashboard', icon: 'pi pi-home', route: '/inventario/dashboard', roles: ['ADMIN', 'OPERADOR', 'AUDITOR'] },
     ],
   },
   {
     section: 'Inventario',
     items: [
-      { label: 'Bienes',       icon: 'pi pi-box',       route: '/inventario/bienes' },
+      { label: 'Bienes',       icon: 'pi pi-box',       route: '/inventario/bienes', roles: ['ADMIN', 'OPERADOR', 'AUDITOR'] },
+      { label: 'Mis Bienes',   icon: 'pi pi-user',       route: '/inventario/mis-bienes', requiresGuardian: true },
       { label: 'Asignaciones', icon: 'pi pi-user-plus', route: '/inventario/asignaciones', roles: ['ADMIN', 'OPERADOR'] },
       { label: 'Registrar',   icon: 'pi pi-plus',      route: '/inventario/registro',     roles: ['ADMIN', 'OPERADOR'] },
     ],
@@ -77,7 +85,7 @@ const LIFECYCLE_LABELS: Record<string, string> = {
 @Component({
   selector: 'app-shell',
   standalone:true,
-  imports: [CommonModule, RouterModule, RouterLink, RouterLinkActive, ButtonModule, TooltipModule,PopoverModule,ToastModule],
+  imports: [CommonModule, RouterModule, RouterLink, RouterLinkActive, ButtonModule, TooltipModule,PopoverModule,ToastModule,HasRoleDirective],
   templateUrl: './shell.html',
   styleUrl: './shell.scss',
 })
@@ -169,9 +177,10 @@ export class Shell {
   // ── Navegación filtrada ───────────────────────────────────────────────────
   readonly navGroups = computed(() => {
     const role = this.role();
+    const hasGuardian = this.authService.hasGuardian();
     return ALL_NAV_GROUPS
       .filter(g => !g.roles || g.roles.includes(role))
-      .map(g => ({ ...g, items: g.items.filter(i => !i.roles || i.roles.includes(role)) }))
+      .map(g => ({ ...g, items: g.items.filter(i => (!i.roles || i.roles.includes(role))&&(!i.requiresGuardian || hasGuardian))}))
       .filter(g => g.items.length > 0);
   });
 

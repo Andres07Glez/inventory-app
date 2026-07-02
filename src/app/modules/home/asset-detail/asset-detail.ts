@@ -418,6 +418,9 @@ export class AssetDetail implements OnInit{
   // ── Navegación ────────────────────────────────────────────────────────────
 
   goBack(): void {
+    if(this.authService.currentUser()?.role === 'GUARDIAN') {
+      this.router.navigate(['/inventario/mis-bienes']);
+    }
     this.router.navigate(['/inventario/bienes']);
   }
 

@@ -27,10 +27,19 @@ export const routes: Routes = [
       {
         path: 'inventario/dashboard',
         loadComponent: () => import('./modules/home/dashboard/dashboard').then(m => m.Dashboard),
+        canActivate: [roleGuard],
+        data: forRoles('ADMIN', 'OPERADOR','AUDITOR'),
+      },
+      {
+        path: 'inventario/mis-bienes',
+        loadComponent: () => import('./modules/home/guardian-assets-list/guardian-assets-list').then(m => m.GuardianAssetsList),
       },
       {
         path: 'inventario/bienes',
         loadComponent: () => import('./modules/home/assets-list/assets-list').then(m => m.AssetsList),
+        canActivate: [roleGuard],
+        data: forRoles('ADMIN', 'OPERADOR','AUDITOR'),
+
       },
       {
         path: 'inventario/bienes/:id',

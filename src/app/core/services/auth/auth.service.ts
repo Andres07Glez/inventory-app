@@ -24,6 +24,8 @@ export class AuthService {
   readonly isAuthenticated  = computed(() => this._currentUser() !== null);
   readonly currentUserId    = computed(() => this._currentUser()?.userId ?? null);
   readonly mustChangePassword = computed(() => this._currentUser()?.mustChangePassword ?? false);
+  readonly guardianId = computed(() => this._currentUser()?.guardianId ?? null);
+  readonly hasGuardian = computed(() => this.guardianId() !== null);
 
   // ── Auth flow ────────────────────────────────────────────────────────────
 

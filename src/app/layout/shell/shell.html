@@ -23,7 +23,7 @@
     <div class="topbar__spacer"></div>
 
     <!-- Buscador por número de inventario -->
-    <div class="topbar__search" [class.topbar__search--open]="showDropdown()">
+    <div class="topbar__search" [class.topbar__search--open]="showDropdown() " *hasRole="['ADMIN', 'OPERADOR','AUDITOR']">
 
       <!-- Input row -->
       <div class="topbar__search-row">

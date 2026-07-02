@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
-import { AssetDetailResponseDTO, AssetQueryParams, AssetResponseDTO, AssetSearchItemDTO, AssignmentHistoryDTO, PageResponse, UpdateConditionRequest, UpdateConditionResponse } from '../../models/asset.model';
+import { AssetDetailResponseDTO, AssetQueryParams, AssetResponseDTO, AssetResumeResponse, AssetSearchItemDTO, AssignmentHistoryDTO, MyAssetsQueryParams, PageResponse, UpdateConditionRequest, UpdateConditionResponse } from '../../models/asset.model';
 import { environment } from '../../../config/environment';
 
 
@@ -67,5 +67,16 @@ export class AssetService {
     return this.http.get<PageResponse<AssetSearchItemDTO>>(
       `${this.endpoint}/search`, { params }
     );
+  }
+  getMyAssets(params: MyAssetsQueryParams = {}): Observable<PageResponse<AssetResumeResponse>> {
+    let httpParams = new HttpParams();
+
+    if (params.page !== undefined) httpParams = httpParams.set('page', params.page.toString());
+    if (params.size !== undefined) httpParams = httpParams.set('size', params.size.toString());
+    if (params.sort) httpParams = httpParams.set('sort', params.sort);
+
+    return this.http
+      .get<ApiResponse<PageResponse<AssetResumeResponse>>>(`${this.endpoint}/me`, { params: httpParams })
+      .pipe(map(r => r.data));
   }
 }

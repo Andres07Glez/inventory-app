@@ -18,6 +18,5 @@ export const roleGuard: CanActivateFn = (route) => {
     return true;
   }
 
-  // Redirige al dashboard en lugar de mostrar un 403 sin contexto
-  return router.createUrlTree(['/inventario/dashboard']);
+  return router.createUrlTree(['/inventario/mis-bienes']);
 };

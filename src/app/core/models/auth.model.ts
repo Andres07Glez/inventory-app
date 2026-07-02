@@ -17,4 +17,5 @@ export interface AuthUser {
   fullName: string;
   role: UserRole;
   mustChangePassword: boolean;
+  guardianId: number | null;
 }

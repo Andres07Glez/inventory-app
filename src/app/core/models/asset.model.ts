@@ -85,6 +85,23 @@ export interface AssetQueryParams {
   startDate?: string; // Formato esperado: YYYY-MM-DD
   endDate?: string;
 }
+export interface AssetResumeResponse {
+  id: number;
+  inventoryNumber: string;
+  description: string;
+  brand: string | null;
+  model: string | null;
+  categoryName: string;
+  locationName: string | null;
+  conditionStatus: ConditionStatus;
+  lifecycleStatus: LifecycleStatus;
+}
+
+export interface MyAssetsQueryParams {
+  page?: number;
+  size?: number;
+  sort?: string;
+}
 
 // ── Opciones para los dropdowns de filtro ────────────────────────────────────
 
